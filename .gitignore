@@ -1,0 +1,24 @@
+# Folders
+_sdk*
+_build/
+_ota
+_out
+_toolchain
+
+# Files
+*.pem
+.nrf_sdk.zip
+*.pb
+*.bin
+*.ipch
+*.pyc
+*.tar.bz2
+
+#Eclipse
+.project
+.cproject
+.settings*
+/Debug/
+
+#Vscode
+.vscode
