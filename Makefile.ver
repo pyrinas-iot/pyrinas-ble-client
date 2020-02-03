@@ -1,0 +1,3 @@
+# Get firmware version
+VER_STRING := $(shell git describe --tags --abbrev=0)
+VER_STRING_W_GITHASH := $(shell git describe --tags --long)

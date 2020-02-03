@@ -5,6 +5,9 @@ OUTPUT_DIRECTORY := _build
 SDK_ROOT := ../_sdk/
 PROJ_DIR := .
 
+include $(PROJ_DIR)/../Makefile.ver
+include $(PROJ_DIR)/../Makefile.pid
+
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := ble_app_buttonless_dfu_gcc_nrf52.ld
 
@@ -134,6 +137,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(PROJ_DIR)/../include/board \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -145,10 +149,11 @@ OPT = -Os -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBL_SETTINGS_ACCESS_ONLY
-CFLAGS += -DBOARD_PCA10056
+CFLAGS += -DBOARD_CUSTOM
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
@@ -169,13 +174,14 @@ CFLAGS += -fno-builtin -fshort-enums
 CXXFLAGS += $(OPT)
 # Assembler flags common to all targets
 ASMFLAGS += -g3
+ASMFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 ASMFLAGS += -DAPP_TIMER_V2
 ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 ASMFLAGS += -DBL_SETTINGS_ACCESS_ONLY
-ASMFLAGS += -DBOARD_PCA10056
+ASMFLAGS += -DBOARD_CUSTOM
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
 ASMFLAGS += -DNRF52840_XXAA

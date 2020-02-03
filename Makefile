@@ -21,15 +21,21 @@ BL_SETTINGS_SD  := bl_settings_sd
 BUILD_SD				:= s140
 BUILD_IDENT     := nrf52840_xxaa
 
+NRUTIL_SD_REQ		:= 0xCA
+
 #############################################
 # TODO: Change these to match your settings
 
 # Serial number for your J-Link
-PROG_SERIAL     := 683820663
+PROG_SERIAL     := 682978319
 
 # App filename
 APP_FILENAME    := scaffolding
 #############################################
+
+# Board definition and Git versioning
+include Makefile.ver
+include Makefile.pid
 
 # Cert for DFU
 DFU_CERT 				:= private.pem
@@ -37,10 +43,7 @@ DFU_CERT 				:= private.pem
 # Commands
 MERGEHEX				:= $(BIN_DIR)/mergehex/mergehex
 NRFJPROG				:= $(BIN_DIR)/nrfjprog/nrfjprog
-
-# Get firmware version
-VER_STRING := $(shell git describe --tags --abbrev=0)
-VER_STRING_W_GITHASH := $(shell git describe --tags --long)
+NRFUTIL					:= $(BIN_DIR)/nrfutil/nrfutil-mac
 
 # Download and install SDK deps
 SDK_ZIP     := .nrf_sdk.zip
@@ -65,12 +68,12 @@ default: build
 
 gen_key:
 	@echo Generating pem key. You should only run this once!
-	cd $(DFU_DIR) && nrfutil keys generate private.pem
-	cd $(DFU_DIR) && nrfutil keys display --key pk --format code private.pem > dfu_public_key.c
+	cd $(DFU_DIR) && $(NRFUTIL) keys generate private.pem
+	cd $(DFU_DIR) && $(NRFUTIL) keys display --key pk --format code private.pem > dfu_public_key.c
 
 settings: build
 	@echo Generating settings .hex file
-	nrfutil settings generate --family NRF52 --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
+	$(NRFUTIL) settings generate --family NRF52840 --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
 
 build:
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(BOOTLOADER_DIR) -j
@@ -112,7 +115,7 @@ erase:
 ota: build
 	@echo Generating OTA package
 	@mkdir -p $(OTA_DIR)
-	nrfutil pkg generate --sd-req 0xb0 --hw-version 52 --key-file $(DFU_DIR)/$(DFU_CERT) \
+	$(NRFUTIL) pkg generate --sd-req $(NRFUTIL_SD_REQ) --hw-version 52 --key-file $(DFU_DIR)/$(DFU_CERT) \
 		--application-version-string $(VER_STRING) --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex \
 		$(OTA_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).zip
 
