@@ -39,7 +39,10 @@ Look for `S/N:` and you should see your serial!
 
 `make build` will build your code
 `make merge` will merge your code as one hex file. This includes the Softdevice
-`make flash` will flash your merged code.
+`make flash_softdevice` will flash the softdevice.
+`make flash` will flash your app, bootloader and settings.
+
+**Note:** on a fresh board, you should run `make erase`, `make flash_softdevice` then `make flash`
 
 ## Uninstalling Toolchain or SDK
 
