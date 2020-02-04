@@ -18,11 +18,6 @@ SETTINGS        := settings
 BL_SETTINGS     := bl_settings
 BL_SETTINGS_SD  := bl_settings_sd
 
-BUILD_SD				:= s140
-BUILD_IDENT     := nrf52840_xxaa
-
-NRUTIL_SD_REQ		:= 0xCA
-
 #############################################
 # TODO: Change these to match your settings
 
@@ -56,7 +51,7 @@ GCC_URL := https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-r
 GCC_MD5 := d536d7fb167c04b24f7f0d40cd739cac
 
 # Soft device info
-SOFT_DEVICE := $(SDK_ROOT)/components/softdevice/$(BUILD_SD)/hex/$(BUILD_SD)_nrf52_7.0.1_softdevice.hex
+SOFT_DEVICE := $(SDK_ROOT)/components/softdevice/$(BUILD_SD)/hex/$(BUILD_SD)_$(BUILD_SD_VER)_softdevice.hex
 
 # Protocol Buffers
 PROTO_SRC   := $(wildcard $(PROTO_DIR)/*.proto)
@@ -73,7 +68,7 @@ gen_key:
 
 settings: build
 	@echo Generating settings .hex file
-	$(NRFUTIL) settings generate --family NRF52840 --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
+	$(NRFUTIL) settings generate --family $(BOARD_FAM) --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
 
 build:
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(BOOTLOADER_DIR) -j
