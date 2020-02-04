@@ -47,6 +47,27 @@ Look for `S/N:` and you should see your serial!
 
 **Note:** on a fresh board, you should run `make erase`, `make flash_softdevice` then `make flash`
 
+## Debugging
+
+In order to debug a central and peripheral mode device at the same time you have to define `PROG_SERIAL` in `Makefile.modes`.
+If you only have one programmer, you will not be able to simultaneously debug.
+
+Then start debugging for each board.
+
+Run these in two separate windows. You do not need to view them.
+
+```
+MODE=central make debug
+MODE=peripheral make debug
+```
+
+Then run these in two separate windows. These will have your log output.
+
+```
+MODE=central make rtt
+MODE=peripheral make rtt
+```
+
 ## Uninstalling Toolchain or SDK
 
 1. Run `make sdk_clean` for the SDK
