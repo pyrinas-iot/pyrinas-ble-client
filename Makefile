@@ -114,10 +114,10 @@ ota: build
 
 debug:
 	@echo Debug using JLinkExe
-	JLinkExe -device NRF52 -speed 4000 -if SWD -autoconnect 1 -SelectEmuBySN $(PROG_SERIAL) -RTTTelnetPort 19022
+	JLinkExe -device NRF52 -speed 4000 -if SWD -autoconnect 1 -SelectEmuBySN $(PROG_SERIAL) -RTTTelnetPort $(PROG_PORT)
 
 rtt:
-	jlinkrttclient -RTTTelnetPort 19022
+	jlinkrttclient -RTTTelnetPort $(PROG_PORT)
 
 sdk:
 	@echo Installing NRF SDK
