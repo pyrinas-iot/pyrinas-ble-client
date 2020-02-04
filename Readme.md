@@ -1,4 +1,7 @@
-# Scaffolding Project for nRF52840 Based Projects on SDK v16
+# Scaffolding Project for Particle Xenon using nRF SDK v16
+
+This repository is a scaffold that anyone can use to get started with the nRF52 DK.
+Currently the only board definition available is for the Particle Xenon.
 
 ## Install (Mac OSX Only)
 
