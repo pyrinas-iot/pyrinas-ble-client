@@ -1,0 +1,26 @@
+ifneq (,$(MODE))
+ifeq ("$(MODE)","peripheral")
+BOARD_MODE = 0
+endif
+
+ifeq ("$(MODE)","central")
+BOARD_MODE = 1
+endif
+endif
+
+
+ifndef BOARD_MODE
+BOARD_MODE=0
+endif
+
+# TODO: change PROG_SERIAL to match the serial nubmers of your programmers.
+# If you have only one programmer, set PROG_SERIAL to the same. The drawback
+# here is that you won't be able to debug simultaneously.
+
+ifeq ("$(BOARD_MODE)","0")
+PROG_SERIAL=682978319
+endif
+
+ifeq ("$(BOARD_MODE)","1")
+PROG_SERIAL=683820663
+endif

@@ -21,16 +21,14 @@ BL_SETTINGS_SD  := bl_settings_sd
 #############################################
 # TODO: Change these to match your settings
 
-# Serial number for your J-Link
-PROG_SERIAL     := 682978319
-
 # App filename
 APP_FILENAME    := scaffolding
 #############################################
 
 # Board definition and Git versioning
 include Makefile.ver
-include Makefile.pid
+include Makefile.bid
+include Makefile.modes
 
 # Cert for DFU
 DFU_CERT 				:= private.pem
