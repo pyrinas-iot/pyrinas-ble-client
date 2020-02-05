@@ -77,72 +77,29 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
     {
 
         // Setitng up protocol buffer data
-        event evt;
+        protobuf_event_t evt;
 
         // NRF_LOG_HEXDUMP_INFO(p_evt_write->data,p_evt_write->len);
 
         // Read in buffer
         pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_write->data, p_evt_write->len);
 
-        if (!pb_decode(&istream, event_fields, &evt))
+        if (!pb_decode(&istream, protobuf_event_t_fields, &evt))
         {
             NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
             return;
         }
 
         // Validate code & type
-        if (evt.type != event_event_type_command)
+        if (evt.type != event_type_command)
         {
+            NRF_LOG_ERROR("Unexpected event_type");
             return;
         }
 
-        // If all valid, append message with a return value
-        char out[64];
+        // Event to the main context
+        p_protobuf->evt_handler(p_protobuf, &evt);
 
-        // Concat strings together
-        strcpy(out, evt.message);
-        strcat(out, " cool."); // <- This is part of the response. It get's concatenated to the "This is " from the javascript app.
-
-        // Copy to message
-        strcpy(evt.message, out);
-
-        // Set response
-        evt.type = event_event_type_response;
-
-        // Encode value
-        pb_byte_t output[event_size];
-
-        // Output buffer
-        pb_ostream_t ostream = pb_ostream_from_buffer(output, sizeof(output));
-
-        if (!pb_encode(&ostream, event_fields, &evt))
-        {
-            NRF_LOG_ERROR("Unable to encode: %s", PB_GET_ERROR(&ostream));
-            return;
-        }
-
-        // NRF_LOG_HEXDUMP_INFO(output,ostream.bytes_written);
-
-        // Initialize value struct.
-        ble_gatts_value_t gatts_value;
-        memset(&gatts_value, 0, sizeof(gatts_value));
-
-        gatts_value.len = ostream.bytes_written;
-        gatts_value.offset = 0;
-        gatts_value.p_value = output;
-
-        // Update database.
-        uint32_t err_code = sd_ble_gatts_value_set(BLE_CONN_HANDLE_INVALID,
-                                                   p_protobuf->command_handles.value_handle,
-                                                   &gatts_value);
-        if (err_code == NRF_SUCCESS)
-        {
-            NRF_LOG_INFO("Response has ben sent.")
-        }
-        else
-        {
-            NRF_LOG_DEBUG("Error sending response.")
-        }
     }
 }
 
@@ -182,7 +139,7 @@ static ret_code_t command_char_add(ble_protobuf_t *p_protobuf, const ble_protobu
     memset(&add_char_params, 0, sizeof(add_char_params));
 
     add_char_params.uuid = PROTOBUF_UUID_CONFIG_CHAR;
-    add_char_params.max_len = event_size;
+    add_char_params.max_len = protobuf_event_t_size;
     add_char_params.is_var_len = true;
 
     add_char_params.char_props.write_wo_resp = 1;

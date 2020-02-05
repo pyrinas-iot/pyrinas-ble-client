@@ -87,6 +87,11 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
+  $(PROJ_DIR)/../external/nanopb/pb_common.c \
+  $(PROJ_DIR)/../external/nanopb/pb_encode.c \
+  $(PROJ_DIR)/../external/nanopb/pb_decode.c \
+  $(PROJ_DIR)/../src/proto/command.pb.c \
+  $(PROJ_DIR)/../src/ble/ble_protobuf.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -137,7 +142,11 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/fprintf \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(PROJ_DIR)/../include \
   $(PROJ_DIR)/../include/board \
+  $(PROJ_DIR)/../include/proto \
+  $(PROJ_DIR)/../include/ble \
+  $(PROJ_DIR)/../external/nanopb \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -149,6 +158,7 @@ OPT = -Os -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED

@@ -6,7 +6,7 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-PB_BIND(event, event, AUTO)
+PB_BIND(protobuf_event_t, protobuf_event_t, AUTO)
 
 
 

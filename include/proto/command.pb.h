@@ -26,12 +26,12 @@ typedef enum _event_code {
 } event_code;
 
 /* Struct definitions */
-typedef PB_BYTES_ARRAY_T(64) event_data_t;
-typedef struct _event {
+typedef PB_BYTES_ARRAY_T(64) protobuf_event_t_data_t;
+typedef struct _protobuf_event_t {
     event_type type;
     event_code code;
-    event_data_t data;
-} event;
+    protobuf_event_t_data_t data;
+} protobuf_event_t;
 
 
 /* Helper constants for enums */
@@ -45,29 +45,29 @@ typedef struct _event {
 
 
 /* Initializer values for message structs */
-#define event_init_default                       {_event_type_MIN, _event_code_MIN, {0, {0}}}
-#define event_init_zero                          {_event_type_MIN, _event_code_MIN, {0, {0}}}
+#define protobuf_event_t_init_default            {_event_type_MIN, _event_code_MIN, {0, {0}}}
+#define protobuf_event_t_init_zero               {_event_type_MIN, _event_code_MIN, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define event_type_tag                           1
-#define event_code_tag                           2
-#define event_data_tag                           3
+#define protobuf_event_t_type_tag                1
+#define protobuf_event_t_code_tag                2
+#define protobuf_event_t_data_tag                3
 
 /* Struct field encoding specification for nanopb */
-#define event_FIELDLIST(X, a) \
+#define protobuf_event_t_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, UENUM,    type,              1) \
 X(a, STATIC,   SINGULAR, UENUM,    code,              2) \
 X(a, STATIC,   SINGULAR, BYTES,    data,              3)
-#define event_CALLBACK NULL
-#define event_DEFAULT NULL
+#define protobuf_event_t_CALLBACK NULL
+#define protobuf_event_t_DEFAULT NULL
 
-extern const pb_msgdesc_t event_msg;
+extern const pb_msgdesc_t protobuf_event_t_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
-#define event_fields &event_msg
+#define protobuf_event_t_fields &protobuf_event_t_msg
 
 /* Maximum encoded size of messages (where known) */
-#define event_size                               70
+#define protobuf_event_t_size                    70
 
 #ifdef __cplusplus
 } /* extern "C" */

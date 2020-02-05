@@ -61,6 +61,7 @@
 
 #include "ble.h"
 #include "ble_srv_common.h"
+#include "command.pb.h"
 #include "nrf_sdh_ble.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -91,25 +92,11 @@ extern "C"
                          ble_protobuf_on_ble_evt,        \
                          &_name)
 
-    /**@brief Protobuf Service event type. */
-    typedef enum
-    {
-        BLE_PROTOBUF_EVT_NOTIFICATION_ENABLED, /**< Battery value notification enabled event. */
-        BLE_PROTOBUF_EVT_NOTIFICATION_DISABLED /**< Battery value notification disabled event. */
-    } ble_protobuf_evt_type_t;
-
-    /**@brief Protobuf Service event. */
-    typedef struct
-    {
-        ble_protobuf_evt_type_t evt_type; /**< Type of event. */
-        uint16_t conn_handle;             /**< Connection handle. */
-    } ble_protobuf_evt_t;
-
     // Forward declaration of the ble_protobuf_t type.
     typedef struct ble_protobuf_s ble_protobuf_t;
 
     /**@brief Protobuf Service event handler type. */
-    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, ble_protobuf_evt_t *p_evt);
+    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, protobuf_event_t *p_evt);
 
     /**@brief Protobuf Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
