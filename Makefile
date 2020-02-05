@@ -196,3 +196,5 @@ toolchain_clean:
 clean:
 		@echo Cleaning..
 		@rm -rf $(BUILD_DIR)
+		@make -C $(BOOTLOADER_DIR) clean
+		@make -C $(MAIN_DIR) clean
