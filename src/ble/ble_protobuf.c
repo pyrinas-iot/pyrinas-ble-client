@@ -44,21 +44,21 @@
  */
 #include "sdk_common.h"
 #if NRF_MODULE_ENABLED(BLE_PROTOBUF)
-#include "ble_protobuf.h"
-#include <string.h>
-#include "ble_srv_common.h"
 #include "ble_conn_state.h"
+#include "ble_protobuf.h"
+#include "ble_srv_common.h"
+#include "command.pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
-#include "command.pb.h"
+#include <string.h>
 
 #define NRF_LOG_MODULE_NAME ble_protobuf
 #if BLE_PROTOBUF_CONFIG_LOG_ENABLED
-#define NRF_LOG_LEVEL       BLE_PROTOBUF_CONFIG_LOG_LEVEL
-#define NRF_LOG_INFO_COLOR  BLE_PROTOBUF_CONFIG_INFO_COLOR
+#define NRF_LOG_LEVEL BLE_PROTOBUF_CONFIG_LOG_LEVEL
+#define NRF_LOG_INFO_COLOR BLE_PROTOBUF_CONFIG_INFO_COLOR
 #define NRF_LOG_DEBUG_COLOR BLE_PROTOBUF_CONFIG_DEBUG_COLOR
 #else // BLE_PROTOBUF_CONFIG_LOG_ENABLED
-#define NRF_LOG_LEVEL       0
+#define NRF_LOG_LEVEL 0
 #endif // BLE_PROTOBUF_CONFIG_LOG_ENABLED
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
@@ -68,12 +68,12 @@ NRF_LOG_MODULE_REGISTER();
  * @param[in]   p_protobuf       Battery Service structure.
  * @param[in]   p_ble_evt   Event received from the BLE stack.
  */
-static void on_write(ble_protobuf_t * p_protobuf, ble_evt_t const * p_ble_evt)
+static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
 {
-    ble_gatts_evt_write_t const * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
+    ble_gatts_evt_write_t const *p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 
     // Handle writning to the value handle
-    if ( p_evt_write->handle == p_protobuf->command_handles.value_handle )
+    if (p_evt_write->handle == p_protobuf->command_handles.value_handle)
     {
 
         // Setitng up protocol buffer data
@@ -84,25 +84,27 @@ static void on_write(ble_protobuf_t * p_protobuf, ble_evt_t const * p_ble_evt)
         // Read in buffer
         pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_write->data, p_evt_write->len);
 
-        if (!pb_decode(&istream, event_fields, &evt)) {
+        if (!pb_decode(&istream, event_fields, &evt))
+        {
             NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
-        return;
-    }
+            return;
+        }
 
         // Validate code & type
-        if( evt.type != event_event_type_command ) {
+        if (evt.type != event_event_type_command)
+        {
             return;
-    }
+        }
 
         // If all valid, append message with a return value
         char out[64];
 
         // Concat strings together
-        strcpy(out,evt.message);
-        strcat(out," cool."); // <- This is part of the response. It get's concatenated to the "This is " from the javascript app.
+        strcpy(out, evt.message);
+        strcat(out, " cool."); // <- This is part of the response. It get's concatenated to the "This is " from the javascript app.
 
         // Copy to message
-        strcpy(evt.message,out);
+        strcpy(evt.message, out);
 
         // Set response
         evt.type = event_event_type_response;
@@ -111,9 +113,10 @@ static void on_write(ble_protobuf_t * p_protobuf, ble_evt_t const * p_ble_evt)
         pb_byte_t output[event_size];
 
         // Output buffer
-        pb_ostream_t ostream = pb_ostream_from_buffer(output,sizeof(output));
+        pb_ostream_t ostream = pb_ostream_from_buffer(output, sizeof(output));
 
-        if (!pb_encode(&ostream, event_fields, &evt)) {
+        if (!pb_encode(&ostream, event_fields, &evt))
+        {
             NRF_LOG_ERROR("Unable to encode: %s", PB_GET_ERROR(&ostream));
             return;
         }
@@ -121,17 +124,17 @@ static void on_write(ble_protobuf_t * p_protobuf, ble_evt_t const * p_ble_evt)
         // NRF_LOG_HEXDUMP_INFO(output,ostream.bytes_written);
 
         // Initialize value struct.
-        ble_gatts_value_t  gatts_value;
+        ble_gatts_value_t gatts_value;
         memset(&gatts_value, 0, sizeof(gatts_value));
 
-        gatts_value.len     = ostream.bytes_written;
-        gatts_value.offset  = 0;
+        gatts_value.len = ostream.bytes_written;
+        gatts_value.offset = 0;
         gatts_value.p_value = output;
 
         // Update database.
         uint32_t err_code = sd_ble_gatts_value_set(BLE_CONN_HANDLE_INVALID,
-                                          p_protobuf->command_handles.value_handle,
-                                          &gatts_value);
+                                                   p_protobuf->command_handles.value_handle,
+                                                   &gatts_value);
         if (err_code == NRF_SUCCESS)
         {
             NRF_LOG_INFO("Response has ben sent.")
@@ -140,20 +143,17 @@ static void on_write(ble_protobuf_t * p_protobuf, ble_evt_t const * p_ble_evt)
         {
             NRF_LOG_DEBUG("Error sending response.")
         }
-
     }
-
 }
 
-
-void ble_protobuf_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context)
+void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 {
     if ((p_context == NULL) || (p_ble_evt == NULL))
     {
         return;
     }
 
-    ble_protobuf_t * p_protobuf = (ble_protobuf_t *)p_context;
+    ble_protobuf_t *p_protobuf = (ble_protobuf_t *)p_context;
 
     switch (p_ble_evt->header.evt_id)
     {
@@ -167,7 +167,6 @@ void ble_protobuf_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context)
     }
 }
 
-
 /**@brief Function for adding the Battery Level characteristic.
  *
  * @param[in]   p_protobuf        Battery Service structure.
@@ -175,24 +174,24 @@ void ble_protobuf_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context)
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static ret_code_t command_char_add(ble_protobuf_t * p_protobuf, const ble_protobuf_init_t * p_protobuf_init)
+static ret_code_t command_char_add(ble_protobuf_t *p_protobuf, const ble_protobuf_init_t *p_protobuf_init)
 {
-    ret_code_t             err_code;
-    ble_add_char_params_t  add_char_params;
+    ret_code_t err_code;
+    ble_add_char_params_t add_char_params;
 
     memset(&add_char_params, 0, sizeof(add_char_params));
 
-    add_char_params.uuid                      = PROTOBUF_UUID_CONFIG_CHAR;
-    add_char_params.max_len                   = event_size;
-    add_char_params.is_var_len                = true;
+    add_char_params.uuid = PROTOBUF_UUID_CONFIG_CHAR;
+    add_char_params.max_len = event_size;
+    add_char_params.is_var_len = true;
 
-    add_char_params.char_props.write_wo_resp  = 1;
-    add_char_params.char_props.write          = 1;
-    add_char_params.char_props.read           = 1;
+    add_char_params.char_props.write_wo_resp = 1;
+    add_char_params.char_props.write = 1;
+    add_char_params.char_props.read = 1;
 
-    add_char_params.cccd_write_access         = p_protobuf_init->bl_cccd_wr_sec;
-    add_char_params.read_access               = p_protobuf_init->bl_rd_sec;
-    add_char_params.write_access              = p_protobuf_init->bl_wr_sec;
+    add_char_params.cccd_write_access = p_protobuf_init->bl_cccd_wr_sec;
+    add_char_params.read_access = p_protobuf_init->bl_rd_sec;
+    add_char_params.write_access = p_protobuf_init->bl_wr_sec;
 
     err_code = characteristic_add(p_protobuf->service_handle,
                                   &add_char_params,
@@ -202,12 +201,10 @@ static ret_code_t command_char_add(ble_protobuf_t * p_protobuf, const ble_protob
         return err_code;
     }
 
-
     return NRF_SUCCESS;
 }
 
-
-ret_code_t ble_protobuf_init(ble_protobuf_t * p_protobuf, const ble_protobuf_init_t * p_protobuf_init)
+ret_code_t ble_protobuf_init(ble_protobuf_t *p_protobuf, const ble_protobuf_init_t *p_protobuf_init)
 {
     if (p_protobuf == NULL || p_protobuf_init == NULL)
     {
@@ -219,7 +216,7 @@ ret_code_t ble_protobuf_init(ble_protobuf_t * p_protobuf, const ble_protobuf_ini
     ble_uuid128_t base_uuid = {PROTOBUF_UUID_BASE};
 
     // Initialize service structure
-    p_protobuf->evt_handler               = p_protobuf_init->evt_handler;
+    p_protobuf->evt_handler = p_protobuf_init->evt_handler;
 
     // Add service
     err_code = sd_ble_uuid_vs_add(&base_uuid, &p_protobuf->uuid_type);

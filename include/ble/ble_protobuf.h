@@ -59,20 +59,24 @@
 #ifndef BLE_PROTOBUF_H__
 #define BLE_PROTOBUF_H__
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "ble.h"
 #include "ble_srv_common.h"
 #include "nrf_sdh_ble.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 // UUID for the Service & Char
-#define PROTOBUF_UUID_BASE   {0x72, 0x09, 0x1a, 0xb3, 0x5f, 0xff, 0x4d, 0xf6, \
-                               0x80, 0x62, 0x45, 0x8d, 0x00, 0x00, 0x00, 0x00}
-#define PROTOBUF_UUID_SERVICE     0xf510
+#define PROTOBUF_UUID_BASE                                 \
+    {                                                      \
+        0x72, 0x09, 0x1a, 0xb3, 0x5f, 0xff, 0x4d, 0xf6,    \
+            0x80, 0x62, 0x45, 0x8d, 0x00, 0x00, 0x00, 0x00 \
+    }
+#define PROTOBUF_UUID_SERVICE 0xf510
 #define PROTOBUF_UUID_CONFIG_CHAR (PROTOBUF_UUID_SERVICE + 1)
 
 /**@brief Macro for defining a ble_protobuf instance.
@@ -82,52 +86,51 @@ extern "C" {
  */
 #define BLE_PROTOBUF_DEF(_name)                          \
     static ble_protobuf_t _name;                         \
-    NRF_SDH_BLE_OBSERVER(_name ## _obs,             \
+    NRF_SDH_BLE_OBSERVER(_name##_obs,                    \
                          BLE_PROTOBUF_BLE_OBSERVER_PRIO, \
                          ble_protobuf_on_ble_evt,        \
                          &_name)
 
-/**@brief Protobuf Service event type. */
-typedef enum
-{
-    BLE_PROTOBUF_EVT_NOTIFICATION_ENABLED, /**< Battery value notification enabled event. */
-    BLE_PROTOBUF_EVT_NOTIFICATION_DISABLED /**< Battery value notification disabled event. */
-} ble_protobuf_evt_type_t;
+    /**@brief Protobuf Service event type. */
+    typedef enum
+    {
+        BLE_PROTOBUF_EVT_NOTIFICATION_ENABLED, /**< Battery value notification enabled event. */
+        BLE_PROTOBUF_EVT_NOTIFICATION_DISABLED /**< Battery value notification disabled event. */
+    } ble_protobuf_evt_type_t;
 
-/**@brief Protobuf Service event. */
-typedef struct
-{
-    ble_protobuf_evt_type_t evt_type;    /**< Type of event. */
-    uint16_t           conn_handle; /**< Connection handle. */
-} ble_protobuf_evt_t;
+    /**@brief Protobuf Service event. */
+    typedef struct
+    {
+        ble_protobuf_evt_type_t evt_type; /**< Type of event. */
+        uint16_t conn_handle;             /**< Connection handle. */
+    } ble_protobuf_evt_t;
 
-// Forward declaration of the ble_protobuf_t type.
-typedef struct ble_protobuf_s ble_protobuf_t;
+    // Forward declaration of the ble_protobuf_t type.
+    typedef struct ble_protobuf_s ble_protobuf_t;
 
-/**@brief Protobuf Service event handler type. */
-typedef void (* ble_protobuf_evt_handler_t) (ble_protobuf_t * p_protobuf, ble_protobuf_evt_t * p_evt);
+    /**@brief Protobuf Service event handler type. */
+    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, ble_protobuf_evt_t *p_evt);
 
-/**@brief Protobuf Service init structure. This contains all options and data needed for
+    /**@brief Protobuf Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
-typedef struct
-{
-    ble_protobuf_evt_handler_t  evt_handler;                    /**< Event handler to be called for handling events in the Protobuf Service. */
-    security_req_t         bl_rd_sec;                      /**< Security requirement for reading the BL characteristic value. */
-    security_req_t         bl_cccd_wr_sec;                 /**< Security requirement for writing the BL characteristic CCCD. */
-    security_req_t         bl_wr_sec;                      /**< Security requirement for writing the BL characteristic value */
-} ble_protobuf_init_t;
+    typedef struct
+    {
+        ble_protobuf_evt_handler_t evt_handler; /**< Event handler to be called for handling events in the Protobuf Service. */
+        security_req_t bl_rd_sec;               /**< Security requirement for reading the BL characteristic value. */
+        security_req_t bl_cccd_wr_sec;          /**< Security requirement for writing the BL characteristic CCCD. */
+        security_req_t bl_wr_sec;               /**< Security requirement for writing the BL characteristic value */
+    } ble_protobuf_init_t;
 
-/**@brief Protobuf Service structure. This contains various status information for the service. */
-struct ble_protobuf_s
-{
-    ble_protobuf_evt_handler_t    evt_handler;               /**< Event handler to be called for handling events in the Protobuf Service. */
-    uint16_t                      service_handle;            /**< Handle of Protobuf Service (as provided by the BLE stack). */
-    ble_gatts_char_handles_t      command_handles;           /**< Handles related to the Command characteristic. */
-    uint8_t                       uuid_type;                 /**< UUID type for the Protobuf Service. */
-};
+    /**@brief Protobuf Service structure. This contains various status information for the service. */
+    struct ble_protobuf_s
+    {
+        ble_protobuf_evt_handler_t evt_handler;   /**< Event handler to be called for handling events in the Protobuf Service. */
+        uint16_t service_handle;                  /**< Handle of Protobuf Service (as provided by the BLE stack). */
+        ble_gatts_char_handles_t command_handles; /**< Handles related to the Command characteristic. */
+        uint8_t uuid_type;                        /**< UUID type for the Protobuf Service. */
+    };
 
-
-/**@brief Function for initializing the Protobuf Service.
+    /**@brief Function for initializing the Protobuf Service.
  *
  * @param[out]  p_protobuf       Protobuf Service structure. This structure will have to be supplied by
  *                          the application. It will be initialized by this function, and will later
@@ -136,10 +139,9 @@ struct ble_protobuf_s
  *
  * @return      NRF_SUCCESS on successful initialization of service, otherwise an error code.
  */
-ret_code_t ble_protobuf_init(ble_protobuf_t * p_protobuf, const ble_protobuf_init_t * p_protobuf_init);
+    ret_code_t ble_protobuf_init(ble_protobuf_t *p_protobuf, const ble_protobuf_init_t *p_protobuf_init);
 
-
-/**@brief Function for handling the Application's BLE Stack events.
+    /**@brief Function for handling the Application's BLE Stack events.
  *
  * @details Handles all events from the BLE stack of interest to the Protobuf Service.
  *
@@ -151,8 +153,7 @@ ret_code_t ble_protobuf_init(ble_protobuf_t * p_protobuf, const ble_protobuf_ini
  * @param[in]   p_ble_evt   Event received from the BLE stack.
  * @param[in]   p_context   Protobuf Service structure.
  */
-void ble_protobuf_on_ble_evt(ble_evt_t const * p_ble_evt, void * p_context);
-
+    void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context);
 
 #ifdef __cplusplus
 }
