@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+// Determine whether this is a command or response.
+enum event_type {
+  command = 0;
+  response = 1;
+}
+
+// Event codes to control the application.
+enum event_code {
+  set_red_led = 0;
+  set_green_led = 1;
+  ret_blue_led = 2;
+}
+
+// Main event that goes over BLE.
+message event {
+  event_type type = 1;
+  event_code code = 2;
+  bytes      data = 3;
+}
