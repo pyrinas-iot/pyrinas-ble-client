@@ -6,7 +6,7 @@ SDK_ROOT := ../_sdk/
 PROJ_DIR := .
 
 include $(PROJ_DIR)/../Makefile.ver
-include $(PROJ_DIR)/../Makefile.pid
+include $(PROJ_DIR)/../Makefile.bid
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := ble_app_buttonless_dfu_gcc_nrf52.ld
