@@ -43,9 +43,9 @@
  * qualification listings, this section of source code must not be modified.
  */
 #include "sdk_common.h"
-#if NRF_MODULE_ENABLED(BLE_PROTOBUF)
+#if NRF_MODULE_ENABLED(BLE_PB)
 #include "ble_conn_state.h"
-#include "ble_protobuf.h"
+#include "ble_pb.h"
 #include "ble_srv_common.h"
 #include "command.pb.h"
 #include "pb_decode.h"
@@ -53,13 +53,13 @@
 #include <string.h>
 
 #define NRF_LOG_MODULE_NAME ble_protobuf
-#if BLE_PROTOBUF_CONFIG_LOG_ENABLED
-#define NRF_LOG_LEVEL BLE_PROTOBUF_CONFIG_LOG_LEVEL
-#define NRF_LOG_INFO_COLOR BLE_PROTOBUF_CONFIG_INFO_COLOR
-#define NRF_LOG_DEBUG_COLOR BLE_PROTOBUF_CONFIG_DEBUG_COLOR
-#else // BLE_PROTOBUF_CONFIG_LOG_ENABLED
+#if BLE_PB_CONFIG_LOG_ENABLED
+#define NRF_LOG_LEVEL BLE_PB_CONFIG_LOG_LEVEL
+#define NRF_LOG_INFO_COLOR BLE_PB_CONFIG_INFO_COLOR
+#define NRF_LOG_DEBUG_COLOR BLE_PB_CONFIG_DEBUG_COLOR
+#else // BLE_PB_CONFIG_LOG_ENABLED
 #define NRF_LOG_LEVEL 0
-#endif // BLE_PROTOBUF_CONFIG_LOG_ENABLED
+#endif // BLE_PB_CONFIG_LOG_ENABLED
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
@@ -99,7 +99,6 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
 
         // Event to the main context
         p_protobuf->evt_handler(p_protobuf, &evt);
-
     }
 }
 
@@ -190,4 +189,4 @@ ret_code_t ble_protobuf_init(ble_protobuf_t *p_protobuf, const ble_protobuf_init
     return err_code;
 }
 
-#endif // NRF_MODULE_ENABLED(BLE_PROTOBUF)
+#endif // NRF_MODULE_ENABLED(BLE_PB)

@@ -51,13 +51,13 @@
  *          NRF_SDH_BLE_OBSERVER macro. Example:
  *          @code
  *              ble_protobuf_t instance;
- *              NRF_SDH_BLE_OBSERVER(anything, BLE_PROTOBUF_BLE_OBSERVER_PRIO,
+ *              NRF_SDH_BLE_OBSERVER(anything, BLE_PB_BLE_OBSERVER_PRIO,
  *                                   ble_protobuf_on_ble_evt, &instance);
  *          @endcode
  *
  */
-#ifndef BLE_PROTOBUF_H__
-#define BLE_PROTOBUF_H__
+#ifndef BLE_PB_H__
+#define BLE_PB_H__
 
 #include "ble.h"
 #include "ble_srv_common.h"
@@ -85,10 +85,10 @@ extern "C"
  * @param   _name  Name of the instance.
  * @hideinitializer
  */
-#define BLE_PROTOBUF_DEF(_name)                          \
+#define BLE_PB_DEF(_name)                          \
     static ble_protobuf_t _name;                         \
     NRF_SDH_BLE_OBSERVER(_name##_obs,                    \
-                         BLE_PROTOBUF_BLE_OBSERVER_PRIO, \
+                         BLE_PB_BLE_OBSERVER_PRIO, \
                          ble_protobuf_on_ble_evt,        \
                          &_name)
 
@@ -146,6 +146,6 @@ extern "C"
 }
 #endif
 
-#endif // BLE_PROTOBUF_H__
+#endif // BLE_PB_H__
 
 /** @} */
