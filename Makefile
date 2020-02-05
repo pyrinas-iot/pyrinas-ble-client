@@ -73,6 +73,7 @@ settings: build
 	$(NRFUTIL) settings generate --family $(BOARD_FAM) --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
 
 build:
+	@rm -rf $(BUILD_DIR)/*
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(BOOTLOADER_DIR) -j
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(MAIN_DIR) -j
 	@mkdir -p $(BUILD_DIR)
@@ -97,12 +98,12 @@ flash_all: merge_all
 
 flash: merge
 	@echo Flashing firmware
-	$(NRFJPROG) -f nrf52 --program $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex --sectorerase -s $(PROG_SERIAL)
+	$(NRFJPROG) -f nrf52 --program $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex --sectoranduicrerase -s $(PROG_SERIAL)
 	$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
 
 flash_softdevice:
 	@echo Flashing softdevice
-	$(NRFJPROG) -f nrf52 --program $(SOFT_DEVICE) --sectorerase -s $(PROG_SERIAL)
+	$(NRFJPROG) -f nrf52 --program $(SOFT_DEVICE) --sectoranduicrerase -s $(PROG_SERIAL)
 	$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
 
 erase:
