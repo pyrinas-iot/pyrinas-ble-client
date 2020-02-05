@@ -64,6 +64,7 @@
 #include "ble_conn_state.h"
 #include "ble_dfu.h"
 #include "ble_hci.h"
+#include "ble_protobuf.h"
 #include "ble_srv_common.h"
 #include "bsp_btn_ble.h"
 #include "fds.h"
@@ -115,6 +116,7 @@
 NRF_BLE_GATT_DEF(m_gatt);           /**< GATT module instance. */
 NRF_BLE_QWR_DEF(m_qwr);             /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising); /**< Advertising module instance. */
+BLE_PROTOBUF_DEF(m_protobuf);       /**< Protobuf module instance. */
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 static void advertising_start(bool erase_bonds);         /**< Forward declaration of advertising start function */
@@ -218,6 +220,13 @@ static void disconnect(uint16_t conn_handle, void *p_context)
     {
         NRF_LOG_DEBUG("Disconnected connection handle %d", conn_handle);
     }
+}
+
+/**@brief Function for forwarding protobuf data from the BLE portion of things
+ */
+void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, protobuf_event_t *p_evt)
+{
+    NRF_LOG_INFO("terp");
 }
 
 // YOUR_JOB: Update this code if you want to do anything given a DFU event (optional).
@@ -397,6 +406,7 @@ static void services_init(void)
     uint32_t err_code;
     nrf_ble_qwr_init_t qwr_init = {0};
     ble_dfu_buttonless_init_t dfus_init = {0};
+    ble_protobuf_init_t protobuf_init = {0};
 
     // Initialize Queued Write Module.
     qwr_init.error_handler = nrf_qwr_error_handler;
@@ -409,29 +419,13 @@ static void services_init(void)
     err_code = ble_dfu_buttonless_init(&dfus_init);
     APP_ERROR_CHECK(err_code);
 
-    /* YOUR_JOB: Add code to initialize the services used by the application.
-       uint32_t                           err_code;
-       ble_xxs_init_t                     xxs_init;
-       ble_yys_init_t                     yys_init;
+    protobuf_init.evt_handler = ble_protobuf_evt_hanlder;
+    protobuf_init.bl_rd_sec = SEC_JUST_WORKS;
+    protobuf_init.bl_cccd_wr_sec = SEC_JUST_WORKS;
+    protobuf_init.bl_wr_sec = SEC_JUST_WORKS;
 
-       // Initialize XXX Service.
-       memset(&xxs_init, 0, sizeof(xxs_init));
-
-       xxs_init.evt_handler                = NULL;
-       xxs_init.is_xxx_notify_supported    = true;
-       xxs_init.ble_xx_initial_value.level = 100;
-
-       err_code = ble_bas_init(&m_xxs, &xxs_init);
-       APP_ERROR_CHECK(err_code);
-
-       // Initialize YYY Service.
-       memset(&yys_init, 0, sizeof(yys_init));
-       yys_init.evt_handler                  = on_yys_evt;
-       yys_init.ble_yy_initial_value.counter = 0;
-
-       err_code = ble_yy_service_init(&yys_init, &yy_init);
-       APP_ERROR_CHECK(err_code);
-     */
+    err_code = ble_protobuf_init(&m_protobuf, &protobuf_init);
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Function for handling the Connection Parameters Module.
