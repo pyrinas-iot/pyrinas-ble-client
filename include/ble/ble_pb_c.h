@@ -95,7 +95,7 @@ extern "C"
     typedef enum
     {
         BLE_PB_C_EVT_DISCOVERY_COMPLETE = 1, /**< Event indicating that the Protobuf Service was discovered at the peer. */
-        BLE_PB_C_EVT_HRM_NOTIFICATION        /**< Event indicating that a notification of the Protobuf characteristic was received from the peer. */
+        BLE_PB_C_EVT_NOTIFICATION            /**< Event indicating that a notification of the Protobuf characteristic was received from the peer. */
     } ble_pb_c_evt_type_t;
 
     /** @} */
@@ -119,7 +119,7 @@ extern "C"
         uint16_t conn_handle;         /**< Connection handle on which the Protobuf service was discovered on the peer device..*/
         union {
             pb_db_t peer_db;     /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
-            protobuf_event_t pb; /**< Protobuf received. This is filled if the evt_type is @ref BLE_PB_C_EVT_HRM_NOTIFICATION. */
+            protobuf_event_t pb; /**< Protobuf received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
         } params;
     } ble_pb_c_evt_t;
 

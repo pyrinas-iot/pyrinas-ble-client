@@ -38,6 +38,7 @@
  *
  */
 #include "ble_m.h"
+#include "ble_advdata.h"
 #include "ble_db_discovery.h"
 #include "ble_pb_c.h"
 #include "fds.h"
@@ -141,7 +142,6 @@ void scan_start(void)
  */
 static void on_adv_report(ble_gap_evt_adv_report_t const *p_adv_report)
 {
-    ret_code_t err_code;
     uint8_t *p_adv_data;
     uint16_t data_len;
     uint16_t field_len;
@@ -347,8 +347,7 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_pb_c_evt)
             NRF_LOG_DEBUG("Heart Rate Service discovered ");
             break;
 
-        case BLE_PB_C_EVT_HRM_NOTIFICATION:
-            NRF_LOG_INFO("Heart Rate = %d", p_pb_c_evt->params.hrm.hr_value);
+        case BLE_PB_C_EVT_NOTIFICATION:
             m_pb_notif_enabled = true;
             break;
 

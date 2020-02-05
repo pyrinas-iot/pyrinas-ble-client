@@ -100,42 +100,12 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
     if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->peer_pb_db.pb_handle)
     {
         ble_pb_c_evt_t ble_pb_c_evt;
-        uint32_t index = 0;
 
-        ble_pb_c_evt.evt_type = BLE_PB_C_EVT_HRM_NOTIFICATION;
+        ble_pb_c_evt.evt_type = BLE_PB_C_EVT_NOTIFICATION;
         ble_pb_c_evt.conn_handle = p_ble_pb_c->conn_handle;
-        ble_pb_c_evt.params.pb.rr_intervals_cnt = 0;
 
-        if (!(p_ble_evt->evt.gattc_evt.params.hvx.data[index++] & HRM_FLAG_MASK_HR_16BIT))
-        {
-            // 8-bit heart rate value received.
-            ble_pb_c_evt.params.pb.hr_value = p_ble_evt->evt.gattc_evt.params.hvx.data[index++]; //lint !e415 suppress Lint Warning 415: Likely access out of bond
-        }
-        else
-        {
-            // 16-bit heart rate value received.
-            ble_pb_c_evt.params.pb.hr_value =
-                uint16_decode(&(p_ble_evt->evt.gattc_evt.params.hvx.data[index]));
-            index += sizeof(uint16_t);
-        }
+        // TODO: fill this in
 
-        if ((p_ble_evt->evt.gattc_evt.params.hvx.data[0] & HRM_FLAG_MASK_HR_RR_INT))
-        {
-            uint32_t i;
-            /*lint --e{415} --e{416} --e{662} --e{661} -save suppress Warning 415: possible access out of bond */
-            for (i = 0; i < BLE_PB_C_RR_INTERVALS_MAX_CNT; i++)
-            {
-                if (index >= p_ble_evt->evt.gattc_evt.params.hvx.len)
-                {
-                    break;
-                }
-                ble_pb_c_evt.params.pb.rr_intervals[i] =
-                    uint16_decode(&(p_ble_evt->evt.gattc_evt.params.hvx.data[index]));
-                index += sizeof(uint16_t);
-            }
-            /*lint -restore*/
-            ble_pb_c_evt.params.pb.rr_intervals_cnt = (uint8_t)i;
-        }
         p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt);
     }
 }
