@@ -13,10 +13,14 @@ BIN_DIR         := ./bin
 SOURCE_DIR      := ./src
 INCLUDE_DIR     := ./include
 EXTERNAL_DIR    := ./external
+PROTO_DIR       := ./proto
 
 SETTINGS        := settings
 BL_SETTINGS     := bl_settings
 BL_SETTINGS_SD  := bl_settings_sd
+
+NANOPB_DIR      := $(EXTERNAL_DIR)/nanopb
+NANOPB_GEN      := $(NANOPB_DIR)/generator/nanopb_generator.py
 
 #############################################
 # TODO: Change these to match your settings
@@ -162,6 +166,22 @@ toolchain:
 	fi;
 	@echo Removing temporary files.
 	@rm -rf $(GCC_ARCHIVE)
+
+%.pb: %.proto
+	protoc -I$(PROTO_DIR) --go_out=$(PROTO_DIR) $<
+	protoc -I$(PROTO_DIR) -o$*.pb $<
+	@$(NANOPB_GEN) -I$(PROTO_DIR) $@
+	pbjs -t static-module -p$(PROTO_DIR) $*.proto > $@.js
+	@mkdir -p $(SOURCE_DIR)/proto
+	@mkdir -p $(INCLUDE_DIR)/proto
+	# @mv $*.pb.c $(SOURCE_DIR)/proto
+	# @mv $*.pb.h $(INCLUDE_DIR)/proto
+
+protobuf: protoclean $(PROTO_PB)
+	@echo building the protocol buffers $(PROTO_PB)
+
+protoclean:
+	@rm -fr $(PROTO_DIR)/*.pb
 
 sdk_clean:
 		@echo SDK Clean..
