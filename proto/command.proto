@@ -14,7 +14,7 @@ enum event_code {
 }
 
 // Main event that goes over BLE.
-message event {
+message protobuf_event_t {
   event_type type = 1;
   event_code code = 2;
   bytes      data = 3;
