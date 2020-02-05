@@ -6,16 +6,11 @@ enum event_type {
   response = 1;
 }
 
-// Event codes to control the application.
-enum event_code {
-  set_red_led = 0;
-  set_green_led = 1;
-  ret_blue_led = 2;
-}
-
 // Main event that goes over BLE.
+// TODO: flush out the need for a specific address
 message protobuf_event_t {
   event_type type = 1;
-  event_code code = 2;
+  bytes      name = 2;
   bytes      data = 3;
+  bytes      addr = 4;
 }
