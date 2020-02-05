@@ -47,6 +47,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
+  $(SDK_ROOT)/components/libraries/queue/nrf_queue.c \
+  $(SDK_ROOT)/components/libraries/ecc/ecc.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
@@ -73,6 +75,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/peer_manager/id_manager.c \
   $(SDK_ROOT)/components/ble/nrf_ble_gatt/nrf_ble_gatt.c \
   $(SDK_ROOT)/components/ble/nrf_ble_qwr/nrf_ble_qwr.c \
+  $(SDK_ROOT)/components/ble/nrf_ble_gq/nrf_ble_gq.c \
+  $(SDK_ROOT)/components/ble/nrf_ble_scan/nrf_ble_scan.c \
   $(SDK_ROOT)/components/ble/peer_manager/peer_data_storage.c \
   $(SDK_ROOT)/components/ble/peer_manager/peer_database.c \
   $(SDK_ROOT)/components/ble/peer_manager/peer_id.c \
@@ -81,6 +85,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/ble/peer_manager/pm_buffer.c \
   $(SDK_ROOT)/components/ble/peer_manager/security_dispatcher.c \
   $(SDK_ROOT)/components/ble/peer_manager/security_manager.c \
+  $(SDK_ROOT)/components/ble/ble_db_discovery/ble_db_discovery.c \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu.c \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu_bonded.c \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu/ble_dfu_unbonded.c \
@@ -91,7 +96,11 @@ SRC_FILES += \
   $(PROJ_DIR)/../external/nanopb/pb_encode.c \
   $(PROJ_DIR)/../external/nanopb/pb_decode.c \
   $(PROJ_DIR)/../src/proto/command.pb.c \
-  $(PROJ_DIR)/../src/ble/ble_protobuf.c \
+  $(PROJ_DIR)/../src/ble/ble_m.c \
+  $(PROJ_DIR)/../src/ble/ble_pb.c \
+  $(PROJ_DIR)/../src/ble/ble_pb_c.c \
+  $(PROJ_DIR)/../src/buttons_m.c \
+  $(PROJ_DIR)/../src/pm_m.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -109,6 +118,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/util \
   $(PROJ_DIR)/config \
   $(SDK_ROOT)/components/ble/common \
+  $(SDK_ROOT)/components/libraries/ecc \
   $(SDK_ROOT)/components/libraries/balloc \
   $(SDK_ROOT)/components/ble/peer_manager \
   $(SDK_ROOT)/components/libraries/ringbuf \
@@ -116,10 +126,15 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/bsp \
   $(SDK_ROOT)/components/libraries/timer \
   $(SDK_ROOT)/external/segger_rtt \
+  $(SDK_ROOT)/external/micro-ecc/micro-ecc \
   $(SDK_ROOT)/components/libraries/log \
   $(SDK_ROOT)/components/ble/nrf_ble_gatt \
   $(SDK_ROOT)/components/ble/nrf_ble_qwr \
+  $(SDK_ROOT)/components/ble/nrf_ble_gq \
+  $(SDK_ROOT)/components/ble/nrf_ble_scan \
+  $(SDK_ROOT)/components/ble/ble_db_discovery \
   $(SDK_ROOT)/components/libraries/button \
+  $(SDK_ROOT)/components/libraries/queue \
   $(SDK_ROOT)/components/libraries/bootloader \
   $(SDK_ROOT)/components/libraries/fstorage \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \

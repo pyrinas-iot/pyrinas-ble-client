@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
- * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
@@ -38,71 +37,23 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "app_timer.h"
-#include "ble_m.h"
-#include "buttons_m.h"
-#include "pm_m.h"
-#include <stdint.h>
-#include <stdio.h>
-
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
-#include "nrf_pwr_mgmt.h"
-
-/**@brief Function for initializing nrf logger.
- */
-static void logs_init()
-{
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(err_code);
-
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
-
-/**@brief Function for initializing application timer.
- */
-static void timer_init()
-{
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-}
-
-/**@brief   Function for application main entry.
+/**@brief     Application buttons module.
  *
- * @details Initializes BLE and NFC stacks and runs NFC Forum device task.
+ * @details   This module contains functions used
+ *            by the application to set up and manage
+ *            buttons events.
  */
-int main(void)
-{
-    logs_init();
-    timer_init();
-    buttons_init();
-    ble_stack_init();
-    peer_manager_init(false);
 
-    NRF_LOG_INFO("Scaffolding started.");
+#ifndef BUTTONS_M_H__
+#define BUTTONS_M_H__
 
-    while (true)
-    {
-        if (NRF_LOG_PROCESS() == false)
-        {
-            nrf_pwr_mgmt_run();
-        }
-    }
-}
+#include <stdbool.h>
 
-/**@brief Function to handle asserts in the SoftDevice.
+/**@brief   Function for initializing device buttons.
  *
- * @details This function will be called in case of an assert in the SoftDevice.
- *
- * @warning This handler is an example only and does not fit a final product. You need to analyze
- *          how your product is supposed to react in case of Assert.
- * @warning On assert from the SoftDevice, the system can only recover on reset.
- *
- * @param[in] line_num     Line number of the failing ASSERT call.
- * @param[in] p_file_name  File name of the failing ASSERT call.
+ * @details Buttons are configured to generate key press events
+ *          handled by bsp_event_handler() function.
  */
-void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
-{
-    app_error_handler(0xDEADBEEF, line_num, p_file_name);
-}
+void buttons_init(void);
+
+#endif // BUTTONS_M_H__

@@ -1,6 +1,5 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
- * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
@@ -38,71 +37,51 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "app_timer.h"
-#include "ble_m.h"
-#include "buttons_m.h"
-#include "pm_m.h"
+
+/**@brief     Application BLE module.
+ *
+ * @details   This module contains most of the functions used
+ *            by the application to manage BLE stack events
+ *            and BLE connections.
+ */
+
+#ifndef BLE_M_H__
+#define BLE_M_H__
+
 #include <stdint.h>
-#include <stdio.h>
+#include <stdbool.h>
 
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
-#include "nrf_pwr_mgmt.h"
 
-/**@brief Function for initializing nrf logger.
+/**@brief Function for terminating connection with a BLE peripheral device.
  */
-static void logs_init()
-{
-    ret_code_t err_code = NRF_LOG_INIT(NULL);
-    APP_ERROR_CHECK(err_code);
+void ble_disconnect(void);
 
-    NRF_LOG_DEFAULT_BACKENDS_INIT();
-}
 
-/**@brief Function for initializing application timer.
+/**@brief Function for initializing the BLE stack.
+ *
+ * @details Initializes the SoftDevice and the BLE event interrupts.
  */
-static void timer_init()
-{
-    ret_code_t err_code = app_timer_init();
-    APP_ERROR_CHECK(err_code);
-}
+void ble_stack_init(void);
 
-/**@brief   Function for application main entry.
- *
- * @details Initializes BLE and NFC stacks and runs NFC Forum device task.
+
+/**@brief Function for starting the scanning.
  */
-int main(void)
-{
-    logs_init();
-    timer_init();
-    buttons_init();
-    ble_stack_init();
-    peer_manager_init(false);
+void scan_start(void);
 
-    NRF_LOG_INFO("Scaffolding started.");
 
-    while (true)
-    {
-        if (NRF_LOG_PROCESS() == false)
-        {
-            nrf_pwr_mgmt_run();
-        }
-    }
-}
-
-/**@brief Function to handle asserts in the SoftDevice.
+/**@brief Function for checking the connection state.
  *
- * @details This function will be called in case of an assert in the SoftDevice.
- *
- * @warning This handler is an example only and does not fit a final product. You need to analyze
- *          how your product is supposed to react in case of Assert.
- * @warning On assert from the SoftDevice, the system can only recover on reset.
- *
- * @param[in] line_num     Line number of the failing ASSERT call.
- * @param[in] p_file_name  File name of the failing ASSERT call.
+ * @retval true     If peripheral device is connected.
+ * @retval false    If peripheral device is not connected.
  */
-void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name)
-{
-    app_error_handler(0xDEADBEEF, line_num, p_file_name);
-}
+bool ble_is_connected(void);
+
+
+/**@brief Function for obtaining connection handle.
+ *
+ * @return Returns connection handle.
+ */
+uint16_t ble_get_conn_handle(void);
+
+
+#endif // BLE_M_H__
