@@ -34,6 +34,11 @@ include Makefile.ver
 include Makefile.bid
 include Makefile.modes
 
+msg = Building app in $(MODE_DESC) mode for $(BOARD_DESC).
+$(info )
+$(info $(msg))
+$(info )
+
 # Cert for DFU
 DFU_CERT 				:= private.pem
 
