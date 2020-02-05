@@ -14,11 +14,17 @@ _toolchain
 *.pyc
 *.tar.bz2
 
-#Eclipse
+# Eclipse
 .project
 .cproject
 .settings*
 /Debug/
 
-#Vscode
+# Vscode
 .vscode
+
+# Protobuf related
+proto/*.c
+proto/*.go
+proto/*.h
+proto/*.js
