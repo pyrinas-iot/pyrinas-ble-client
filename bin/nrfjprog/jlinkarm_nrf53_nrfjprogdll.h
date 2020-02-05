@@ -36,8 +36,8 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef JLINKARM_NRF52_NRFJPROGDLL_H
-#define JLINKARM_NRF52_NRFJPROGDLL_H
+#ifndef JLINKARM_NRF53_NRFJPROGDLL_H
+#define JLINKARM_NRF53_NRFJPROGDLL_H
 
 
 #include <stdint.h>
@@ -55,7 +55,6 @@ typedef void msg_callback(const char * msg_str);
 /* Logger  callback that also passes back a context handle, so one thread can handle multiple dll instances. */
 typedef void msg_callback_ex(const char * msg_str, void * param);
 #endif
-
 
 /**
  * @brief   Returns the JLinkARM DLL version.
@@ -91,13 +90,13 @@ nrfjprogdll_err_t NRFJPROG_is_dll_open(bool * opened);
 
 
 /**
- * @brief   Opens the JLinkARM DLL and sets the log callback. Prepares the dll for work with an nRF52 device.
+ * @brief   Opens the JLinkARM DLL and sets the log callback. Prepares the dll for work with an nRF53 device.
  *
  * @details This function opens the JLinkARM DLL using the received path. The path should include the name of the DLL
  *          itself (i.e. "JLinkARM.dll"). Only JLinkARM DLLs whose versions are greater than a minimum version will be
  *          accepted. The minimum version for the JLinkARM DLL is defined in MIN_JLINK_MAJOR_VERSION and
  *          MIN_JLINK_MINOR_VERSION defines. The log callback may be NULL. In that case no logging mechanism is provided.
- *          The msg_callback typedef is defined elsewhere in this file. To close the dll, see NRFJPROG_close_dll() function.
+ *          The msg_callback typedef is defined elsewhere in this file. To close the dll, see NRFJPROG_close() function.
  *
  * @pre     Before the execution of this function, the dll must not be open. To close the dll, see NRFJPROG_close_dll() function.
  *
@@ -211,7 +210,7 @@ nrfjprogdll_err_t NRFJPROG_enum_emu_com(const uint32_t serial_number, com_port_i
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  INVALID_PARAMETER                   The serial_numbers parameter is NULL but serial_numbers_len is > 0.
  *                                              The num_available parameter is NULL.
- * @retval  OUT_OF_MEMORY                       Memory could not be allocated for the operation.
+ * @retval  OUT_OF_MEMORY                       Could not allocate buffer for reading serial numbers.
  */
 nrfjprogdll_err_t NRFJPROG_enum_emu_snr(uint32_t serial_numbers[], uint32_t serial_numbers_len, uint32_t * num_available);
 
@@ -287,22 +286,6 @@ nrfjprogdll_err_t NRFJPROG_connect_to_emu_without_snr(uint32_t clock_speed_in_kh
 
 
 /**
- * @brief   Reads the serial number of the emulator connected to.
- *
- * @details Reads the serial number of the emulator connected to.
- *
- * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
- * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- *
- * @retval  SUCCESS
- * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
- *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  INVALID_PARAMETER                   The serial_number pointer is NULL.
- */
-nrfjprogdll_err_t NRFJPROG_read_connected_emu_snr(uint32_t * serial_number);
-
-
-/**
  * @brief   Attempts to reset the connected J-Link OB.
  *
  * @details Resets and reconnects to the J-Link OB.
@@ -348,6 +331,22 @@ nrfjprogdll_err_t NRFJPROG_replace_connected_emu_fw(void);
 
 
 /**
+ * @brief   Reads the serial number of the emulator connected to.
+ *
+ * @details Reads the serial number of the emulator connected to.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
+ * @retval  INVALID_PARAMETER                   The serial_number pointer is NULL.
+ */
+nrfjprogdll_err_t NRFJPROG_read_connected_emu_snr(uint32_t * serial_number);
+
+
+/**
  * @brief   Reads the firmware identification string of the emulator connected to.
  *
  * @details This function reads the firmware identification string of the emulator connected to into the
@@ -366,7 +365,7 @@ nrfjprogdll_err_t NRFJPROG_replace_connected_emu_fw(void);
  *                                              NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() has not been called.
  * @retval  INVALID_PARAMETER                   The character buffer pointer is a NULL-pointer.
  */
-nrfjprogdll_err_t NRFJPROG_read_connected_emu_fwstr(char * buffer, uint32_t buffer_size);
+nrfjprogdll_err_t NRFJPROG_read_connected_emu_fwstr(char * buffer, uint32_t buffer_size);;
 
 
 /**
@@ -391,32 +390,95 @@ nrfjprogdll_err_t NRFJPROG_disconnect_from_emu(void);
 
 
 /**
- * @brief   Operation not available for devices of NRF52 family.
+ * @brief   Checks if the coprocessor is enabled.
  *
- * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
+ * @details Checks if the coprocessor is enabled by reading the the network power interface in CP_APPLICATION.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
+ *
+ * @param   is_coprocessor_enabled              Pointer of the location to store the result.
+ * @param   coprocessor                         The targeted coprocessor.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
+ * @retval  INVALID_PARAMETER                   The is_coprocessor_enabled is NULL.
+ *                                              The coprocessor is not a valid coprocessor.
+ * @retval  UNAVAILABLE_BECAUSE_PROTECTION      The Application coprocessor is readback protected, making the POWER.LTEMODEM registers unavailable.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_is_coprocessor_enabled(coprocessor_t coprocessor, bool * is_coprocessor_enabled);
 
+
 /**
- * @brief   Writes one uint32_t data into the given address in the FICR.
+ * @brief   Enables the coprocessor.
  *
- * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
+ * @details Enables the coprocessor by writing the network power interface in CP_APPLICATION.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
+ *
+ * @param   coprocessor                         The targeted coprocessor.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
+ *                                              The coprocessor is not a valid coprocessor.
+ * @retval  UNAVAILABLE_BECAUSE_PROTECTION      The Application coprocessor is readback protected, making the POWER.LTEMODEM registers unavailable.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_enable_coprocessor(coprocessor_t coprocessor);
 
 
 /**
- * @brief   Operation not available for devices of NRF52 family.
+ * @brief   Disables the coprocessor.
  *
- * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
+ * @details Disables the coprocessor by writing the network power interface in CP_APPLICATION.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
+ *
+ * @param   coprocessor                         The targeted coprocessor.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
+ *                                              The coprocessor is not a valid coprocessor.
+ * @retval  UNAVAILABLE_BECAUSE_PROTECTION      The Application coprocessor is readback protected, making the POWER.LTEMODEM registers unavailable.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_disable_coprocessor(coprocessor_t coprocessor);
 
 
 /**
- * @brief   Operation not available for devices of NRF52 family.
+ * @brief   Selects which coprocessor to connect to.
  *
- * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
+ * @details Selects which coprocessor for the NRFJPROG_connect_to_device() function. If the target coprocessor is not the applicaton core, it checks if the coprocessor is enabled, and fail if that is not the case.
+ *          If application coprocessor is readback protected, the function still attempts to select the target coprocessor. This may fail in a later function call if the coprocessor is disabled.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
+ *
+ * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
+ *
+ * @param   coprocessor                         The targeted coprocessor.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                           The NRFJPROG_open_dll() function has not been called.
+ *                                                      The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
+ *                                                      The NRFJPROG_connect_to_device() function has already been called.
+ * @retval  INVALID_PARAMETER                           The coprocessor is not one belonging to a coprocessor of the device.
+ *                                                      The coprocessor is not a valid coprocessor.
+ * @retval  NOT_AVAILABLE_BECAUSE_COPROCESSOR_DISABLED  The coprocessor selected belongs to a coprocessor that is disabled.
+ * @retval  JLINKARM_DLL_ERROR                          The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_select_coprocessor(coprocessor_t coprocessor);
 
@@ -425,26 +487,23 @@ nrfjprogdll_err_t NRFJPROG_select_coprocessor(coprocessor_t coprocessor);
  * @brief   Recovers the device.
  *
  * @details This operation attempts to recover the device and leave it as it was when it left Nordic factory. It will attempt to
- *          connect, erase all user available flash, halt and eliminate any protection. Note that this operation may take up to 30 s
- *          if the device was readback protected. Note as well that this function only affects flash and CPU, but does not reset or 
- *          stop any peripheral or oscillator source. The operation will therefore leave the watchdog still operational.
+ *          connect, erase all user available flash, halt and eliminate any protection.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  * @post    After the execution of this function, all device RAM will be powered. To unpower the device RAM, see NRFJPROG_unpower_ram_section() function.
  * @post    After the execution of this function, the device code and UICR flash will be erased.
- * @post    After the execution of this function, if the device was readback protected, the device RAM will be erased.
- * @post    After the execution of this function, if the device was readback protected, the device will no longer be readback protected.
- * @post    After the execution of this function, the POWER.RESETREAS register will be cleared.
  *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  RECOVER_FAILED                      Recover failed for any reason, including that the wrong family was used in the NRFJPROG_open_dll() function.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
+ * @retval  NVMC_ERROR                          Flash operation failed.
+ * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
  */
 nrfjprogdll_err_t NRFJPROG_recover(void);
 
@@ -476,7 +535,7 @@ nrfjprogdll_err_t NRFJPROG_is_connected_to_device(bool * is_emu_connected_to_dev
  * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the trace and debug resources will be switched on. To switch off the debug resources, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @retval  SUCCESS
@@ -486,7 +545,6 @@ nrfjprogdll_err_t NRFJPROG_is_connected_to_device(bool * is_emu_connected_to_dev
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_connect_to_device(void);
 
@@ -512,12 +570,12 @@ nrfjprogdll_err_t NRFJPROG_connect_to_device(void);
 nrfjprogdll_err_t NRFJPROG_disconnect_from_device(void);
 
 
+
 /**
  * @brief   Protects the device against read or debug.
  *
- * @details Protects the device against read or debug by writing into UICR.RBPCONF and resetting. The function will reset
- *          with a debug reset after execution. The only protection level allowed for nRF52 devices is "ALL". Only devices
- *          with CTRL-AP can readback protect, so nRF52 Engineering sample A devices are excluded.
+ * @details Protects the device against read or debug by enabling APPROTECT and resetting. The function will reset
+ *          with a debug reset after execution. For nRF53 devices, the only protection levels allowed are "ALL", and "SECURE".
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
@@ -533,13 +591,11 @@ nrfjprogdll_err_t NRFJPROG_disconnect_from_device(void);
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  * @retval  INVALID_PARAMETER                   The desired_protection is NONE, REGION_0 or BOTH.
- *                                              The desired_protection cannot be encoded in readback_protection_status_t.
  * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
  * @retval  NVMC_ERROR                          Flash operation failed.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_readback_protect(readback_protection_status_t desired_protection);
 
@@ -566,13 +622,9 @@ nrfjprogdll_err_t NRFJPROG_readback_status(readback_protection_status_t * status
 
 
 /**
- * @brief   Since region 0 cannot be configured in NRF52 devices, returns 0 size and NO_REGION_0 source.
- *
- * @param   size                                Pointer for storing of region 0 protection size.
- * @param   source                              Pointer for storing of region 0 protection source.
+ * @brief   Since region 0 cannot be configured in NRF53 devices, returns 0 size and NO_REGION_0 source.
  *
  * @retval  SUCCESS
- * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  * @retval  INVALID_PARAMETER                   The size pointer is NULL.
  *                                              The source pointer is NULL.
  */
@@ -595,7 +647,6 @@ nrfjprogdll_err_t NRFJPROG_read_region_0_size_and_source(uint32_t * size, region
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
- * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
  */
 nrfjprogdll_err_t NRFJPROG_debug_reset(void);
 
@@ -610,7 +661,7 @@ nrfjprogdll_err_t NRFJPROG_debug_reset(void);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -619,7 +670,6 @@ nrfjprogdll_err_t NRFJPROG_debug_reset(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_sys_reset(void);
 
@@ -649,26 +699,25 @@ nrfjprogdll_err_t NRFJPROG_pin_reset(void);
 
 
 /**
- * @brief   Disables BPROT.
+ * @brief   Disables memory block protection.
  *
- * @details Disables BPROT by writing into register BPROT.DISABLEINDEBUG or ACL by writing into register ACL.ACLINDEBUG where appropriate depending on device.
- *          The method then halts the target device and performs a system reset to clear any block protection settings.
+ * @details Disables SPU protection mechanisms by halting the target device and performing a sys reset. The device is left halted to prevent the target device from initializing the SPU again.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  * @post    After the execution of this function, if UICR->APPROTECT was written, readback protection may be enabled. If so, the function will fail with NOT_AVAILABLE_BECAUSE_PROTECTION.
  *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
- * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection, or the operation triggered readback protection.
+ * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection, or the operation triggered the readback protection mechanism.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
  */
 nrfjprogdll_err_t NRFJPROG_disable_bprot(void);
@@ -677,8 +726,8 @@ nrfjprogdll_err_t NRFJPROG_disable_bprot(void);
 /**
  * @brief   Detects if memory block protection is enabled.
  *
- * @details Checks target device BPROT or ACL configuration, and returns bprot_enabled = true if the address range address_start to address_start + length overlaps a region with write restrictions.
- *          If the range address_start -> address_start + length falls outside code flash, BPROT and ACL protection is assumed disabled for the part that falls outside flash memory.
+ * @details Checks target device SPU configuration, and returns bprot_enabled = true if the address range address_start to address_start + length overlaps a FLASHREGION with write restrictions.
+ *          If the range address_start -> address_start + length falls outside code flash, spu protection is assumed disabled for the part that falls outside flash memory.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
@@ -697,7 +746,7 @@ nrfjprogdll_err_t NRFJPROG_disable_bprot(void);
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  * @retval  INVALID_PARAMETER                   The bprot_enabled parameter is a NULL pointer.
  *                                              The length parameter is 0.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
@@ -716,7 +765,7 @@ nrfjprogdll_err_t NRFJPROG_is_bprot_enabled(bool * bprot_enabled, uint32_t addre
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -726,7 +775,6 @@ nrfjprogdll_err_t NRFJPROG_is_bprot_enabled(bool * bprot_enabled, uint32_t addre
  * @retval  NVMC_ERROR                          Flash operation failed.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_erase_all(void);
 
@@ -734,7 +782,7 @@ nrfjprogdll_err_t NRFJPROG_erase_all(void);
 /**
  * @brief   Erases a page of code flash.
  *
- * @details Erases a page of code flash containing the addr. Note that NRFJPROG_erase_page() will not disable BPROT if enabled while in debug
+ * @details Erases a page of code flash beginning at the addr. Note that NRFJPROG_erase_page() will not disable BPROT if enabled while in debug
  *          interface mode. See NRFJPROG_disable_bprot() funtion to disable BPROT while in debug interface mode.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
@@ -742,7 +790,7 @@ nrfjprogdll_err_t NRFJPROG_erase_all(void);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   addr                                Address of the code flash page to erase.
@@ -752,10 +800,9 @@ nrfjprogdll_err_t NRFJPROG_erase_all(void);
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NVMC_ERROR                          Flash operation failed.
- * @retval  NOT_AVAILABLE_BECAUSE_BPROT         The page is not erasable because it is configured as write protected by the BPROT or ACL modules. Call NRFJPROG_disable_bprot() to allow the page to be erased.
+ * @retval  NOT_AVAILABLE_BECAUSE_BPROT         The page is not erasable because it is configured as write protected by the SPU or ACL modules. Call NRFJPROG_disable_bprot() to allow the page to be erased.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_erase_page(uint32_t addr);
 
@@ -770,7 +817,7 @@ nrfjprogdll_err_t NRFJPROG_erase_page(uint32_t addr);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -780,7 +827,6 @@ nrfjprogdll_err_t NRFJPROG_erase_page(uint32_t addr);
  * @retval  NVMC_ERROR                          Flash operation failed.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_erase_uicr(void);
 
@@ -797,7 +843,7 @@ nrfjprogdll_err_t NRFJPROG_erase_uicr(void);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   addr                                Address to write to.
@@ -813,7 +859,6 @@ nrfjprogdll_err_t NRFJPROG_erase_uicr(void);
  * @retval  NVMC_ERROR                          Flash operation failed.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_write_u32(uint32_t addr, uint32_t data, bool nvmc_control);
 
@@ -829,7 +874,7 @@ nrfjprogdll_err_t NRFJPROG_write_u32(uint32_t addr, uint32_t data, bool nvmc_con
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   addr                                Address to read from.
@@ -844,7 +889,6 @@ nrfjprogdll_err_t NRFJPROG_write_u32(uint32_t addr, uint32_t data, bool nvmc_con
  *                                              The address to read is in unpowered RAM.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_read_u32(uint32_t addr, uint32_t * data);
 
@@ -853,17 +897,15 @@ nrfjprogdll_err_t NRFJPROG_read_u32(uint32_t addr, uint32_t * data);
  * @brief   Writes data from the array into the device starting at the given address.
  *
  * @details Writes data_len bytes from the data array into the device starting at the given addr without verifying that the address is accessible
- *          or even exists. If nvmc_control is true, it will control the NVMC in order to write into flash. Writing addr does not need to be 32-bit 
- *          aligned. Writing length data_len does not need to be a multiple of four, but please note that the number of writes to a flash word between 
- *          erases is limited (see nWRITE parameter in the Product Specification for your device) so data_len less than four bytes should be avoided
- *          if possible. Note that if the target address is in unpowered RAM, the operation will fail.
+ *          or even exists. If nvmc_control is true, it will control the NVMC in order to write into flash. Writes need
+ *          to be 32-bit aligned. Note that if the target address is in unpowered RAM, the operation will fail.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   addr                                Start address of the region to write to.
@@ -874,15 +916,14 @@ nrfjprogdll_err_t NRFJPROG_read_u32(uint32_t addr, uint32_t * data);
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  INVALID_PARAMETER                   The data_len parameter is 0.
+ * @retval  INVALID_PARAMETER                   The addr parameter is not 32-bit aligned.
+ *                                              The data_len parameter is 0.
  *                                              The data parameter is NULL.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  *                                              The address to write is in unpowered RAM.
- * @retval  OUT_OF_MEMORY                       Memory could not be allocated for the operation.
  * @retval  NVMC_ERROR                          Flash operation failed.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_write(uint32_t addr, const uint8_t * data, uint32_t data_len, bool nvmc_control);
 
@@ -898,7 +939,7 @@ nrfjprogdll_err_t NRFJPROG_write(uint32_t addr, const uint8_t * data, uint32_t d
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   addr                                Address to read from.
@@ -911,12 +952,12 @@ nrfjprogdll_err_t NRFJPROG_write(uint32_t addr, const uint8_t * data, uint32_t d
  * @retval  INVALID_PARAMETER                   The data parameter is null.
  *                                              The data_len parameter is 0.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
- *                                              The address to read is in unpowered RAM.
+ *                                              The address to write is in unpowered RAM.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_read(uint32_t addr, uint8_t * data, uint32_t data_len);
+    
 
 
 /**
@@ -929,7 +970,7 @@ nrfjprogdll_err_t NRFJPROG_read(uint32_t addr, uint8_t * data, uint32_t data_len
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @param   is_device_halted                    Pointer of the location to store the result.
  *
@@ -940,7 +981,6 @@ nrfjprogdll_err_t NRFJPROG_read(uint32_t addr, uint8_t * data, uint32_t data_len
  * @retval  INVALID_PARAMETER                   The is_device_halted pointer is NULL.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_is_halted(bool * is_device_halted);
 
@@ -955,7 +995,7 @@ nrfjprogdll_err_t NRFJPROG_is_halted(bool * is_device_halted);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -964,7 +1004,6 @@ nrfjprogdll_err_t NRFJPROG_is_halted(bool * is_device_halted);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_halt(void);
 
@@ -981,7 +1020,7 @@ nrfjprogdll_err_t NRFJPROG_halt(void);
  * @during  During the execution of this function, the device CPU is halted. If the function execution fails, the device CPU might be left halted.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be running. To halt the device CPU, see NRFJPROG_halt() function.
  *
  * @param   pc                                  Program Counter to start running from.
@@ -993,7 +1032,6 @@ nrfjprogdll_err_t NRFJPROG_halt(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_run(uint32_t pc, uint32_t sp);
 
@@ -1008,7 +1046,7 @@ nrfjprogdll_err_t NRFJPROG_run(uint32_t pc, uint32_t sp);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be running. To halt the device CPU, see NRFJPROG_halt() function.
  *
  * @retval  SUCCESS
@@ -1017,7 +1055,6 @@ nrfjprogdll_err_t NRFJPROG_run(uint32_t pc, uint32_t sp);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_go(void);
 
@@ -1033,7 +1070,7 @@ nrfjprogdll_err_t NRFJPROG_go(void);
  * @pre     Before the execution of this function, the device CPU must be halted. To halt the device CPU, see NRFJPROG_halt() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -1043,7 +1080,6 @@ nrfjprogdll_err_t NRFJPROG_go(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_step(void);
 
@@ -1069,7 +1105,7 @@ nrfjprogdll_err_t NRFJPROG_step(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  */
 nrfjprogdll_err_t NRFJPROG_read_ram_sections_count(uint32_t * ram_sections_count);
 
@@ -1098,7 +1134,7 @@ nrfjprogdll_err_t NRFJPROG_read_ram_sections_count(uint32_t * ram_sections_count
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  */
 nrfjprogdll_err_t NRFJPROG_read_ram_sections_size(uint32_t * ram_sections_size, uint32_t ram_sections_size_len);
 
@@ -1107,8 +1143,6 @@ nrfjprogdll_err_t NRFJPROG_read_ram_sections_size(uint32_t * ram_sections_size, 
  * @brief   Reads the RAM sections power status.
  *
  * @details Reads the RAM sections power status and returns the result, on or off for each section, in ram_sections_power_status array.
- *          If the device is an NRF52832 ENGA, please note that the RAM sections power status mapping is wrong, see 
- *          Errata-65 from the errata document for nRF52832 devices.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
@@ -1128,7 +1162,7 @@ nrfjprogdll_err_t NRFJPROG_read_ram_sections_size(uint32_t * ram_sections_size, 
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  */
 nrfjprogdll_err_t NRFJPROG_read_ram_sections_power_status(ram_section_power_status_t * ram_sections_power_status, uint32_t ram_sections_power_status_len);
 
@@ -1137,40 +1171,13 @@ nrfjprogdll_err_t NRFJPROG_read_ram_sections_power_status(ram_section_power_stat
  * @brief   DEPRECATED. Please use NRFJPROG_read_ram_sections_power_status(), NRFJPROG_read_ram_sections_size() or NRFJPROG_read_ram_sections_count() functions instead.
  *
  * @details This function is DEPRECATED and replaced by NRFJPROG_read_ram_sections_power_status(), NRFJPROG_read_ram_sections_count() and NRFJPROG_read_ram_sections_size() functions.
- *          The function is functional for all versions of nRF52832 and nRF52810 devices, but should not be used as it will be removed in a future major release of the DLL.
- *
- *          Reads the RAM power status. Will read the status of the RAM sections and return if they are either on or off.
- *          Parameter ram_sections_number is used by the dll to indicate how many of the ram_sections_power_status are
- *          used to store results. Parameter ram_sections_size is used to report the size of those RAM sections. As a special
- *          use case, if ram_sections_power_status_array_size is 0, the dll will report the size and number of RAM power
- *          sections, but will not populate ram_sections_power_status array. If the device is an NRF52832 ENGA, please
- *          note that the RAM sections power status mapping is wrong, see Errata-65 from the errata document for nRF52832 devices.
- *
- * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
- * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
- *
- * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
- * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
- *
+ * 
  * @param   ram_sections_power_status               Array to store the results.
  * @param   ram_sections_power_status_array_size    Size of ram_sections_power_status array.
  * @param   ram_sections_number                     Pointer of the location to store the number of RAM sections in the device.
  * @param   ram_sections_size                       Pointer of the location to store the size of RAM sections in the device.
  *
- * @retval  SUCCESS
- * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
- *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  INVALID_PARAMETER                   The ram_sections_power_status pointer is NULL and ram_sections_power_status_array_size is different than 0.
- *                                              The ram_sections_size pointer is NULL.
- *                                              The ram_sections_number pointer is NULL.
- *                                              The ram_sections_power_status_array_size is not 0 but is less than the number of RAM power sections in the device.
- * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
- * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
- * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
- * @retval  INVALID_DEVICE_FOR_OPERATION        This API function is deprecated for the device in use.
+ * @retval  INVALID_DEVICE_FOR_OPERATION            This function is deprecated, and therefore not implemented for this device.
  */
 nrfjprogdll_err_t NRFJPROG_is_ram_powered(ram_section_power_status_t * ram_sections_power_status, uint32_t ram_sections_power_status_array_size, uint32_t * ram_sections_number, uint32_t * ram_sections_size);
 
@@ -1185,7 +1192,7 @@ nrfjprogdll_err_t NRFJPROG_is_ram_powered(ram_section_power_status_t * ram_secti
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @retval  SUCCESS
@@ -1194,7 +1201,6 @@ nrfjprogdll_err_t NRFJPROG_is_ram_powered(ram_section_power_status_t * ram_secti
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_power_ram_all(void);
 
@@ -1202,16 +1208,14 @@ nrfjprogdll_err_t NRFJPROG_power_ram_all(void);
 /**
  * @brief   Powers down a RAM section of the device.
  *
- * @details Powers down a RAM section of the device in ON state. Will not affect the RAM retention. If the device is an
- *          NRF52832 ENGA, please note that the RAM sections power status mapping is wrong, see Errata-65 from the errata
- *          document for nRF52 devices. The use of this function is therefore discouraged.
+ * @details Powers down a RAM section of the device in ON state. Will not affect the RAM retention.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   section_index                       Section of RAM to power down.
@@ -1223,7 +1227,6 @@ nrfjprogdll_err_t NRFJPROG_power_ram_all(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_unpower_ram_section(uint32_t section_index);
 
@@ -1238,7 +1241,7 @@ nrfjprogdll_err_t NRFJPROG_unpower_ram_section(uint32_t section_index);
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   register_name                       Register name to read. See cpu_registers_t definition for valid values.
@@ -1252,7 +1255,6 @@ nrfjprogdll_err_t NRFJPROG_unpower_ram_section(uint32_t section_index);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_read_cpu_register(cpu_registers_t register_name, uint32_t * register_value);
 
@@ -1267,7 +1269,7 @@ nrfjprogdll_err_t NRFJPROG_read_cpu_register(cpu_registers_t register_name, uint
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   register_name                       CPU register to write. See cpu_registers_t definition for valid values.
@@ -1280,7 +1282,6 @@ nrfjprogdll_err_t NRFJPROG_read_cpu_register(cpu_registers_t register_name, uint
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  */
 nrfjprogdll_err_t NRFJPROG_write_cpu_register(cpu_registers_t register_name, uint32_t register_value);
 
@@ -1288,16 +1289,14 @@ nrfjprogdll_err_t NRFJPROG_write_cpu_register(cpu_registers_t register_name, uin
 /**
  * @brief   Reads the version of the device connected to the emulator.
  *
- * @details Reads the version of the device connected to the emulator. If the device is not an NRF52 device version parameter will be set to UNKNOWN and WRONG_FAMILY_FOR_DEVICE error returned.
- *          If the device in use is a newer revision of a known NRF52 device, but this revision is not known at compile time of this dll, the appropriate device _FUTURE will be returned instead.
- *          See DllCommonDefinitions.h header file for the possible values of x. Consider updating to a newer version of tools.
+ * @details Reads the version of the device connected to the emulator.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   version                             Pointer of the location to store the device type.
@@ -1306,7 +1305,7 @@ nrfjprogdll_err_t NRFJPROG_write_cpu_register(cpu_registers_t register_name, uin
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  * @retval  INVALID_PARAMETER                   The version parameter is null.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
@@ -1317,34 +1316,30 @@ nrfjprogdll_err_t NRFJPROG_read_device_version(device_version_t * version);
 /**
  * @brief   Reads the version, name, memory and revision descriptors of the device connected to the emulator.
  *
- * @details Reads the version, name, memory and revision descriptors of the device connected to the emulator. If the device is not an NRF52 device version, name, memory and revision parameters will be set to UNKNOWN, UNKNOWN_NAME, UNKNOWN_MEM and UNKNOWN_REV and WRONG_FAMILY_FOR_DEVICE error is returned.
- *          If the device in use is a newer revision of a known NRF52 device, but this revision is not known at compile time of this dll, device revision will be set to FUTURE.
- *          See DllCommonDefinitions.h header file for the possible values of x. Consider updating to a newer version of tools.
- *          If a NULL-pointer is passed as an argument, that parameter is not updated.
+ * @details Reads the version, name, memory and revision descriptors of the device connected to the emulator.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, access port protection must be disabled. To disable access port protection, see NRFJPROG_recover() function.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  * @post    After the execution of this function, the device CPU will be halted. To unhalt the device CPU, see NRFJPROG_pin_reset(), NRFJPROG_debug_reset(),  NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @param   version                             Pointer of the location to store the device version.
  * @param   name                                Pointer of the location to store the device name.
  * @param   memory                              Pointer of the location to store the device memory.
  * @param   revision                            Pointer of the location to store the device revision.
- * 
  *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
  */
-nrfjprogdll_err_t NRFJPROG_read_device_info(device_version_t * version, device_name_t * name, device_memory_t * memory, device_revision_t * revision);
+nrfjprogdll_err_t NRFJPROG_read_device_info(device_version_t * version, device_name_t * name, device_memory_t * memory, device_revision_t * device_revision);
 
 
 /**
@@ -1362,7 +1357,6 @@ nrfjprogdll_err_t NRFJPROG_read_device_family(device_family_t * family);
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @param   reg_addr                            Register address to read, either in debug port or access port.
  * @param   data                                Pointer of the location to store the value read.
@@ -1370,7 +1364,6 @@ nrfjprogdll_err_t NRFJPROG_read_device_family(device_family_t * family);
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- *                                              The NRFJPROG_connect_to_device() function has already been called.
  * @retval  INVALID_PARAMETER                   The data parameter is null.
  *                                              The register address is not 32-bit aligned.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
@@ -1385,7 +1378,6 @@ nrfjprogdll_err_t NRFJPROG_read_debug_port_register(uint8_t reg_addr, uint32_t *
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @param   reg_addr                            Register address to write, either in debug port or access port.
  * @param   data                                Data to write into the register.
@@ -1393,7 +1385,6 @@ nrfjprogdll_err_t NRFJPROG_read_debug_port_register(uint8_t reg_addr, uint32_t *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- *                                              The NRFJPROG_connect_to_device() function has already been called.
  * @retval  INVALID_PARAMETER                   The data parameter is null.
  *                                              The register address is not 32-bit aligned.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
@@ -1408,7 +1399,6 @@ nrfjprogdll_err_t NRFJPROG_write_debug_port_register(uint8_t reg_addr, uint32_t 
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
@@ -1419,7 +1409,6 @@ nrfjprogdll_err_t NRFJPROG_write_debug_port_register(uint8_t reg_addr, uint32_t 
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- *                                              The NRFJPROG_connect_to_device() function has already been called.
  * @retval  INVALID_PARAMETER                   The data parameter is null.
  *                                              The register address is not 32-bit aligned.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
@@ -1434,7 +1423,6 @@ nrfjprogdll_err_t NRFJPROG_read_access_port_register(uint8_t ap_index, uint8_t r
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
- * @pre     Before the execution of this function, the emulator must not be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
@@ -1445,7 +1433,6 @@ nrfjprogdll_err_t NRFJPROG_read_access_port_register(uint8_t ap_index, uint8_t r
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- *                                              The NRFJPROG_connect_to_device() function has already been called.
  * @retval  INVALID_PARAMETER                   The data parameter is null.
  *                                              The register address is not 32-bit aligned.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
@@ -1501,13 +1488,12 @@ nrfjprogdll_err_t NRFJPROG_rtt_set_control_block_address(uint32_t address);
  * @pre     Before the execution of this function, the RTT control block must be present in RAM. Normally it is the firmware execution that writes the control block into RAM. To run the firmware, see NRFJPROG_go() and NRFJPROG_run() functions.
  *
  * @post    After the execution of this function, the device will be in debug interface mode. To exit debug interface mode, see NRFJPROG_pin_reset(), NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
- * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu(), NRFJPROG_close_dll() and NRFJPROG_disconnect_from_device() functions.
+ * @post    After the execution of this function, the emulator will be connected to the device. To disconnect from the device, see NRFJPROG_disconnect_from_emu() and NRFJPROG_close_dll() functions.
  *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  *                                              The NRFJPROG_rtt_start() function has already been called.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
@@ -1544,7 +1530,6 @@ nrfjprogdll_err_t NRFJPROG_rtt_is_control_block_found(bool * is_control_block_fo
  * @details Stops RTT and clears the RTT Control Buffer.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
- * @pre     Before the execution of this function, the RTT must be started. To start the RTT, see NRFJPROG_rtt_start() function.
  * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  * @pre     Before the execution of this function, a connection to the device must be established. To establish a connection, see NRFJPROG_connect_to_device() and NRFJPROG_rtt_start() functions.
  *
@@ -1553,8 +1538,6 @@ nrfjprogdll_err_t NRFJPROG_rtt_is_control_block_found(bool * is_control_block_fo
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- *                                              There is no connection between the emulator and the device.
- *                                              The NRFJPROG_rtt_start() function has not been called.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_rtt_stop(void);
@@ -1695,7 +1678,8 @@ nrfjprogdll_err_t NRFJPROG_is_qspi_init(bool * initialized);
  * @details Initializes the QSPI peripheral, configuring the QSPI peripheral according to init_params. If retain_ram is true, the device RAM used for QSPI operations will be read and stored.
  *          The stored contents will be restored after the execution of NRFJPROG_qspi_uninit() function. NRFJPROG_qspi_init() function does not initialize the external flash memory device in
  *          any way. If the external flash device requires special configuration for the QSPI configuration given by init_params, it is up to the user to do so with the help of NRFJPROG_qspi_custom()
- *          function. Note that for certain external flash memory devices some operation modes are not available, so use the available options with care. 
+ *          function. Note that for certain external flash memory devices some operation modes are not available, so use the available options with care. NRFJPROG_qspi_init() function currently 
+ *          supports a limited range of configurations. The only supported memory device at the moment is the MX25R6435F. It will be extended in the future on request.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, the QSPI must not be initialized. To uninitialize the QSPI, see NRFJPROG_qspi_uninit() function.
@@ -1717,7 +1701,7 @@ nrfjprogdll_err_t NRFJPROG_is_qspi_init(bool * initialized);
  *                                              The init_params->read_mode parameter cannot be encoded in a qspi_read_mode_t. 
  *                                              The init_params->write_mode parameter cannot be encoded in a qspi_write_mode_t. 
  *                                              The init_params->frequency parameter cannot be encoded in a qspi_frequency_t. 
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
@@ -1743,7 +1727,7 @@ nrfjprogdll_err_t NRFJPROG_qspi_init(bool retain_ram, const qspi_init_params_t *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
- * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF52.
+ * @retval  WRONG_FAMILY_FOR_DEVICE             The device connected is not an NRF53 device.
  * @retval  INVALID_DEVICE_FOR_OPERATION        The version of the connected device does not support this operation.
  * @retval  NOT_AVAILABLE_BECAUSE_PROTECTION    The operation is not available due to readback protection.
  * @retval  CANNOT_CONNECT                      It is impossible to connect to any nRF device.
@@ -1821,7 +1805,7 @@ nrfjprogdll_err_t NRFJPROG_qspi_write(uint32_t addr, const uint8_t * data, uint3
  *
  * @details Erases length bytes from addr address of the external QSPI-connected memory. The given addr must be aligned to the desired erase length. Please note that some erase operations
  *          take a long time with certain external flash devices, so this operation might take minutes, specially with a full erase. Note that for certain external flash memory devices some
- *          erase lengths are not supported, please consult your datasheet and use the available options with care.
+ *          erase lengths are not supported, so use the available options with care.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, the QSPI must be initialized. To initialize the QSPI, see NRFJPROG_qspi_init() function.
@@ -1841,7 +1825,6 @@ nrfjprogdll_err_t NRFJPROG_qspi_write(uint32_t addr, const uint8_t * data, uint3
  * @retval  INVALID_PARAMETER                   The length parameter cannot be encoded in a qspi_erase_len_t. 
  *                                              The addr parameter is greater than 0x00FFFFFFul when QSPI is configured to work with 24-bit addresses.
  *                                              The addr parameter is not aligned to erase length.
- * @retval  OUT_OF_MEMORY                       Memory could not be allocated for the operation.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_qspi_erase(uint32_t addr, qspi_erase_len_t length);
@@ -1850,9 +1833,9 @@ nrfjprogdll_err_t NRFJPROG_qspi_erase(uint32_t addr, qspi_erase_len_t length);
 /**
  * @brief   Sends a custom instruction to the external QSPI-connected memory.
  *
- * @details Sends the custom instruction with instruction_code code and instruction_length length to the external QSPI-connected memory.
- *          If data_in parameter is NULL, 0x00 will be sent as data in the custom instruction. The data_out parameter can be NULL.
- *          If more than 8 bytes of data is sent, it will start a long frame qspi operation if available in the device. 
+ * @details Sends the custom instruction with instruction_code code and instruction_length length to the external QSPI-connected memory. Up to 8 bytes can be sent to the external memory through 
+ *          the use of data_in parameter. If data_in parameter is NULL, 0x00 will be sent as data in the custom instruction. Up to 8 bytes of data received from the external memory can be 
+ *          obtained by the use of data_out parameter. The data_out parameter can be NULL.
  *
  * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
  * @pre     Before the execution of this function, the QSPI must be initialized. To initialize the QSPI, see NRFJPROG_qspi_init() function.
@@ -1863,24 +1846,23 @@ nrfjprogdll_err_t NRFJPROG_qspi_erase(uint32_t addr, qspi_erase_len_t length);
  *
  * @param   instruction_code                    Instruction code of the custom instruction.
  * @param   instruction_length                  Length of the custom instruction.
- * @param   data_in                             Pointer to data to send in the custom instruction. Can be NULL if no data is desired to be sent, where 0x00 will be used if needed.
- * @param   data_out                            Pointer to data to write the data received during the custom instruction. Can be NULL if no data is desired.
+ * @param   data_in                             Pointer to 8 bytes of data to send in the custom instruction. Can be NULL if no data is desired to be sent, where 0x00 will be used if needed. If given, 8 bytes will be read.
+ * @param   data_out                            Pointer to 8 bytes of data to write the data received during the custom instruction. Can be NULL if no data is desired. If given, 8 bytes will be written.
  *
  * @retval  SUCCESS
  * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
  *                                              The NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() function has not been called.
  *                                              There is no connection between the emulator and the device.
  *                                              The NRFJPROG_qspi_init() function has not been called.
- * @retval  OUT_OF_MEMORY                       Memory could not be allocated for the operation.
- * @retval  INVALID_DEVICE_FOR_OPERATION        The instruction_length parameter is larger than 9 for a device that does not support long frame operations.
  * @retval  INVALID_PARAMETER                   The instruction_length parameter is equal to 0.
+ *                                              The instruction_length parameter is greater than 9.
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
-nrfjprogdll_err_t NRFJPROG_qspi_custom(uint8_t instruction_code, uint32_t instruction_length, const uint8_t * data_in, uint8_t * data_out);
+nrfjprogdll_err_t NRFJPROG_qspi_custom(uint8_t instruction_code, uint8_t instruction_length, const uint8_t * data_in, uint8_t * data_out);
 
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif  /* JLINKARM_NRF52_NRFJPROGDLL_H */
+#endif  /* JLINKARM_NRF53_NRFJPROGDLL_H */

@@ -1,3 +1,41 @@
+/*
+ * Copyright (c) 2010 - 2018, Nordic Semiconductor ASA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #ifndef JLINKARM_UNKNOWN_NRFJPROGDLL_H
 #define JLINKARM_UNKNOWN_NRFJPROGDLL_H
 
@@ -12,6 +50,11 @@ extern "C" {
 
 /* Expected log function prototype for logging operations. */
 typedef void msg_callback(const char * msg_str);
+
+#if colored(Internal)
+/* Logger  callback that also passes back a context handle, so one thread can handle multiple dll instances. */
+typedef void msg_callback_ex(const char * msg_str, void * param);
+#endif
 
 
 /**
@@ -48,7 +91,7 @@ nrfjprogdll_err_t NRFJPROG_is_dll_open(bool * opened);
 
 
 /**
- * @brief   Opens the JLinkARM DLL and sets the log callback. Prepares the dll for work with an nRF52 device.
+ * @brief   Opens the JLinkARM DLL and sets the log callback. Prepares the dll for work with an nRF device.
  *
  * @details This function opens the JLinkARM DLL using the received path. The path should include the name of the DLL
  *          itself (i.e. "JLinkARM.dll"). Only JLinkARM DLLs whose versions are greater than a minimum version will be
@@ -76,6 +119,38 @@ nrfjprogdll_err_t NRFJPROG_is_dll_open(bool * opened);
 nrfjprogdll_err_t NRFJPROG_open_dll(const char * jlink_path, msg_callback * cb, device_family_t family);
 
 
+#if colored(Internal)
+/**
+ * @brief   Opens the JLinkARM DLL and sets the log callback. Prepares the dll for work with an nRF device.
+ *
+ * @details This function opens the JLinkARM DLL using the received path. The path should include the name of the DLL
+ *          itself (i.e. "JLinkARM.dll"). Only JLinkARM DLLs whose versions are greater than a minimum version will be
+ *          accepted. The minimum version for the JLinkARM DLL is defined in MIN_JLINK_MAJOR_VERSION and
+ *          MIN_JLINK_MINOR_VERSION defines. The log callback may be NULL. In that case no logging mechanism is provided.
+ *          The msg_callback typedef is defined elsewhere in this file. To close the dll, see NRFJPROG_close_dll() function.
+ *
+ * @pre     Before the execution of this function, the dll must not be open. To close the dll, see NRFJPROG_close_dll() function.
+ *
+ * @post    After the execution of this function, the JLINKARM DLL pointers will be loaded and some memory reserved. To unload the pointers and free the memory, see NRFJPROG_close_dll() function.
+ *
+ * @param   jlink_path                          Path to the JLinkARM DLL.
+ * @param   family                              Defines the device family the next commands are going to be called to.
+ * @param   callback                            Callback for reporting informational and error messages.
+ * @param   param                               Pointer passed back as an argument in every call to callback. Can be used to identify the calling dll instance.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has already been called.
+ * @retval  INVALID_PARAMETER                   The jlink_path is NULL.
+ *                                              The provided device family is not supported by this DLL.
+ * @retval  JLINKARM_DLL_TOO_OLD                The version of JLinkARM is lower than the minimum version required.
+ * @retval  JLINKARM_DLL_NOT_FOUND              The jlink_path did not yield a usable DLL.
+ * @retval  JLINKARM_DLL_COULD_NOT_BE_OPENED    An error occurred while opening the JLinkARM DLL.
+ *                                              A required function could not be loaded from the DLL.
+ */
+nrfjprogdll_err_t NRFJPROG_open_dll_tagged_callback(const char * jlink_path, device_family_t family, msg_callback_ex * callback, void * param);
+
+
+#endif
 /**
  * @brief   Closes and frees the JLinkARM DLL.
  *
@@ -87,6 +162,28 @@ nrfjprogdll_err_t NRFJPROG_open_dll(const char * jlink_path, msg_callback * cb, 
  * @post    After the execution of this function, the PC will be disconnected from an emulator. To connect to an emulator, see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
  */
 void NRFJPROG_close_dll(void);
+
+
+/**
+ * @brief   Enumerates all comports connected to a given Segger debug probe
+ *
+ * @details This function finds all com ports hosted by a given debug probe.
+ *          The number of com ports found is written into the num_com_ports parameter. It also copies
+ *          up to com_ports_len com_port_info_t objects into the com_ports array parameter.
+ *
+ * @param   serial_number                       Serial number of the debug probe to find the com port of.
+ * @param   com_ports                           Array in which to store the enumerated com ports.
+ * @param   com_ports_len                       Number of com_port_info_t values that can be stored in the
+ *                                              com_ports array.
+ * @param   num_com_ports                       The number of com ports that were discovered.
+ *
+ * @retval  SUCCESS
+ * @retval  INTERNAL_ERROR                      An internal error has occured.
+ * @retval  INVALID_PARAMETER                   The com_ports parameter is NULL.
+ *                                              The com_ports_len parameter is 0.
+ *                                              The num_available parameter is NULL.
+**/
+nrfjprogdll_err_t NRFJPROG_enum_emu_com(uint32_t serial_number, com_port_info_t com_ports[], uint32_t com_ports_len, uint32_t * num_com_ports);
 
 
 /**
@@ -110,7 +207,7 @@ void NRFJPROG_close_dll(void);
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  * @retval  INVALID_PARAMETER                   The serial_numbers parameter is NULL but serial_numbers_len is > 0.
  *                                              The num_available parameter is NULL.
- * @retval  OUT_OF_MEMORY                       Could not allocate buffer for reading serial numbers.
+ * @retval  OUT_OF_MEMORY                       Memory could not be allocated for the operation.
  */
 nrfjprogdll_err_t NRFJPROG_enum_emu_snr(uint32_t serial_numbers[], uint32_t serial_numbers_len, uint32_t * num_available);
 
@@ -186,6 +283,51 @@ nrfjprogdll_err_t NRFJPROG_connect_to_emu_without_snr(uint32_t clock_speed_in_kh
 
 
 /**
+ * @brief   Attempts to reset the connected J-Link OB.
+ *
+ * @details Resets and reconnects to the J-Link OB.
+            This operation is only available in debug probes of type J-Link OB-SAM3U128-V2-NordicSemi.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection,
+ *          see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @post    After the execution of this function, the PC will still be connected to the emulator.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() has not been called.
+ * @retval  INVALID_DEVICE_FOR_OPERATION        The connected debug probe does not support the ResetJLink command.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error, check log for details.
+ * @retval  EMULATOR_NOT_CONNECTED              The emulator did not successfully reenumerate within 10s after the reset.
+ */
+nrfjprogdll_err_t NRFJPROG_reset_connected_emu(void);
+
+
+/**
+ * @brief   Replaces the firmware on the connected J-Link debug probe.
+ *
+ * @details Replaces the firmware on the selected debug probe.
+ *          The debug probe firmware is replaced with the fw version that shipped with the J-Link DLL selected in open_dll()
+ *          even if a newer version is already present.
+ *
+ * @pre     Before the execution of this function, the dll must be open. To open the dll, see NRFJPROG_open_dll() function.
+ * @pre     Before the execution of this function, a connection to the emulator must be established. To establish a connection,
+ *          see NRFJPROG_connect_to_emu_with_snr() and NRFJPROG_connect_to_emu_without_snr() functions.
+ *
+ * @post    After the execution of this function, the debug probe will have been reset.
+ * @post    After the execution of this function, the PC will still be connected to the emulator.
+ *
+ * @retval  SUCCESS
+ * @retval  INVALID_OPERATION                   The NRFJPROG_open_dll() function has not been called.
+ *                                              NRFJPROG_connect_to_emu_with_snr() or NRFJPROG_connect_to_emu_without_snr() has not been called.
+ * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error, check log for details.
+ * @retval  EMULATOR_NOT_CONNECTED              The emulator did not successfully reenumerate within 10s after the reset.
+ */
+nrfjprogdll_err_t NRFJPROG_replace_connected_emu_fw(void);
+
+
+/**
  * @brief   Reads the serial number of the emulator connected to.
  *
  * @details Reads the serial number of the emulator connected to.
@@ -240,6 +382,38 @@ nrfjprogdll_err_t NRFJPROG_read_connected_emu_fwstr(char * buffer, uint32_t buff
  * @retval  JLINKARM_DLL_ERROR                  The JLinkARM DLL function returned an error.
  */
 nrfjprogdll_err_t NRFJPROG_disconnect_from_emu(void);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_is_coprocessor_enabled(coprocessor_t coprocessor, bool * is_coprocessor_enabled);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_enable_coprocessor(coprocessor_t coprocessor);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_disable_coprocessor(coprocessor_t coprocessor);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_select_coprocessor(coprocessor_t coprocessor);
 
 
 /**
@@ -328,6 +502,14 @@ nrfjprogdll_err_t NRFJPROG_pin_reset(void);
  * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
  */
 nrfjprogdll_err_t NRFJPROG_disable_bprot(void);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_is_bprot_enabled(bool * bprot_enabled, uint32_t address_start, uint32_t length);
 
 
 /**
@@ -496,6 +678,14 @@ nrfjprogdll_err_t NRFJPROG_write_cpu_register(cpu_registers_t register_name, uin
  * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
  */
 nrfjprogdll_err_t NRFJPROG_read_device_version(device_version_t * version);
+
+
+/**
+ * @brief   Operation not available without a known family.
+ *
+ * @retval  INVALID_OPERATION                   This function cannot be executed without a known family.
+ */
+nrfjprogdll_err_t NRFJPROG_read_device_info(device_version_t * version, device_name_t * name, device_memory_t * memory, device_revision_t * revision);
 
 
 /**

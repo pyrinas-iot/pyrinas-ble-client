@@ -1,4 +1,45 @@
-Release x.x.x
+Release 10.4.0
+Changelog
+---------------------------------------
+- (OSXRelease) Installing fails for nrf command line tools on macos due to postinstall script lacking execute permissions. Fixed.
+
+Release 10.3.0
+Changelog
+---------------------------------------
+- No changes, updated to synchronize with nRFTools.
+
+Release 10.2.2
+Changelog
+---------------------------------------
+- No changes, updated to synchronize with nRFTools.
+
+Release 10.1.1
+Changelog
+---------------------------------------
+- No changes, updated to synchronize with nRFTools.
+
+Release 10.1.0
+Changelog
+---------------------------------------
+- (LinuxRelease) Released Zip files used to have long internal folder structures. Fixed.
+
+- (OSXRelease) Released Zip files used to have long internal folder structures. Fixed.
+
+Release 10.0.0
+Changelog
+---------------------------------------
+- (LinuxRelease) Initial release of Linux .deb package.
+- (LinuxRelease) Bundle LICENSE file in zip, tar.gz, and .deb deliveries.
+
+- (OSXRelease) Initial release of OS X .dmg and .pkg packages.
+- (OSXRelease) Bundle LICENSE file in tar, .dmg, and .pkg deliveries.
+
+- (WindowsRelease) Install license file in installation folder.
+
+- (mergehex.exe) Change license to Nordic 5-Clause. See attached license file for new license agreement.
+- (mergehex.exe) Add license heading to mergehex.h header file.
+
+Release 9.8.0
 Changelog
 ---------------------------------------
 - (WindowsRelease) Release 64-bit Windows installer for nRF5x-Command-Line-Tools.

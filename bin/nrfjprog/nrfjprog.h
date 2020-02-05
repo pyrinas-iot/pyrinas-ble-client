@@ -1,12 +1,39 @@
-/* Copyright (c) 2009 Nordic Semiconductor. All Rights Reserved.
+/*
+ * Copyright (c) 2010 - 2018, Nordic Semiconductor ASA
+ * All rights reserved.
  *
- * The information contained herein is property of Nordic Semiconductor ASA.
- * Terms and conditions of usage are described in detail in NORDIC
- * SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
  *
- * Licensees are granted free, non-transferable use of the information. NO
- * WARRANTY of ANY KIND is provided. This heading must NOT be removed from
- * the file.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
  
 #ifndef NRFJPROG_H
@@ -14,9 +41,9 @@
 
 #include "DllCommonDefinitions.h"
 
-#define major_version (9) 
-#define minor_version (8) 
-#define micro_version (1) 
+#define major_version (10) 
+#define minor_version (5) 
+#define micro_version (0) 
 
 
  enum NrfjprogErrorCodesType {
@@ -58,8 +85,10 @@
     JLinkARMDllInvalidError                         = 31,               // Dll found does not seem a valid dll.
     JLinkARMDllFailedToOpenError                    = 32,               // Dll could not be opened.
     JLinkARMDllError                                = 33,               // Dll reported error.
-    JLinkARMDllTooOldError                          = 34,               // Dll is too old for functionality. Install a newer version of JLinkARM.dll
+    JLinkARMDllTooOldError                          = 34,               // Dll is too old for functionality. Install a newer version of JLinkARM.dll                                     
+    UnavailableOperationBecauseCoprocessorDisabled  = 36,               // Operation is not able to be executed because of the selected coprocessor is disabled.
     UnavailableOperationBecauseTrustZone            = 37,               // The address area attempted to be accessed is unavailable because of TrustZone set up.
+    UnavailableOperationBecauseBPROT                = 38,               // The address area attempted to be accessed is unavailable because of memory block protection (ie. MPU, BPROT, ACL, or SPU) setup.
                                                                         
     /* Emulator errors */                                               
     InvalidSerialNumberError                        = 40,               // Serial number provided is not among those connected.
@@ -80,6 +109,7 @@
     NoReadPermissionError                           = 60,               // Unable to open file for read.
     NoExternalMemoryConfiguredError                 = 61,               // A QSPI operation is attempted without an external memory configured.
     RecoverFailed                                   = 62,               // Recovery failed.
+    InternalError                                   = 63,               // An unexpected internal error occured.
                                                                         
     /* QSPI ini parsing. */                                             
     NrfjprogQspiIniNotFoundError                    = 70,               // Unable to find QspiDefault.ini file in the installation directory or given with option --qspiini.
