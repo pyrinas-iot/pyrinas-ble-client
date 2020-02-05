@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
@@ -46,20 +47,20 @@
  *
  */
 
-#include <stdint.h>
+#include "app_error.h"
+#include "app_error_weak.h"
 #include "boards.h"
-#include "nrf_mbr.h"
 #include "nrf_bootloader.h"
 #include "nrf_bootloader_app_start.h"
 #include "nrf_bootloader_dfu_timers.h"
+#include "nrf_bootloader_info.h"
+#include "nrf_delay.h"
 #include "nrf_dfu.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
-#include "app_error.h"
-#include "app_error_weak.h"
-#include "nrf_bootloader_info.h"
-#include "nrf_delay.h"
+#include "nrf_mbr.h"
+#include <stdint.h>
 
 static void on_error(void)
 {
@@ -75,20 +76,17 @@ static void on_error(void)
     NVIC_SystemReset();
 }
 
-
-void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t * p_file_name)
+void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t *p_file_name)
 {
     NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
     on_error();
 }
-
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
     NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
     on_error();
 }
-
 
 void app_error_handler_bare(uint32_t error_code)
 {
@@ -122,7 +120,6 @@ static void dfu_observer(nrf_dfu_evt_type_t evt_type)
     }
 }
 
-
 /**@brief Function for application main entry. */
 int main(void)
 {
@@ -137,7 +134,7 @@ int main(void)
     ret_val = nrf_bootloader_flash_protect(BOOTLOADER_START_ADDR, BOOTLOADER_SIZE, false);
     APP_ERROR_CHECK(ret_val);
 
-    (void) NRF_LOG_INIT(nrf_bootloader_dfu_timer_counter_get);
+    (void)NRF_LOG_INIT(nrf_bootloader_dfu_timer_counter_get);
     NRF_LOG_DEFAULT_BACKENDS_INIT();
 
     NRF_LOG_INFO("Inside main");

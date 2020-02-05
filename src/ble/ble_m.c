@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
@@ -420,6 +421,8 @@ static void scan_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+// TODO: callback to main context
+// TODO: configure as "server" mode or "client" mode
 void ble_stack_init(void)
 {
     ret_code_t err_code;
@@ -445,4 +448,8 @@ void ble_stack_init(void)
     db_discovery_init();
     pb_c_init();
     scan_init();
+
+    // TODO: also configure advertising.
+
+    // TODO: services_init is also back
 }

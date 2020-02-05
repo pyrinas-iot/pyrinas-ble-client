@@ -17,6 +17,7 @@
 #define BLE_PB_CONFIG_DEBUG_COLOR 3
 
 // Security Configuration
+// TODO: update these for best security
 #define SEC_PARAM_BOND 1                               /**< Perform bonding. */
 #define SEC_PARAM_MITM 0                               /**< Man In The Middle protection not required. */
 #define SEC_PARAM_LESC 0                               /**< LE Secure Connections not enabled. */
@@ -46,6 +47,7 @@
 #define NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL 30
 #define NRF_BLE_SCAN_SLAVE_LATENCY 0
 #define NRF_BLE_SCAN_SUPERVISION_TIMEOUT 4000
+// TODO: default to CODED PHY
 #define NRF_BLE_SCAN_SCAN_PHY 1
 
 #define NRF_BLE_SCAN_FILTER_ENABLE 1

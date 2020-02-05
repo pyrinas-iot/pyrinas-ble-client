@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
@@ -58,6 +59,8 @@ NRF_LOG_MODULE_REGISTER();
      !(BLE_NFC_SEC_PARAM_KDIST_PEER_ID))
 #error "At least one of the BLE_NFC_SEC_PARAM_KDIST flags must be set to 1 when bonding is enabled."
 #endif
+
+// TODO: review this to make sure it .. works
 
 /**@brief Function for handling Peer Manager events.
  *

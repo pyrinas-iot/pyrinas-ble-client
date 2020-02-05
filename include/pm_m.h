@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2020, Jared Wolff
  *
  * All rights reserved.
  *
