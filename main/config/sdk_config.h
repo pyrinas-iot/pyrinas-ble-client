@@ -221,7 +221,8 @@
  
 
 #ifndef NRF_DFU_BLE_BUTTONLESS_SUPPORTS_BONDS
-#define NRF_DFU_BLE_BUTTONLESS_SUPPORTS_BONDS 0
+#define NRF_DFU_BLE_BUTTONLESS_SUPPORTS_BONDS 0
+
 #endif
 
 // </h> 
@@ -4617,7 +4618,7 @@
 
 // <o> NRF_SDH_BLE_VS_UUID_COUNT - The number of vendor-specific UUIDs. 
 #ifndef NRF_SDH_BLE_VS_UUID_COUNT
-#define NRF_SDH_BLE_VS_UUID_COUNT 1
+#define NRF_SDH_BLE_VS_UUID_COUNT 2
 #endif
 
 // <q> NRF_SDH_BLE_SERVICE_CHANGED  - Include the Service Changed characteristic in the Attribute Table.
@@ -5225,7 +5226,6 @@
 #ifndef NRF_SDH_ANT_STACK_OBSERVER_PRIO
 #define NRF_SDH_ANT_STACK_OBSERVER_PRIO 0
 #endif
-
 // <o> NRF_SDH_BLE_STACK_OBSERVER_PRIO  
 // <i> This setting configures the priority with which BLE events are processed with respect to other events coming from the stack.
 // <i> Modify this setting if you need to have BLE events dispatched before or after other stack events, such as ANT or SoC.
@@ -5233,14 +5233,6 @@
 
 #ifndef NRF_SDH_BLE_STACK_OBSERVER_PRIO
 #define NRF_SDH_BLE_STACK_OBSERVER_PRIO 0
-#endif
-
-// <o> NRF_SDH_SOC_STACK_OBSERVER_PRIO  
-// <i> This setting configures the priority with which SoC events are processed with respect to other events coming from the stack.
-// <i> Modify this setting if you need to have SoC events dispatched before or after other stack events, such as ANT or BLE.
-// <i> Zero is the highest priority.
-
-#ifndef NRF_SDH_SOC_STACK_OBSERVER_PRIO
 #define NRF_SDH_SOC_STACK_OBSERVER_PRIO 0
 #endif
 
