@@ -43,8 +43,8 @@ $(info )
 DFU_CERT 				:= private.pem
 
 # Commands
-MERGEHEX				:= $(BIN_DIR)/mergehex/mergehex
 NRFJPROG				:= $(BIN_DIR)/nrfjprog/nrfjprog
+MERGEHEX				:= $(BIN_DIR)/mergehex/mergehex
 NRFUTIL					:= $(BIN_DIR)/nrfutil/nrfutil-mac
 
 # Download and install SDK deps
@@ -73,43 +73,40 @@ gen_key:
 	cd $(DFU_DIR) && $(NRFUTIL) keys generate private.pem
 	cd $(DFU_DIR) && $(NRFUTIL) keys display --key pk --format code private.pem > dfu_public_key.c
 
-settings: build
+settings:
 	@echo Generating settings .hex file
-	$(NRFUTIL) settings generate --family $(BOARD_FAM) --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
+	@mkdir -p $(BUILD_DIR)
+	$(NRFUTIL) settings generate --family $(BOARD_FAM) --application $(MAIN_DIR)/_build/$(BUILD_IDENT).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
 
 build:
-	@rm -rf $(BUILD_DIR)/*
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(BOOTLOADER_DIR) -j
 	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(MAIN_DIR) -j
-	@mkdir -p $(BUILD_DIR)
-	@cp -f $(MAIN_DIR)/_build/$(BUILD_IDENT).hex $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex
-	@cp -f $(BOOTLOADER_DIR)/_build/$(BUILD_IDENT)_$(BUILD_SD).hex $(BUILD_DIR)/$(APP_FILENAME).bootloader.$(VER_STRING_W_GITHASH).hex
 
-merge: settings
+merge: build settings
+	@mkdir -p $(BUILD_DIR)
 	@echo Merging settings with bootloader
-	$(MERGEHEX) -m $(BUILD_DIR)/$(APP_FILENAME).bootloader.$(VER_STRING_W_GITHASH).hex $(BUILD_DIR)/$(SETTINGS).hex -o $(BUILD_DIR)/$(BL_SETTINGS).hex
+	@$(MERGEHEX) -m $(BOOTLOADER_DIR)/_build/$(BUILD_IDENT)_$(BUILD_SD).hex $(BUILD_DIR)/$(SETTINGS).hex -o $(BUILD_DIR)/$(BL_SETTINGS).hex
 	@echo Merging app with bootloader + settings
-	@mkdir -p $(OUT_DIR)
-	$(MERGEHEX) -m $(BUILD_DIR)/$(BL_SETTINGS).hex $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex -o $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex
+	@$(MERGEHEX) -m $(BUILD_DIR)/$(BL_SETTINGS).hex $(MAIN_DIR)/_build/$(BUILD_IDENT).hex -o $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex
 
 merge_all: merge
 	@echo Merging all files
-	$(MERGEHEX) -m $(SOFT_DEVICE) $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex -o $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).full.hex
+	@$(MERGEHEX) -m $(SOFT_DEVICE) $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex -o $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).full.hex
 
 flash_all: merge_all
 	@echo Flashing all
 	$(NRFJPROG) -f nrf52 --program $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).full.hex --chiperase -s $(PROG_SERIAL)
-	$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
+	@$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
 
 flash: merge
 	@echo Flashing firmware
 	$(NRFJPROG) -f nrf52 --program $(OUT_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).combined.hex --sectoranduicrerase -s $(PROG_SERIAL)
-	$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
+	@$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
 
 flash_softdevice:
 	@echo Flashing softdevice
-	$(NRFJPROG) -f nrf52 --program $(SOFT_DEVICE) --sectoranduicrerase -s $(PROG_SERIAL)
-	$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
+	$(NRFJPROG) -f nrf52 --program $(SOFT_DEVICE) --sectorerase -s $(PROG_SERIAL)
+	@$(NRFJPROG) -f nrf52 --reset -s $(PROG_SERIAL)
 
 erase:
 	@echo Erasing device
@@ -202,5 +199,4 @@ toolchain_clean:
 clean:
 		@echo Cleaning..
 		@rm -rf $(BUILD_DIR)
-		@make -C $(BOOTLOADER_DIR) clean
 		@make -C $(MAIN_DIR) clean
