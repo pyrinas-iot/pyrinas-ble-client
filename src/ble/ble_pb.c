@@ -44,6 +44,7 @@
  */
 #include "sdk_common.h"
 #if NRF_MODULE_ENABLED(BLE_PB)
+#include "app_error.h"
 #include "ble_conn_state.h"
 #include "ble_pb.h"
 #include "ble_srv_common.h"
@@ -52,6 +53,7 @@
 #include "pb_encode.h"
 #include <string.h>
 
+// TODO: rename ble_protobuf to ble_pb
 #define NRF_LOG_MODULE_NAME ble_protobuf
 #if BLE_PB_CONFIG_LOG_ENABLED
 #define NRF_LOG_LEVEL BLE_PB_CONFIG_LOG_LEVEL
@@ -63,6 +65,36 @@
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
+/**@brief Function for handling write events to the Heart Rate Measurement characteristic.
+ *
+ * @param[in]   p_protobuf         Heart Rate Service structure.
+ * @param[in]   p_evt_write   Write event received from the BLE stack.
+ */
+static void on_pb_cccd_write(ble_protobuf_t *p_protobuf, ble_gatts_evt_write_t const *p_evt_write)
+{
+    if (p_evt_write->len == 2)
+    {
+        // CCCD written, update notification state
+        if (p_protobuf->evt_handler != NULL)
+        {
+            ble_pb_evt_t evt;
+
+            if (ble_srv_is_notification_enabled(p_evt_write->data))
+            {
+                evt.evt_type = BLE_PB_EVT_NOTIFICATION_ENABLED;
+                NRF_LOG_DEBUG("Notifications enabled!");
+            }
+            else
+            {
+                NRF_LOG_DEBUG("Notifications disabled!");
+                evt.evt_type = BLE_PB_EVT_NOTIFICATION_DISABLED;
+            }
+
+            p_protobuf->evt_handler(p_protobuf, &evt, NULL);
+        }
+    }
+}
+
 /**@brief Function for handling the Write event.
  *
  * @param[in]   p_protobuf       Battery Service structure.
@@ -72,34 +104,87 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
 {
     ble_gatts_evt_write_t const *p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
 
+    if (p_evt_write->handle == p_protobuf->command_handles.cccd_handle)
+    {
+        on_pb_cccd_write(p_protobuf, p_evt_write);
+    }
+
     // Handle writning to the value handle
     if (p_evt_write->handle == p_protobuf->command_handles.value_handle)
     {
 
         // Setitng up protocol buffer data
-        protobuf_event_t evt;
+        protobuf_event_t data;
+
+        ble_pb_evt_t evt;
+        evt.evt_type = BLE_PB_EVT_DATA;
 
         // NRF_LOG_HEXDUMP_INFO(p_evt_write->data,p_evt_write->len);
 
         // Read in buffer
         pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_write->data, p_evt_write->len);
 
-        if (!pb_decode(&istream, protobuf_event_t_fields, &evt))
+        if (!pb_decode(&istream, protobuf_event_t_fields, &data))
         {
             NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
             return;
         }
 
-        // Validate code & type
-        if (evt.type != event_type_command)
-        {
-            NRF_LOG_ERROR("Unexpected event_type");
-            return;
-        }
-
         // Event to the main context
-        p_protobuf->evt_handler(p_protobuf, &evt);
+        p_protobuf->evt_handler(p_protobuf, &evt, &data);
     }
+}
+
+// TODO: add comment
+void ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size)
+{
+
+    ret_code_t err_code;
+
+    // Send value if connected and notifying
+    if (p_protobuf->conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+
+        uint16_t hvx_len = size;
+        ble_gatts_hvx_params_t hvx_params;
+
+        memset(&hvx_params, 0, sizeof(hvx_params));
+
+        hvx_params.handle = p_protobuf->command_handles.value_handle;
+        hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
+        hvx_params.offset = 0;
+        hvx_params.p_len = &hvx_len;
+        hvx_params.p_data = data;
+
+        err_code = sd_ble_gatts_hvx(p_protobuf->conn_handle, &hvx_params);
+    }
+    else
+    {
+        err_code = NRF_ERROR_INVALID_STATE;
+    }
+
+    APP_ERROR_CHECK(err_code);
+}
+
+/**@brief Function for handling the Disconnect event.
+ *
+ * @param[in]   p_protobuf       Heart Rate Service structure.
+ * @param[in]   p_ble_evt   Event received from the BLE stack.
+ */
+static void on_disconnect(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
+{
+    UNUSED_PARAMETER(p_ble_evt);
+    p_protobuf->conn_handle = BLE_CONN_HANDLE_INVALID;
+}
+
+/**@brief Function for handling the Connect event.
+ *
+ * @param[in]   p_protobuf       Heart Rate Service structure.
+ * @param[in]   p_ble_evt   Event received from the BLE stack.
+ */
+static void on_connect(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
+{
+    p_protobuf->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 }
 
 void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
@@ -113,6 +198,12 @@ void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
+        case BLE_GAP_EVT_CONNECTED:
+            on_connect(p_protobuf, p_ble_evt);
+            break;
+        case BLE_GAP_EVT_DISCONNECTED:
+            on_disconnect(p_protobuf, p_ble_evt);
+            break;
         case BLE_GATTS_EVT_WRITE:
             on_write(p_protobuf, p_ble_evt);
             break;
@@ -141,12 +232,10 @@ static ret_code_t command_char_add(ble_protobuf_t *p_protobuf, const ble_protobu
     add_char_params.max_len = protobuf_event_t_size;
     add_char_params.is_var_len = true;
 
-    add_char_params.char_props.write_wo_resp = 1;
+    add_char_params.char_props.notify = 1;
     add_char_params.char_props.write = 1;
-    add_char_params.char_props.read = 1;
 
     add_char_params.cccd_write_access = p_protobuf_init->bl_cccd_wr_sec;
-    add_char_params.read_access = p_protobuf_init->bl_rd_sec;
     add_char_params.write_access = p_protobuf_init->bl_wr_sec;
 
     err_code = characteristic_add(p_protobuf->service_handle,
@@ -173,6 +262,7 @@ ret_code_t ble_protobuf_init(ble_protobuf_t *p_protobuf, const ble_protobuf_init
 
     // Initialize service structure
     p_protobuf->evt_handler = p_protobuf_init->evt_handler;
+    p_protobuf->conn_handle = BLE_CONN_HANDLE_INVALID;
 
     // Add service
     err_code = sd_ble_uuid_vs_add(&base_uuid, &p_protobuf->uuid_type);

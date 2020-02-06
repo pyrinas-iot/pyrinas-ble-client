@@ -86,24 +86,39 @@ extern "C"
  * @hideinitializer
  */
 #define BLE_PB_DEF(_name)                          \
-    static ble_protobuf_t _name;                         \
-    NRF_SDH_BLE_OBSERVER(_name##_obs,                    \
+    static ble_protobuf_t _name;                   \
+    NRF_SDH_BLE_OBSERVER(_name##_obs,              \
                          BLE_PB_BLE_OBSERVER_PRIO, \
-                         ble_protobuf_on_ble_evt,        \
+                         ble_protobuf_on_ble_evt,  \
                          &_name)
+
+    // TODO: handling subscriptions
+
+    /**@brief Heart Rate Service event type. */
+    typedef enum
+    {
+        BLE_PB_EVT_DATA,
+        BLE_PB_EVT_NOTIFICATION_ENABLED, /**< Heart Rate value notification enabled event. */
+        BLE_PB_EVT_NOTIFICATION_DISABLED /**< Heart Rate value notification disabled event. */
+    } ble_pb_evt_type_t;
+
+    /**@brief Heart Rate Service event. */
+    typedef struct
+    {
+        ble_pb_evt_type_t evt_type; /**< Type of event. */
+    } ble_pb_evt_t;
 
     // Forward declaration of the ble_protobuf_t type.
     typedef struct ble_protobuf_s ble_protobuf_t;
 
     /**@brief Protobuf Service event handler type. */
-    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, protobuf_event_t *p_evt);
+    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, protobuf_event_t *p_pb_evt);
 
     /**@brief Protobuf Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
     typedef struct
     {
         ble_protobuf_evt_handler_t evt_handler; /**< Event handler to be called for handling events in the Protobuf Service. */
-        security_req_t bl_rd_sec;               /**< Security requirement for reading the BL characteristic value. */
         security_req_t bl_cccd_wr_sec;          /**< Security requirement for writing the BL characteristic CCCD. */
         security_req_t bl_wr_sec;               /**< Security requirement for writing the BL characteristic value */
     } ble_protobuf_init_t;
@@ -114,8 +129,13 @@ extern "C"
         ble_protobuf_evt_handler_t evt_handler;   /**< Event handler to be called for handling events in the Protobuf Service. */
         uint16_t service_handle;                  /**< Handle of Protobuf Service (as provided by the BLE stack). */
         ble_gatts_char_handles_t command_handles; /**< Handles related to the Command characteristic. */
-        uint8_t uuid_type;                        /**< UUID type for the Protobuf Service. */
+        //TODO: Above is RX handle. Need a TX handle.
+        uint8_t uuid_type;    /**< UUID type for the Protobuf Service. */
+        uint16_t conn_handle; /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if not in a connection). */
     };
+
+    // TODO: fill out more info on this call
+    void ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size);
 
     /**@brief Function for initializing the Protobuf Service.
  *
