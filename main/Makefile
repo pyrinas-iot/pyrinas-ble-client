@@ -98,10 +98,13 @@ SRC_FILES += \
   $(PROJ_DIR)/../external/nanopb/pb_decode.c \
   $(PROJ_DIR)/../src/proto/command.pb.c \
   $(PROJ_DIR)/../src/ble/ble_m.c \
+  $(PROJ_DIR)/../src/ble/ble_peripheral.c \
+  $(PROJ_DIR)/../src/ble/ble_central.c \
   $(PROJ_DIR)/../src/ble/ble_pb.c \
   $(PROJ_DIR)/../src/ble/ble_pb_c.c \
   $(PROJ_DIR)/../src/buttons_m.c \
   $(PROJ_DIR)/../src/pm_m.c \
+  $(PROJ_DIR)/../src/util.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -174,6 +177,7 @@ OPT = -Os -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -DDEBUG
 CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DBOARD_MODE=$(BOARD_MODE)

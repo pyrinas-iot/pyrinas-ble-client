@@ -1,6 +1,20 @@
 #ifndef SETUP_H
 #define SETUP_H
 
+#include "app_util.h"
+
+#define DEVICE_NAME "Scafolding"         /**< Name of device. Will be included in the advertising data. */
+#define MANUFACTURER_NAME "Circuit Dojo" /**< Manufacturer. Will be passed to Device Information Service. */
+#define APP_ADV_INTERVAL 300             /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
+#define APP_ADV_DURATION 0               /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
+#define APP_BLE_CONN_CFG_TAG 1           /**< A tag identifying the SoftDevice BLE configuration. */
+
+#define MIN_CONN_INTERVAL MSEC_TO_UNITS(100, UNIT_1_25_MS) /**< Minimum acceptable connection interval (0.1 seconds). */
+#define MAX_CONN_INTERVAL MSEC_TO_UNITS(200, UNIT_1_25_MS) /**< Maximum acceptable connection interval (0.2 second). */
+#define SLAVE_LATENCY 0                                    /**< Slave latency. */
+#define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)   /**< Connection supervisory timeout (4 seconds). */
+
+// PB Related
 #define BLE_PB_ENABLED true
 #define BLE_PB_CONFIG_LOG_ENABLED true
 #define BLE_PB_BLE_OBSERVER_PRIO 2
@@ -15,12 +29,13 @@
 #define BLE_PB_CONFIG_LOG_LEVEL 3
 #define BLE_PB_CONFIG_INFO_COLOR 0
 #define BLE_PB_CONFIG_DEBUG_COLOR 3
+#define PM_LOG_LEVEL 2
 
 // Security Configuration
 // TODO: update these for best security
 #define SEC_PARAM_BOND 1                               /**< Perform bonding. */
-#define SEC_PARAM_MITM 0                               /**< Man In The Middle protection not required. */
-#define SEC_PARAM_LESC 0                               /**< LE Secure Connections not enabled. */
+#define SEC_PARAM_MITM 0                               /**< Man In The Middle protection required. */
+#define SEC_PARAM_LESC 0                               /**< LE Secure Connections enabled. */
 #define SEC_PARAM_KEYPRESS 0                           /**< Keypress notifications not enabled. */
 #define SEC_PARAM_IO_CAPABILITIES BLE_GAP_IO_CAPS_NONE /**< No I/O capabilities. */
 #define SEC_PARAM_OOB 0                                /**< Out Of Band data not available. */
@@ -54,7 +69,7 @@
 #define NRF_BLE_SCAN_UUID_CNT 2
 #define NRF_BLE_SCAN_NAME_CNT 1
 #define NRF_BLE_SCAN_SHORT_NAME_CNT 0
-#define NRF_BLE_SCAN_ADDRESS_CNT 0
+#define NRF_BLE_SCAN_ADDRESS_CNT 8
 #define NRF_BLE_SCAN_APPEARANCE_CNT 0
 
 // Discovery

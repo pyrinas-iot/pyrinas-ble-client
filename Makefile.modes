@@ -1,16 +1,15 @@
-MODE_PERIPHERAL := 0
-MODE_CENTRAL := 1
+MODE_PERIPHERAL = 0
+MODE_CENTRAL = 1
 
 ifneq (,$(MODE))
 ifeq ("$(MODE)","peripheral")
-BOARD_MODE = MODE_PERIPHERAL
+BOARD_MODE = $(MODE_PERIPHERAL)
 endif
 
 ifeq ("$(MODE)","central")
-BOARD_MODE = MODE_CENTRAL
+BOARD_MODE = $(MODE_CENTRAL)
 endif
 endif
-
 
 ifndef BOARD_MODE
 BOARD_MODE=0

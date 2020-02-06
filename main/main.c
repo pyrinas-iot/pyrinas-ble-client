@@ -38,12 +38,15 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
+#include <stdint.h>
+#include <stdio.h>
+
+#include "app_error_weak.h"
 #include "app_timer.h"
 #include "ble_m.h"
 #include "buttons_m.h"
 #include "pm_m.h"
-#include <stdint.h>
-#include <stdio.h>
+#include "util.h"
 
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -77,13 +80,51 @@ int main(void)
     logs_init();
     timer_init();
     buttons_init();
-    ble_stack_init();
+
+// Replace BLE_STACK_PERIPH_DEF with BLE_STACK_CENTRAL_DEF for central mode
+#if BOARD_MODE == ble_mode_peripheral
+    BLE_STACK_PERIPH_DEF(init);
+#else
+    BLE_STACK_CENTRAL_DEF(init);
+
+    // Add an address to scan for
+    ble_gap_addr_t dev = {
+        .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
+        .addr = {0x81, 0x64, 0x4C, 0xAD, 0x7D, 0xC0}};
+
+    init.config.devices[0] = dev;
+
+    // Increment the device_count
+    init.config.device_count += 1;
+
+#endif
+
+    // Configuration for ble stack
+    ble_stack_init(&init);
+
+    // Peer manager config
     peer_manager_init(false);
 
+    advertising_start();
+    scan_start();
+
+    ble_gap_addr_t gap_addr;
+    sd_ble_gap_addr_get(&gap_addr);
+    char gap_addr_str[18];
+
+    // Convert address to readable string
+    bin_to_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, ':', gap_addr_str);
+
+    // Startup message
     NRF_LOG_INFO("Scaffolding started.");
+    NRF_LOG_INFO("Address: %s", gap_addr_str);
 
     while (true)
     {
+        // Processing in main loop.
+        ble_process();
+
+        // Manage power if there's nothing else to do.
         if (NRF_LOG_PROCESS() == false)
         {
             nrf_pwr_mgmt_run();
