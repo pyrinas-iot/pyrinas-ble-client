@@ -75,6 +75,8 @@ extern "C"
 {
 #endif
 
+#define PB_SERVICE_UUID_TYPE BLE_UUID_TYPE_VENDOR_BEGIN /**< UUID type for the PB Service (vendor specific). */
+
 /**@brief   Macro for defining a ble_pb_c instance.
  *
  * @param   _name   Name of the instance.
@@ -138,7 +140,7 @@ extern "C"
  * @details This is the type of the event handler that is to be provided by the application
  *          of this module to receive events.
  */
-    typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_ble_pb_c, ble_pb_c_evt_t *p_evt);
+    typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf_event_t *p_pb_evt);
 
     /** @} */
 
@@ -151,6 +153,7 @@ extern "C"
  */
     struct ble_pb_c_s
     {
+        uint8_t uuid_type;                     /**< UUID type for DFU UUID. */
         uint16_t conn_handle;                  /**< Connection handle, as provided by the SoftDevice. */
         pb_db_t peer_pb_db;                    /**< Handles related to PB on the peer. */
         ble_pb_c_evt_handler_t evt_handler;    /**< Application event handler to be called when there is an event related to the Protobuf Service. */
@@ -173,6 +176,9 @@ extern "C"
  * @defgroup pb_c_functions Functions
  * @{
  */
+
+    // TODO: document this
+    uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint8_t *data, size_t size);
 
     /**@brief     Function for initializing the Protobuf Client module.
  *

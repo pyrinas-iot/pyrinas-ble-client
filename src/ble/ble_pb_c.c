@@ -45,8 +45,12 @@
 #if NRF_MODULE_ENABLED(BLE_PB_C)
 #include "ble_db_discovery.h"
 #include "ble_gattc.h"
+#include "ble_pb.h"
 #include "ble_pb_c.h"
 #include "ble_types.h"
+
+#include "pb_decode.h"
+#include "pb_encode.h"
 
 #define NRF_LOG_MODULE_NAME ble_pb_c
 #include "nrf_log.h"
@@ -75,8 +79,8 @@ static void gatt_error_handler(uint32_t nrf_error,
 /**@brief     Function for handling Handle Value Notification received from the SoftDevice.
  *
  * @details   This function uses the Handle Value Notification received from the SoftDevice
- *            and checks whether it is a notification of the heart rate measurement from the peer. If
- *            it is, this function decodes the heart rate measurement and sends it to the
+ *            and checks whether it is a notification of the protobuf measurement from the peer. If
+ *            it is, this function decodes the protobuf measurement and sends it to the
  *            application.
  *
  * @param[in] p_ble_pb_c Pointer to the Protobuf Client structure.
@@ -96,17 +100,31 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
                   p_ble_evt->evt.gattc_evt.params.hvx.handle,
                   p_ble_pb_c->peer_pb_db.pb_handle);
 
-    // Check if this is a heart rate notification.
+    // Check if this is a protobuf notification.
     if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->peer_pb_db.pb_handle)
     {
-        ble_pb_c_evt_t ble_pb_c_evt;
 
+        // Decode the data
+        ble_gattc_evt_hvx_t const *p_evt_data = &p_ble_evt->evt.gattc_evt.params.hvx;
+
+        // Setitng up protocol buffer data
+        protobuf_event_t data;
+
+        // Read in buffer
+        pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_data->data, p_evt_data->len);
+
+        if (!pb_decode(&istream, protobuf_event_t_fields, &data))
+        {
+            NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
+            return;
+        }
+
+        // Set the event type
+        ble_pb_c_evt_t ble_pb_c_evt;
         ble_pb_c_evt.evt_type = BLE_PB_C_EVT_NOTIFICATION;
         ble_pb_c_evt.conn_handle = p_ble_pb_c->conn_handle;
 
-        // TODO: fill this in
-
-        p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt);
+        p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt, &data);
     }
 }
 
@@ -133,8 +151,8 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
 {
     // Check if the Protobuf Service was discovered.
     if (p_evt->evt_type == BLE_DB_DISCOVERY_COMPLETE &&
-        p_evt->params.discovered_db.srv_uuid.uuid == BLE_UUID_HEART_RATE_SERVICE &&
-        p_evt->params.discovered_db.srv_uuid.type == BLE_UUID_TYPE_BLE)
+        p_evt->params.discovered_db.srv_uuid.uuid == PROTOBUF_UUID_SERVICE &&
+        p_evt->params.discovered_db.srv_uuid.type == PB_SERVICE_UUID_TYPE)
     {
         // Find the CCCD Handle of the Protobuf characteristic.
         uint32_t i;
@@ -147,7 +165,7 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
         for (i = 0; i < p_evt->params.discovered_db.char_count; i++)
         {
             if (p_evt->params.discovered_db.charateristics[i].characteristic.uuid.uuid ==
-                BLE_UUID_HEART_RATE_MEASUREMENT_CHAR)
+                PROTOBUF_UUID_CONFIG_CHAR)
             {
                 // Found Protobuf characteristic. Store CCCD handle and break.
                 evt.params.peer_db.pb_cccd_handle =
@@ -169,7 +187,7 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
             }
         }
 
-        p_ble_pb_c->evt_handler(p_ble_pb_c, &evt);
+        p_ble_pb_c->evt_handler(p_ble_pb_c, &evt, NULL);
     }
 }
 
@@ -178,10 +196,9 @@ uint32_t ble_pb_c_init(ble_pb_c_t *p_ble_pb_c, ble_pb_c_init_t *p_ble_pb_c_init)
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c_init);
 
+    ret_code_t err_code;
+    ble_uuid128_t pb_base_uuid = {PROTOBUF_UUID_BASE};
     ble_uuid_t pb_uuid;
-
-    pb_uuid.type = BLE_UUID_TYPE_BLE;
-    pb_uuid.uuid = BLE_UUID_HEART_RATE_SERVICE;
 
     p_ble_pb_c->evt_handler = p_ble_pb_c_init->evt_handler;
     p_ble_pb_c->error_handler = p_ble_pb_c_init->error_handler;
@@ -189,6 +206,18 @@ uint32_t ble_pb_c_init(ble_pb_c_t *p_ble_pb_c, ble_pb_c_init_t *p_ble_pb_c_init)
     p_ble_pb_c->conn_handle = BLE_CONN_HANDLE_INVALID;
     p_ble_pb_c->peer_pb_db.pb_cccd_handle = BLE_GATT_HANDLE_INVALID;
     p_ble_pb_c->peer_pb_db.pb_handle = BLE_GATT_HANDLE_INVALID;
+
+    // Register longer uuid. Generates uuid_type
+    err_code = sd_ble_uuid_vs_add(&pb_base_uuid, &p_ble_pb_c->uuid_type);
+    if (err_code != NRF_SUCCESS)
+    {
+        return err_code;
+    }
+    VERIFY_SUCCESS(err_code);
+
+    // Short UUID
+    pb_uuid.type = p_ble_pb_c->uuid_type;
+    pb_uuid.uuid = PROTOBUF_UUID_SERVICE;
 
     return ble_db_discovery_evt_register(&pb_uuid);
 }
@@ -215,6 +244,33 @@ void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
         default:
             break;
     }
+}
+
+uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint8_t *data, size_t size)
+{
+    VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
+
+    if (p_ble_pb_c->conn_handle == BLE_CONN_HANDLE_INVALID)
+    {
+        return NRF_ERROR_INVALID_STATE;
+    }
+
+    NRF_LOG_DEBUG("Writing %d bytes", size);
+
+    nrf_ble_gq_req_t write_req;
+
+    memset(&write_req, 0, sizeof(nrf_ble_gq_req_t));
+
+    write_req.type = NRF_BLE_GQ_REQ_GATTC_WRITE;
+    write_req.error_handler.cb = gatt_error_handler;
+    write_req.error_handler.p_ctx = p_ble_pb_c;
+    write_req.params.gattc_write.handle = p_ble_pb_c->peer_pb_db.pb_handle;
+    write_req.params.gattc_write.len = size;
+    write_req.params.gattc_write.p_value = data;
+    write_req.params.gattc_write.offset = 0;
+    write_req.params.gattc_write.write_op = BLE_GATT_OP_WRITE_CMD;
+
+    return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &write_req, p_ble_pb_c->conn_handle);
 }
 
 /**@brief Function for creating a message for writing to the CCCD.
@@ -245,7 +301,7 @@ static uint32_t cccd_configure(ble_pb_c_t *p_ble_pb_c, bool enable)
     return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &pb_c_req, p_ble_pb_c->conn_handle);
 }
 
-uint32_t ble_pb_c_pb_notif_enable(ble_pb_c_t *p_ble_pb_c)
+uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c)
 {
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
