@@ -67,7 +67,11 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Current connection
 
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
 
-static ble_stack_init_t m_config;
+static ble_subscription_list_t m_subscribe_list; /**< Use for adding/removing subscriptions */
+
+static ble_stack_init_t m_config; /**< Init config */
+
+static raw_susbcribe_handler_t m_raw_handler_ext;
 
 bool ble_is_connected(void)
 {
@@ -100,14 +104,14 @@ void ble_publish(char *name, char *data)
     uint8_t data_length = strlen(data);
 
     // Check size
-    if (name_length > sizeof(protobuf_event_t_name_t))
+    if (name_length > member_size(protobuf_event_t_name_t, bytes))
     {
         NRF_LOG_WARNING("Name must be <= %d characters.", member_size(protobuf_event_t_name_t, bytes));
         return;
     }
 
     // Check size
-    if (data_length > sizeof(protobuf_event_t_data_t))
+    if (data_length > member_size(protobuf_event_t_data_t, bytes))
     {
         NRF_LOG_WARNING("Data must be <= %d characters.", member_size(protobuf_event_t_data_t, bytes));
         return;
@@ -158,8 +162,59 @@ void ble_publish_raw(protobuf_event_t event)
 
 void ble_subscribe(char *name, susbcribe_handler_t handler)
 {
-    // TODO: search through hash map (possible)?
-    // TODO: create if not exists, otherwise update.
+
+    uint8_t name_length = strlen(name);
+
+    // Check size
+    if (name_length > member_size(protobuf_event_t_name_t, bytes))
+    {
+        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(protobuf_event_t_name_t, bytes));
+        return;
+    }
+
+    // Check subscription amount
+    if (m_subscribe_list.count >= BLE_M_SUBSCRIBER_MAX_COUNT)
+    {
+        NRF_LOG_WARNING("Too many subscriptions.");
+        return;
+    }
+
+    ble_subscription_handler_t subscriber = {
+        .evt_handler = handler};
+
+    // Copy over info to structure.
+    subscriber.name.size = name_length;
+    memcpy(subscriber.name.bytes, name, name_length);
+
+    int index = 0;
+    bool found = false;
+
+    // Check if exists
+    for (; index < m_subscribe_list.count; index++)
+    {
+        protobuf_event_t_name_t *name = &m_subscribe_list.subscribers[index].name;
+
+        if (name->size == subscriber.name.size)
+        {
+            if (memcmp(name->bytes, subscriber.name.bytes, name->size) == 0)
+            {
+                found = true;
+                break;
+            }
+        }
+    }
+
+    // Update the found one.
+    if (found)
+    {
+        m_subscribe_list.subscribers[index] = subscriber;
+    }
+    // Otherwise create a new one
+    else
+    {
+        m_subscribe_list.subscribers[m_subscribe_list.count] = subscriber;
+        m_subscribe_list.count++;
+    }
 }
 
 void advertising_start(void)
@@ -246,7 +301,21 @@ static void gatt_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-// TODO: callback to main context
+/**@brief Function for queuing events so they can read in main context.
+ */
+static void ble_raw_evt_handler(protobuf_event_t *evt)
+{
+
+    // Forward to raw handler if it exists
+    if (m_raw_handler_ext != NULL)
+    {
+        m_raw_handler_ext(evt);
+    }
+    // TODO: queue events.
+
+    // TODO: adding \0 terminating char so printing, strlen, etc works
+}
+
 // TODO: transmit power
 void ble_stack_init(ble_stack_init_t *init)
 {
@@ -278,13 +347,28 @@ void ble_stack_init(ble_stack_init_t *init)
     switch (m_config.mode)
     {
         case ble_mode_peripheral:
+            // Attach handler
+            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+
+            // Init peripheral mode
             ble_peripheral_init();
             break;
 
         case ble_mode_central:
+            // First, attach handler
+            ble_central_attach_raw_handler(ble_raw_evt_handler);
+
+            // Initialize
             ble_central_init(&m_config.config);
             break;
     }
+}
+
+// Passthrough function for subscribing to RAW events
+void ble_subscribe_raw(raw_susbcribe_handler_t handler)
+{
+
+    m_raw_handler_ext = handler;
 }
 
 // TODO: deque messages, fire off the appropriate handlers

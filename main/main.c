@@ -71,6 +71,17 @@ static void timer_init()
     APP_ERROR_CHECK(err_code);
 }
 
+/**@brief Function recieving events (central or peripheral)
+ */
+static void ble_raw_evt_handler(protobuf_event_t *p_evt)
+{
+    protobuf_event_t evt = *p_evt;
+    evt.name.bytes[evt.name.size++] = 0;
+    evt.data.bytes[evt.data.size++] = 0;
+
+    NRF_LOG_INFO("%s: %s", evt.name.bytes, evt.data.bytes);
+}
+
 /**@brief   Function for application main entry.
  *
  * @details Initializes BLE and NFC stacks and runs NFC Forum device task.
@@ -87,6 +98,8 @@ int main(void)
 #else
     BLE_STACK_CENTRAL_DEF(init);
 
+    // TODO: move out of init. Adding a separate function "attaching"
+    // TODO: -> new devices.
     // Add an address to scan for
     ble_gap_addr_t dev = {
         .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
@@ -101,6 +114,10 @@ int main(void)
 
     // Configuration for ble stack
     ble_stack_init(&init);
+
+    // Subscribe to raw events
+    // For more advanced use cases
+    ble_subscribe_raw(ble_raw_evt_handler);
 
     // Peer manager config
     peer_manager_init(false);

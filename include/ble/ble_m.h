@@ -53,7 +53,25 @@
 #include <stdint.h>
 
 #include "ble_central.h"
+#include "ble_handlers.h"
 #include "command.pb.h"
+
+//TODO: better place to define this
+#define BLE_M_SUBSCRIBER_MAX_COUNT 12 /**< Max amount of potential subscriptions. */
+
+/**@brief Struct for tracking callbacks
+ */
+typedef struct
+{
+    susbcribe_handler_t evt_handler;
+    protobuf_event_t_name_t name;
+} ble_subscription_handler_t;
+
+typedef struct
+{
+    ble_subscription_handler_t subscribers[BLE_M_SUBSCRIBER_MAX_COUNT];
+    uint8_t count;
+} ble_subscription_list_t;
 
 /**@brief Different device "modes"
  */
@@ -81,9 +99,6 @@ typedef struct
 #define BLE_STACK_PERIPH_DEF(X) ble_stack_init_t X = {.mode = ble_mode_peripheral, .long_range = false}
 #define BLE_STACK_CENTRAL_DEF(X) ble_stack_init_t X = {.mode = ble_mode_central, .long_range = false}
 
-/**@brief Subscription handler definition. */
-typedef void (*susbcribe_handler_t)(char *name, char *data);
-
 /**@brief Function for terminating connection with a BLE peripheral device.
  */
 void ble_disconnect(void);
@@ -107,6 +122,9 @@ void ble_publish_raw(protobuf_event_t event);
 
 // TODO: document this
 void ble_subscribe(char *name, susbcribe_handler_t handler);
+
+// TODO: document this
+void ble_subscribe_raw(raw_susbcribe_handler_t handler);
 
 // TODO: document this
 void advertising_start(void);

@@ -45,7 +45,8 @@
 #include "ble.h"
 #include <stdint.h>
 
-//TODO: a method for sending messages
+//TODO document
+void ble_peripheral_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler);
 void ble_peripheral_write(uint8_t *data, size_t size);
 void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context);
 void ble_peripheral_advertising_start(void);

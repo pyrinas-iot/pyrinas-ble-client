@@ -40,6 +40,8 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Current connection
 static bool m_pb_notif_enabled = false;                  /**< Flag indicating that pb notification has been enabled. */
 static ble_central_init_t m_config;
 
+static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
+
 /**< Scan parameters requested for scanning and connection. */
 // static ble_gap_scan_params_t const m_scan_param =
 //     {
@@ -109,9 +111,14 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf
             break;
 
         case BLE_PB_C_EVT_NOTIFICATION:
-            // TODO: forward this on to the main context
-            NRF_LOG_HEXDUMP_INFO(p_pb_evt->name.bytes, p_pb_evt->name.size)
-            NRF_LOG_HEXDUMP_INFO(p_pb_evt->data.bytes, p_pb_evt->data.size)
+
+            // Forward to raw handler.
+            if (m_raw_evt_handler != NULL)
+            {
+                m_raw_evt_handler(p_pb_evt);
+            }
+
+            // TODO: determine if this is necessary
             m_pb_notif_enabled = true;
             break;
 
@@ -450,11 +457,15 @@ void ble_central_init(ble_central_init_t *init)
     pb_c_init();
     scan_init();
     conn_params_init();
-    // UNUSED_VARIABLE(conn_params_init);
 }
 
 void ble_central_write(uint8_t *data, size_t size)
 {
     ret_code_t err_code = ble_pb_c_write(&m_pb_c, data, size);
     APP_ERROR_CHECK(err_code);
+}
+
+void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
+{
+    m_raw_evt_handler = raw_evt_handler;
 }

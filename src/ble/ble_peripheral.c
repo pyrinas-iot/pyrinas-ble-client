@@ -62,6 +62,8 @@ NRF_LOG_MODULE_REGISTER();
 // Static defines
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 
+static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
+
 /**@brief Function for handling BLE events.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
@@ -205,9 +207,13 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, p
             break;
         case BLE_PB_EVT_DATA:
             NRF_LOG_DEBUG("Data!");
-            //TODO: moving this to the main context.
-            NRF_LOG_HEXDUMP_INFO(p_pb_evt->name.bytes, p_pb_evt->name.size);
-            NRF_LOG_HEXDUMP_INFO(p_pb_evt->data.bytes, p_pb_evt->data.size);
+
+            // Forward to raw handler.
+            if (m_raw_evt_handler != NULL)
+            {
+                m_raw_evt_handler(p_pb_evt);
+            }
+
             break;
     }
 }
@@ -255,4 +261,9 @@ void ble_peripheral_init()
 {
     advertising_init();
     services_init();
+}
+
+void ble_peripheral_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
+{
+    m_raw_evt_handler = raw_evt_handler;
 }
