@@ -193,7 +193,7 @@ static void advertising_init(void)
 /**@brief Function for forwarding protobuf data from the BLE portion of things
  */
 // TODO: kill this event handler and set one up in init
-void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, protobuf_event_t *p_pb_evt)
+void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt)
 {
 
     switch (p_evt->evt_type)
@@ -210,7 +210,7 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, p
             // Forward to raw handler.
             if (m_raw_evt_handler != NULL)
             {
-                m_raw_evt_handler(p_pb_evt);
+                m_raw_evt_handler(&(p_evt->params.data));
             }
 
             break;

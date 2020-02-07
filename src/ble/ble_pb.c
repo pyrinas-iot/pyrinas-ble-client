@@ -90,7 +90,7 @@ static void on_pb_cccd_write(ble_protobuf_t *p_protobuf, ble_gatts_evt_write_t c
                 evt.evt_type = BLE_PB_EVT_NOTIFICATION_DISABLED;
             }
 
-            p_protobuf->evt_handler(p_protobuf, &evt, NULL);
+            p_protobuf->evt_handler(p_protobuf, &evt);
         }
     }
 }
@@ -130,8 +130,11 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
             return;
         }
 
+        // Copy data over
+        evt.params.data = data;
+
         // Event to the main context
-        p_protobuf->evt_handler(p_protobuf, &evt, &data);
+        p_protobuf->evt_handler(p_protobuf, &evt);
     }
 }
 

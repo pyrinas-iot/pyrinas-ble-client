@@ -94,25 +94,30 @@ extern "C"
 
     // TODO: handling subscriptions
 
-    /**@brief Heart Rate Service event type. */
+    /**@brief Protobuf Service event type. */
     typedef enum
     {
         BLE_PB_EVT_DATA,
-        BLE_PB_EVT_NOTIFICATION_ENABLED, /**< Heart Rate value notification enabled event. */
-        BLE_PB_EVT_NOTIFICATION_DISABLED /**< Heart Rate value notification disabled event. */
+        BLE_PB_EVT_NOTIFICATION_ENABLED, /**< Protobuf value notification enabled event. */
+        BLE_PB_EVT_NOTIFICATION_DISABLED /**< Protobuf value notification disabled event. */
     } ble_pb_evt_type_t;
 
-    /**@brief Heart Rate Service event. */
+    /**@brief Protobuf Service event. */
+    // TODO: move the callback data to this struct.
     typedef struct
     {
         ble_pb_evt_type_t evt_type; /**< Type of event. */
+        union {
+            protobuf_event_t data; /* data */
+        } params;
+
     } ble_pb_evt_t;
 
     // Forward declaration of the ble_protobuf_t type.
     typedef struct ble_protobuf_s ble_protobuf_t;
 
     /**@brief Protobuf Service event handler type. */
-    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, protobuf_event_t *p_pb_evt);
+    typedef void (*ble_protobuf_evt_handler_t)(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt);
 
     /**@brief Protobuf Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
