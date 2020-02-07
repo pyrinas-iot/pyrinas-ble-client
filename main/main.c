@@ -71,11 +71,20 @@ static void timer_init()
     APP_ERROR_CHECK(err_code);
 }
 
+static void back_handler(char *name, char *data)
+{
+    NRF_LOG_INFO("%s: %s", name, data);
+}
+
 /**@brief Function recieving events (central or peripheral)
  */
 static void ble_raw_evt_handler(protobuf_event_t *p_evt)
 {
-    protobuf_event_t evt = *p_evt;
+
+    static protobuf_event_t evt;
+
+    evt = *p_evt;
+
     evt.name.bytes[evt.name.size++] = 0;
     evt.data.bytes[evt.data.size++] = 0;
 
@@ -135,6 +144,12 @@ int main(void)
     // Startup message
     NRF_LOG_INFO("Scaffolding started.");
     NRF_LOG_INFO("Address: %s", gap_addr_str);
+
+    // Publish test
+    ble_publish("ping", "");
+
+    // Subscribe test
+    ble_subscribe("back", back_handler);
 
     while (true)
     {

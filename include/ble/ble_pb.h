@@ -135,7 +135,7 @@ extern "C"
     };
 
     // TODO: fill out more info on this call
-    void ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size);
+    uint32_t ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size);
 
     /**@brief Function for initializing the Protobuf Service.
  *

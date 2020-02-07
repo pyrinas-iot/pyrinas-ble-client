@@ -200,7 +200,6 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt, p
     {
         case BLE_PB_EVT_NOTIFICATION_ENABLED:
             NRF_LOG_INFO("Notifications enabled!")
-            ble_publish("back", "at you");
             break;
         case BLE_PB_EVT_NOTIFICATION_DISABLED:
             NRF_LOG_INFO("Notifications disabled!")
@@ -254,7 +253,15 @@ static void services_init(void)
 
 void ble_peripheral_write(uint8_t *data, size_t size)
 {
-    ble_protobuf_write(&m_protobuf, data, size);
+    ret_code_t err_code = ble_protobuf_write(&m_protobuf, data, size);
+    if (err_code == NRF_ERROR_INVALID_STATE)
+    {
+        NRF_LOG_WARNING("Not connected. Unable to send message.");
+    }
+    else
+    {
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 void ble_peripheral_init()

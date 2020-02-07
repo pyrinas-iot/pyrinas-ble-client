@@ -4,7 +4,6 @@
 
 #include "ble_advdata.h"
 #include "ble_central.h"
-#include "ble_conn_params.h"
 #include "ble_db_discovery.h"
 #include "ble_m.h"
 #include "ble_pb_c.h"
@@ -105,8 +104,6 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf
             // Enable notifications
             err_code = ble_pb_c_notif_enable(p_pb_c);
             APP_ERROR_CHECK(err_code);
-
-            ble_publish("test", "event");
 
             break;
 
@@ -416,36 +413,6 @@ static void soc_evt_handler(uint32_t sys_evt, void *p_context)
     }
 }
 
-/**@brief Function for handling a Connection Parameters error.
- *
- * @param[in] nrf_error  Error code containing information about what went wrong.
- */
-static void conn_params_error_handler(uint32_t nrf_error)
-{
-    APP_ERROR_HANDLER(nrf_error);
-}
-
-/**@brief Function for initializing the Connection Parameters module. */
-static void conn_params_init(void)
-{
-    ret_code_t err_code;
-    ble_conn_params_init_t cp_init;
-
-    memset(&cp_init, 0, sizeof(cp_init));
-
-    cp_init.p_conn_params = NULL;
-    cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
-    cp_init.next_conn_params_update_delay = NEXT_CONN_PARAMS_UPDATE_DELAY;
-    cp_init.max_conn_params_update_count = MAX_CONN_PARAMS_UPDATE_COUNT;
-    cp_init.start_on_notify_cccd_handle = BLE_GATT_HANDLE_INVALID; // Start upon connection.
-    cp_init.disconnect_on_fail = true;
-    cp_init.evt_handler = NULL; // Ignore events.
-    cp_init.error_handler = conn_params_error_handler;
-
-    err_code = ble_conn_params_init(&cp_init);
-    APP_ERROR_CHECK(err_code);
-}
-
 void ble_central_init(ble_central_init_t *init)
 {
     // Copy configuration over
@@ -456,13 +423,20 @@ void ble_central_init(ble_central_init_t *init)
     db_discovery_init();
     pb_c_init();
     scan_init();
-    conn_params_init();
 }
 
 void ble_central_write(uint8_t *data, size_t size)
 {
+    // TODO: best way of handling non connection
     ret_code_t err_code = ble_pb_c_write(&m_pb_c, data, size);
-    APP_ERROR_CHECK(err_code);
+    if (err_code == NRF_ERROR_INVALID_STATE)
+    {
+        NRF_LOG_WARNING("Not connected. Unable to send message.");
+    }
+    else
+    {
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)

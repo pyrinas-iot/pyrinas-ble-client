@@ -136,7 +136,7 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
 }
 
 // TODO: add comment
-void ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size)
+uint32_t ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size)
 {
 
     ret_code_t err_code;
@@ -163,7 +163,7 @@ void ble_protobuf_write(ble_protobuf_t *p_protobuf, uint8_t *data, size_t size)
         err_code = NRF_ERROR_INVALID_STATE;
     }
 
-    APP_ERROR_CHECK(err_code);
+    return err_code;
 }
 
 /**@brief Function for handling the Disconnect event.

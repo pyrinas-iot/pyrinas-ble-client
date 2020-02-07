@@ -38,16 +38,18 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "util.h"
 
-#include "ble_central.h"
 #include "ble_m.h"
+#include "app_error.h"
+#include "ble_central.h"
 #include "ble_peripheral.h"
 #include "fds.h"
 #include "nordic_common.h"
 #include "nrf_ble_gatt.h"
+#include "nrf_queue.h"
 #include "nrf_sdh.h"
 #include "nrf_sdh_ble.h"
+#include "util.h"
 
 #include "pb_decode.h"
 #include "pb_encode.h"
@@ -58,6 +60,8 @@ NRF_LOG_MODULE_REGISTER();
 
 #define APP_BLE_CONN_CFG_TAG 1  /**< Tag for the configuration of the BLE stack. */
 #define APP_BLE_OBSERVER_PRIO 3 /**< BLE observer priority of the application. There is no need to modify this value. */
+
+NRF_QUEUE_DEF(protobuf_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
 
 // TODO: connect to inner portions of cthe code
 static bool m_is_connected = false; /**< Flag to keep track of the BLE connections with peripheral devices. */
@@ -72,6 +76,8 @@ static ble_subscription_list_t m_subscribe_list; /**< Use for adding/removing su
 static ble_stack_init_t m_config; /**< Init config */
 
 static raw_susbcribe_handler_t m_raw_handler_ext;
+
+static int subscriber_search(protobuf_event_t_name_t *event_name); // Forward declaration of subscriber_search
 
 bool ble_is_connected(void)
 {
@@ -104,14 +110,14 @@ void ble_publish(char *name, char *data)
     uint8_t data_length = strlen(data);
 
     // Check size
-    if (name_length > member_size(protobuf_event_t_name_t, bytes))
+    if (name_length >= member_size(protobuf_event_t_name_t, bytes))
     {
         NRF_LOG_WARNING("Name must be <= %d characters.", member_size(protobuf_event_t_name_t, bytes));
         return;
     }
 
     // Check size
-    if (data_length > member_size(protobuf_event_t_data_t, bytes))
+    if (data_length >= member_size(protobuf_event_t_data_t, bytes))
     {
         NRF_LOG_WARNING("Data must be <= %d characters.", member_size(protobuf_event_t_data_t, bytes));
         return;
@@ -163,7 +169,7 @@ void ble_publish_raw(protobuf_event_t event)
 void ble_subscribe(char *name, susbcribe_handler_t handler)
 {
 
-    uint8_t name_length = strlen(name);
+    uint8_t name_length = strlen(name) + 1;
 
     // Check size
     if (name_length > member_size(protobuf_event_t_name_t, bytes))
@@ -186,26 +192,11 @@ void ble_subscribe(char *name, susbcribe_handler_t handler)
     subscriber.name.size = name_length;
     memcpy(subscriber.name.bytes, name, name_length);
 
-    int index = 0;
-    bool found = false;
-
     // Check if exists
-    for (; index < m_subscribe_list.count; index++)
-    {
-        protobuf_event_t_name_t *name = &m_subscribe_list.subscribers[index].name;
+    int index = subscriber_search(&subscriber.name);
 
-        if (name->size == subscriber.name.size)
-        {
-            if (memcmp(name->bytes, subscriber.name.bytes, name->size) == 0)
-            {
-                found = true;
-                break;
-            }
-        }
-    }
-
-    // Update the found one.
-    if (found)
+    // If index is >= 0, we have an entry
+    if (index != -1)
     {
         m_subscribe_list.subscribers[index] = subscriber;
     }
@@ -305,15 +296,9 @@ static void gatt_init(void)
  */
 static void ble_raw_evt_handler(protobuf_event_t *evt)
 {
-
-    // Forward to raw handler if it exists
-    if (m_raw_handler_ext != NULL)
-    {
-        m_raw_handler_ext(evt);
-    }
-    // TODO: queue events.
-
-    // TODO: adding \0 terminating char so printing, strlen, etc works
+    // Queue events.
+    ret_code_t ret = nrf_queue_push(&m_event_queue, evt);
+    APP_ERROR_CHECK(ret);
 }
 
 // TODO: transmit power
@@ -371,7 +356,58 @@ void ble_subscribe_raw(raw_susbcribe_handler_t handler)
     m_raw_handler_ext = handler;
 }
 
-// TODO: deque messages, fire off the appropriate handlers
+// deque messages, fire off the appropriate handlers
 void ble_process()
 {
+
+    // Dequeue one item if not empty
+    if (!nrf_queue_is_empty(&m_event_queue))
+    {
+
+        static protobuf_event_t evt;
+        ret_code_t ret = nrf_queue_pop(&m_event_queue, &evt);
+        APP_ERROR_CHECK(ret);
+
+        // Forward to raw handler if it exists
+        if (m_raw_handler_ext != NULL)
+        {
+            m_raw_handler_ext(&evt);
+        }
+
+        // adding \0 terminating char so printing, strlen, etc works
+        evt.name.bytes[evt.name.size++] = 0;
+        evt.data.bytes[evt.data.size++] = 0;
+
+        // Check if exists
+        int index = subscriber_search(&evt.name);
+
+        // If index is >= 0, we have an entry
+        if (index != -1)
+        {
+            // Push to susbscription context
+            m_subscribe_list.subscribers[index].evt_handler((char *)evt.name.bytes, (char *)evt.data.bytes);
+        }
+    }
+}
+
+// TODO: more optimized way of doing this?
+static int subscriber_search(protobuf_event_t_name_t *event_name)
+{
+
+    int index = 0;
+
+    for (; index < m_subscribe_list.count; index++)
+    {
+        protobuf_event_t_name_t *name = &m_subscribe_list.subscribers[index].name;
+
+        if (name->size == event_name->size)
+        {
+            if (memcmp(name->bytes, event_name->bytes, name->size) == 0)
+            {
+                return index;
+            }
+        }
+    }
+
+    return -1;
 }
