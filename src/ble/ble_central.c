@@ -4,10 +4,12 @@
 
 #include "ble_advdata.h"
 #include "ble_central.h"
+#include "ble_conn_state.h"
 #include "ble_db_discovery.h"
 #include "ble_m.h"
 #include "ble_pb_c.h"
 
+#include "nrf_ble_qwr.h"
 #include "nrf_ble_scan.h"
 #include "nrf_fstorage.h"
 #include "nrf_sdh_soc.h"
@@ -26,10 +28,11 @@ NRF_LOG_MODULE_REGISTER();
 #define DEV_NAME_LEN ((BLE_GAP_ADV_SET_DATA_SIZE_MAX + 1) - \
                       AD_DATA_OFFSET) /**< Determines the device name length. */
 
-BLE_DB_DISCOVERY_DEF(m_db_discovery); /**< Database Discovery module instance. */
-NRF_BLE_SCAN_DEF(m_scan);             /**< Scanning Module instance. */
-BLE_PB_C_DEF(m_pb_c);                 /**< Protobuf service client module instance. */
-NRF_BLE_GQ_DEF(m_ble_gatt_queue,      /**< BLE GATT Queue instance. */
+BLE_DB_DISCOVERY_ARRAY_DEF(m_db_discovery, 2);         /**< Database Discovery module instance. */
+NRF_BLE_SCAN_DEF(m_scan);                              /**< Scanning Module instance. */
+BLE_PB_C_DEF(m_pb_c);                                  /**< Protobuf service client module instance. */
+NRF_BLE_QWRS_DEF(m_qwr, NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< Context for the Queued Write module.*/
+NRF_BLE_GQ_DEF(m_ble_gatt_queue,                       /**< BLE GATT Queue instance. */
                NRF_SDH_BLE_CENTRAL_LINK_COUNT,
                NRF_BLE_GQ_QUEUE_SIZE);
 
@@ -80,7 +83,7 @@ static void db_disc_handler(ble_db_discovery_evt_t *p_evt)
  * @param[in] p_evt        Pointer to event structure.
  * @param[in] p_pb_evt     Pointer to event data.
  */
-static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf_event_t *p_pb_evt)
+static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
 {
     ret_code_t err_code;
 
@@ -112,7 +115,7 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf
             // Forward to raw handler.
             if (m_raw_evt_handler != NULL)
             {
-                m_raw_evt_handler(p_pb_evt);
+                m_raw_evt_handler(&(p_evt->params.data));
             }
 
             // TODO: determine if this is necessary
@@ -121,6 +124,23 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf
 
         default:
             break;
+    }
+}
+
+/**@brief Function for assigning new connection handle to available instance of QWR module.
+ *
+ * @param[in] conn_handle New connection handle.
+ */
+static void multi_qwr_conn_handle_assign(uint16_t conn_handle)
+{
+    for (uint32_t i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
+    {
+        if (m_qwr[i].conn_handle == BLE_CONN_HANDLE_INVALID)
+        {
+            ret_code_t err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr[i], conn_handle);
+            APP_ERROR_CHECK(err_code);
+            break;
+        }
     }
 }
 
@@ -274,12 +294,30 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
             APP_ERROR_CHECK(err_code);
 
             // Discover the peer services.
-            err_code = ble_db_discovery_start(&m_db_discovery,
-                                              p_ble_evt->evt.gap_evt.conn_handle);
-            APP_ERROR_CHECK(err_code);
+            err_code = ble_db_discovery_start(&m_db_discovery[0],
+                                              p_gap_evt->conn_handle);
+            if (err_code == NRF_ERROR_BUSY)
+            {
+                err_code = ble_db_discovery_start(&m_db_discovery[1], p_gap_evt->conn_handle);
+                APP_ERROR_CHECK(err_code);
+            }
+            else
+            {
+                APP_ERROR_CHECK(err_code);
+            }
 
             m_is_connected = true;
-            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            m_conn_handle = p_gap_evt->conn_handle;
+
+            // Assign connection handle to the QWR module.
+            multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
+
+            // Continue scan if not full yet.
+            if (ble_conn_state_central_conn_count() < NRF_SDH_BLE_CENTRAL_LINK_COUNT)
+            {
+                scan_start();
+            }
+
             break;
 
         // Upon disconnection, reset the connection handle of the peer that disconnected
@@ -413,10 +451,36 @@ static void soc_evt_handler(uint32_t sys_evt, void *p_context)
     }
 }
 
+/**@brief Function for handling Queued Write Module errors.
+ *
+ * @details A pointer to this function will be passed to each service which may need to inform the
+ *          application about an error.
+ *
+ * @param[in]   nrf_error   Error code containing information about what went wrong.
+ */
+static void nrf_qwr_error_handler(uint32_t nrf_error)
+{
+    APP_ERROR_HANDLER(nrf_error);
+}
+
 void ble_central_init(ble_central_init_t *init)
 {
+
+    ret_code_t err_code;
+
+    nrf_ble_qwr_init_t qwr_init = {0};
+
     // Copy configuration over
     m_config = *init;
+
+    // Initialize Queued Write module instances.
+    qwr_init.error_handler = nrf_qwr_error_handler;
+
+    for (uint32_t i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
+    {
+        err_code = nrf_ble_qwr_init(&m_qwr[i], &qwr_init);
+        APP_ERROR_CHECK(err_code);
+    }
 
     NRF_SDH_SOC_OBSERVER(m_soc_observer, APP_SOC_OBSERVER_PRIO, soc_evt_handler, NULL);
 
