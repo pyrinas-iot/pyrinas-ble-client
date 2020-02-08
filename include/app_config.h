@@ -20,7 +20,6 @@
 #define BLE_PB_BLE_OBSERVER_PRIO 2
 
 // PB Collector
-#define SECURITY_LEVEL_THR 4
 #define BLE_PB_C_ENABLED true
 #define BLE_PB_C_BLE_OBSERVER_PRIO 2
 #define BLE_PB_C_CONFIG_LOG_ENABLED true
