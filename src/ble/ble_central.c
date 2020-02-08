@@ -45,15 +45,15 @@ static ble_central_init_t m_config;
 static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
 
 /**< Scan parameters requested for scanning and connection. */
-// static ble_gap_scan_params_t const m_scan_param =
-//     {
-//         .active = 0x01,
-//         .interval = NRF_BLE_SCAN_SCAN_INTERVAL,
-//         .window = NRF_BLE_SCAN_SCAN_WINDOW,
-//         .filter_policy = BLE_GAP_SCAN_FP_WHITELIST,
-//         .timeout = SCAN_DURATION_WITELIST,
-//         .scan_phys = BLE_GAP_PHY_AUTO,
-// };
+static ble_gap_scan_params_t const m_scan_param =
+    {
+        .active = 0x01,
+        .interval = NRF_BLE_SCAN_SCAN_INTERVAL,
+        .window = NRF_BLE_SCAN_SCAN_WINDOW,
+        .filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL,
+        .timeout = NRF_BLE_SCAN_SCAN_DURATION,
+        .scan_phys = BLE_GAP_PHY_1MBPS,
+};
 
 /**@brief Function for handling the Heart Rate Service Client and Battery Service Client errors.
  *
@@ -107,6 +107,13 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
             // Enable notifications
             err_code = ble_pb_c_notif_enable(p_pb_c);
             APP_ERROR_CHECK(err_code);
+
+            // Continue scan if not full yet.
+            if ((ble_conn_state_central_conn_count() < m_config.device_count) &&
+                (ble_conn_state_central_conn_count() < NRF_SDH_BLE_CENTRAL_LINK_COUNT))
+            {
+                ble_central_scan_start();
+            }
 
             break;
 
@@ -249,7 +256,6 @@ static void scan_init(void)
 
     memset(&init_scan, 0, sizeof(init_scan));
 
-    // init_scan.p_scan_param = &m_scan_param;
     init_scan.connect_if_match = true;
     init_scan.conn_cfg_tag = APP_BLE_CONN_CFG_TAG;
 
@@ -257,6 +263,7 @@ static void scan_init(void)
     APP_ERROR_CHECK(err_code);
 
     // Iterate through all the available addresses
+    // TODO: update this on change
     for (uint8_t i = 0; i < m_config.device_count; i++)
     {
         err_code = nrf_ble_scan_filter_set(&m_scan,
@@ -286,7 +293,7 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         // Upon connection, initiate secure bonding.
         case BLE_GAP_EVT_CONNECTED:
 
-            NRF_LOG_INFO("Connected.");
+            NRF_LOG_INFO("Connected to handle 0x%x", p_gap_evt->conn_handle);
 
             // TODO: continue scanning..
 
@@ -311,12 +318,6 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
             // Assign connection handle to the QWR module.
             multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
-
-            // Continue scan if not full yet.
-            if (ble_conn_state_central_conn_count() < NRF_SDH_BLE_CENTRAL_LINK_COUNT)
-            {
-                scan_start();
-            }
 
             break;
 
@@ -421,6 +422,9 @@ void ble_central_scan_start(void)
         m_memory_access_in_progress = true;
         return;
     }
+
+    err_code = nrf_ble_scan_params_set(&m_scan, &m_scan_param);
+    APP_ERROR_CHECK(err_code);
 
     err_code = nrf_ble_scan_start(&m_scan);
     APP_ERROR_CHECK(err_code);

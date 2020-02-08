@@ -114,10 +114,16 @@ int main(void)
         .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
         .addr = {0x81, 0x64, 0x4C, 0xAD, 0x7D, 0xC0}};
 
+    // 7c:84:9d:32:8d:e4
+    ble_gap_addr_t two = {
+        .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
+        .addr = {0x7c, 0x84, 0x9d, 0x32, 0x8d, 0xe4}};
+
     init.config.devices[0] = dev;
+    init.config.devices[1] = two;
 
     // Increment the device_count
-    init.config.device_count += 1;
+    init.config.device_count = 2;
 
 #endif
 
