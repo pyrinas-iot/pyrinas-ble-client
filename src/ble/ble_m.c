@@ -39,16 +39,21 @@
  *
  */
 
-#include "ble_m.h"
 #include "app_error.h"
-#include "ble_central.h"
-#include "ble_peripheral.h"
+#include "boards.h"
 #include "fds.h"
 #include "nordic_common.h"
+
+#include "ble_central.h"
+#include "ble_m.h"
+#include "ble_peripheral.h"
+
 #include "nrf_ble_gatt.h"
+#include "nrf_gpio.h"
 #include "nrf_queue.h"
 #include "nrf_sdh.h"
 #include "nrf_sdh_ble.h"
+
 #include "util.h"
 
 #include "pb_decode.h"
@@ -301,6 +306,18 @@ static void ble_raw_evt_handler(protobuf_event_t *evt)
     APP_ERROR_CHECK(ret);
 }
 
+static void radio_switch_init()
+{
+
+    nrf_gpio_cfg_output(VCTL1);
+    nrf_gpio_cfg_output(VCTL2);
+
+    // VCTL2 low, Output 2
+    // VCTL1 low, Output 1
+    nrf_gpio_pin_clear(VCTL2);
+    nrf_gpio_pin_set(VCTL1);
+}
+
 // TODO: transmit power
 void ble_stack_init(ble_stack_init_t *init)
 {
@@ -308,6 +325,9 @@ void ble_stack_init(ble_stack_init_t *init)
 
     // Copy over configuration
     m_config = *init;
+
+    // First, let's set the output switch correctly..
+    radio_switch_init();
 
     // Enable request for BLE stack
     err_code = nrf_sdh_enable_request();
