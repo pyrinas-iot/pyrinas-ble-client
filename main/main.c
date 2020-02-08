@@ -145,7 +145,7 @@ int main(void)
     char gap_addr_str[18];
 
     // Convert address to readable string
-    bin_to_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, ':', gap_addr_str);
+    addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
 
     // Startup message
     NRF_LOG_INFO("Scaffolding started.");

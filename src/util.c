@@ -1,21 +1,17 @@
 #include "util.h"
 
-void bin_to_strhex_delim(const uint8_t *data, int size, char delim, char *result)
+void addr_strhex_delim(uint8_t *addr, int size, char *out)
 {
     static char hex_str[] = "0123456789abcdef";
     unsigned int i;
 
-    int factor = (delim == 0) ? 2 : 3;
+    int factor = 3;
 
     for (i = 0; i < size; i++)
     {
-        (result)[i * factor + 0] = hex_str[(data[i] >> 4) & 0x0F];
-        (result)[i * factor + 1] = hex_str[(data[i]) & 0x0F];
-
-        if (delim != 0)
-        {
-            (result)[i * factor + 2] = delim;
-        }
+        (out)[i * factor + 0] = hex_str[(addr[i] >> 4) & 0x0F];
+        (out)[i * factor + 1] = hex_str[(addr[i]) & 0x0F];
+        (out)[i * factor + 2] = ':';
     }
-    (result)[(i - 1) * factor + 2] = '\0';
+    (out)[(i - 1) * factor + 2] = '\0';
 }

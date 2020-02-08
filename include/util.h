@@ -5,6 +5,9 @@
 
 #define member_size(type, member) sizeof(((type *)0)->member)
 
-void bin_to_strhex_delim(const uint8_t *data, int size, char delim, char *result);
+#define STRX(a) #a
+#define STR(a) STRX(a)
+
+void addr_strhex_delim(uint8_t *addr, int size, char *result);
 
 #endif
