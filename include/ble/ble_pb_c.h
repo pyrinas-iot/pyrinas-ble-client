@@ -120,8 +120,8 @@ extern "C"
         ble_pb_c_evt_type_t evt_type; /**< Type of the event. */
         uint16_t conn_handle;         /**< Connection handle on which the Protobuf service was discovered on the peer device..*/
         union {
-            pb_db_t peer_db;     /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
-            protobuf_event_t pb; /**< Protobuf received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
+            pb_db_t peer_db;       /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
+            protobuf_event_t data; /**< Protobuf data received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
         } params;
     } ble_pb_c_evt_t;
 
@@ -140,7 +140,7 @@ extern "C"
  * @details This is the type of the event handler that is to be provided by the application
  *          of this module to receive events.
  */
-    typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt, protobuf_event_t *p_pb_evt);
+    typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt);
 
     /** @} */
 

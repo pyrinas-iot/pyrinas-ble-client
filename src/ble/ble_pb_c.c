@@ -123,8 +123,9 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
         ble_pb_c_evt_t ble_pb_c_evt;
         ble_pb_c_evt.evt_type = BLE_PB_C_EVT_NOTIFICATION;
         ble_pb_c_evt.conn_handle = p_ble_pb_c->conn_handle;
+        ble_pb_c_evt.params.data = data;
 
-        p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt, &data);
+        p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt);
     }
 }
 
@@ -187,7 +188,7 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
             }
         }
 
-        p_ble_pb_c->evt_handler(p_ble_pb_c, &evt, NULL);
+        p_ble_pb_c->evt_handler(p_ble_pb_c, &evt);
     }
 }
 
