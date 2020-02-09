@@ -8,6 +8,7 @@
 #define APP_ADV_INTERVAL 300             /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 #define APP_ADV_DURATION 0               /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 #define APP_BLE_CONN_CFG_TAG 1           /**< A tag identifying the SoftDevice BLE configuration. */
+#define APP_ADV_TX_POWER 8u
 
 #define MIN_CONN_INTERVAL MSEC_TO_UNITS(100, UNIT_1_25_MS) /**< Minimum acceptable connection interval (0.1 seconds). */
 #define MAX_CONN_INTERVAL MSEC_TO_UNITS(200, UNIT_1_25_MS) /**< Maximum acceptable connection interval (0.2 second). */
@@ -68,7 +69,8 @@
 #define NRF_BLE_SCAN_SLAVE_LATENCY 0
 #define NRF_BLE_SCAN_SUPERVISION_TIMEOUT 4000
 // TODO: default to CODED PHY
-#define NRF_BLE_SCAN_SCAN_PHY 1
+#define NRF_BLE_SCAN_SCAN_PHY 4
+#define NRF_BLE_SCAN_TX_POWER 8
 
 #define NRF_BLE_SCAN_FILTER_ENABLE 1
 #define NRF_BLE_SCAN_UUID_CNT 2

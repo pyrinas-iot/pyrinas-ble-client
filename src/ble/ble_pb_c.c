@@ -56,6 +56,24 @@
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
+static bool handle_is_valid(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle)
+{
+
+    // Return an error if the conn_handle is greater than the possible connections.
+    if (conn_handle >= NRF_SDH_BLE_TOTAL_LINK_COUNT)
+    {
+        // tODO: necessary?
+        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+    }
+
+    if (p_ble_pb_c->conn_handles[conn_handle] != BLE_CONN_HANDLE_INVALID)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 /**@brief Function for interception of the errors of GATTC and the BLE GATT Queue.
  *
  * @param[in] nrf_error   Error code.
@@ -88,20 +106,22 @@ static void gatt_error_handler(uint32_t nrf_error,
  */
 static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
 {
+    uint16_t conn_handle = p_ble_evt->evt.gattc_evt.conn_handle;
+
     // Check if the event is on the link for this instance.
-    if (p_ble_pb_c->conn_handle != p_ble_evt->evt.gattc_evt.conn_handle)
+    if (!handle_is_valid(p_ble_pb_c, conn_handle))
     {
         NRF_LOG_DEBUG("Received HVX on link 0x%x, not associated to this instance. Ignore.",
-                      p_ble_evt->evt.gattc_evt.conn_handle);
+                      conn_handle);
         return;
     }
 
-    NRF_LOG_DEBUG("Received HVX on link 0x%x, pb_handle 0x%x",
+    NRF_LOG_DEBUG("Received HVX on link 0x%x, data_handle 0x%x",
                   p_ble_evt->evt.gattc_evt.params.hvx.handle,
-                  p_ble_pb_c->peer_pb_db.pb_handle);
+                  p_ble_pb_c->char_handles[conn_handle].data_handle);
 
     // Check if this is a protobuf notification.
-    if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->peer_pb_db.pb_handle)
+    if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->char_handles[conn_handle].cccd_handle)
     {
 
         // Decode the data
@@ -122,7 +142,7 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
         // Set the event type
         ble_pb_c_evt_t ble_pb_c_evt;
         ble_pb_c_evt.evt_type = BLE_PB_C_EVT_NOTIFICATION;
-        ble_pb_c_evt.conn_handle = p_ble_pb_c->conn_handle;
+        ble_pb_c_evt.conn_handle = conn_handle;
         ble_pb_c_evt.params.data = data;
 
         p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt);
@@ -140,16 +160,23 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
  */
 static void on_disconnected(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
 {
-    if (p_ble_pb_c->conn_handle == p_ble_evt->evt.gap_evt.conn_handle)
+
+    uint16_t conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
+    // Check if the event is on the link for this instance.
+    if (handle_is_valid(p_ble_pb_c, conn_handle))
     {
-        p_ble_pb_c->conn_handle = BLE_CONN_HANDLE_INVALID;
-        p_ble_pb_c->peer_pb_db.pb_cccd_handle = BLE_GATT_HANDLE_INVALID;
-        p_ble_pb_c->peer_pb_db.pb_handle = BLE_GATT_HANDLE_INVALID;
+        p_ble_pb_c->conn_handles[conn_handle] = BLE_CONN_HANDLE_INVALID;
+        p_ble_pb_c->char_handles[conn_handle].cccd_handle = BLE_GATT_HANDLE_INVALID;
+        p_ble_pb_c->char_handles[conn_handle].data_handle = BLE_GATT_HANDLE_INVALID;
     }
 }
 
 void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t *p_evt)
 {
+
+    uint16_t conn_handle = p_evt->conn_handle;
+
     // Check if the Protobuf Service was discovered.
     if (p_evt->evt_type == BLE_DB_DISCOVERY_COMPLETE &&
         p_evt->params.discovered_db.srv_uuid.uuid == PROTOBUF_UUID_SERVICE &&
@@ -161,7 +188,7 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
         ble_pb_c_evt_t evt;
 
         evt.evt_type = BLE_PB_C_EVT_DISCOVERY_COMPLETE;
-        evt.conn_handle = p_evt->conn_handle;
+        evt.conn_handle = conn_handle;
 
         for (i = 0; i < p_evt->params.discovered_db.char_count; i++)
         {
@@ -169,9 +196,9 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
                 PROTOBUF_UUID_CONFIG_CHAR)
             {
                 // Found Protobuf characteristic. Store CCCD handle and break.
-                evt.params.peer_db.pb_cccd_handle =
+                evt.params.peer_db.cccd_handle =
                     p_evt->params.discovered_db.charateristics[i].cccd_handle;
-                evt.params.peer_db.pb_handle =
+                evt.params.peer_db.data_handle =
                     p_evt->params.discovered_db.charateristics[i].characteristic.handle_value;
                 break;
             }
@@ -179,12 +206,14 @@ void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t 
 
         NRF_LOG_DEBUG("Protobuf Service discovered at peer.");
         //If the instance has been assigned prior to db_discovery, assign the db_handles.
-        if (p_ble_pb_c->conn_handle != BLE_CONN_HANDLE_INVALID)
+
+        // Check if the event is on the link for this instance.
+        if (handle_is_valid(p_ble_pb_c, conn_handle))
         {
-            if ((p_ble_pb_c->peer_pb_db.pb_cccd_handle == BLE_GATT_HANDLE_INVALID) &&
-                (p_ble_pb_c->peer_pb_db.pb_handle == BLE_GATT_HANDLE_INVALID))
+            if ((p_ble_pb_c->char_handles[conn_handle].cccd_handle == BLE_GATT_HANDLE_INVALID) &&
+                (p_ble_pb_c->char_handles[conn_handle].data_handle == BLE_GATT_HANDLE_INVALID))
             {
-                p_ble_pb_c->peer_pb_db = evt.params.peer_db;
+                p_ble_pb_c->char_handles[conn_handle] = evt.params.peer_db;
             }
         }
 
@@ -204,9 +233,13 @@ uint32_t ble_pb_c_init(ble_pb_c_t *p_ble_pb_c, ble_pb_c_init_t *p_ble_pb_c_init)
     p_ble_pb_c->evt_handler = p_ble_pb_c_init->evt_handler;
     p_ble_pb_c->error_handler = p_ble_pb_c_init->error_handler;
     p_ble_pb_c->p_gatt_queue = p_ble_pb_c_init->p_gatt_queue;
-    p_ble_pb_c->conn_handle = BLE_CONN_HANDLE_INVALID;
-    p_ble_pb_c->peer_pb_db.pb_cccd_handle = BLE_GATT_HANDLE_INVALID;
-    p_ble_pb_c->peer_pb_db.pb_handle = BLE_GATT_HANDLE_INVALID;
+
+    for (int i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
+    {
+        p_ble_pb_c->conn_handles[i] = BLE_CONN_HANDLE_INVALID;
+        p_ble_pb_c->char_handles[i].cccd_handle = BLE_GATT_HANDLE_INVALID;
+        p_ble_pb_c->char_handles[i].data_handle = BLE_GATT_HANDLE_INVALID;
+    }
 
     // Register longer uuid. Generates uuid_type
     err_code = sd_ble_uuid_vs_add(&pb_base_uuid, &p_ble_pb_c->uuid_type);
@@ -247,14 +280,12 @@ void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
     }
 }
 
-uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint8_t *data, size_t size)
+uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, uint8_t *data, size_t size)
 {
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
-    if (p_ble_pb_c->conn_handle == BLE_CONN_HANDLE_INVALID)
-    {
-        return NRF_ERROR_INVALID_STATE;
-    }
+    // Return an error if the handle is not set.
+    if (!handle_is_valid(p_ble_pb_c, conn_handle)) return NRF_ERROR_INVALID_PARAM;
 
     NRF_LOG_DEBUG("Writing %d bytes", size);
 
@@ -265,22 +296,26 @@ uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint8_t *data, size_t size)
     write_req.type = NRF_BLE_GQ_REQ_GATTC_WRITE;
     write_req.error_handler.cb = gatt_error_handler;
     write_req.error_handler.p_ctx = p_ble_pb_c;
-    write_req.params.gattc_write.handle = p_ble_pb_c->peer_pb_db.pb_handle;
+    write_req.params.gattc_write.handle = p_ble_pb_c->char_handles[conn_handle].data_handle;
     write_req.params.gattc_write.len = size;
     write_req.params.gattc_write.p_value = data;
     write_req.params.gattc_write.offset = 0;
     write_req.params.gattc_write.write_op = BLE_GATT_OP_WRITE_CMD;
 
-    return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &write_req, p_ble_pb_c->conn_handle);
+    return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &write_req, conn_handle);
 }
 
 /**@brief Function for creating a message for writing to the CCCD.
  */
-static uint32_t cccd_configure(ble_pb_c_t *p_ble_pb_c, bool enable)
+static uint32_t cccd_configure(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, bool enable)
 {
+
+    // Return an error if the handle is not set.
+    if (!handle_is_valid(p_ble_pb_c, conn_handle)) return NRF_ERROR_INVALID_PARAM;
+
     NRF_LOG_DEBUG("Configuring CCCD. CCCD Handle = %d, Connection Handle = %d",
-                  p_ble_pb_c->peer_pb_db.pb_cccd_handle,
-                  p_ble_pb_c->conn_handle);
+                  p_ble_pb_c->char_handles[conn_handle].cccd_handle,
+                  conn_handle);
 
     nrf_ble_gq_req_t pb_c_req;
     uint8_t cccd[BLE_CCCD_VALUE_LEN];
@@ -294,31 +329,31 @@ static uint32_t cccd_configure(ble_pb_c_t *p_ble_pb_c, bool enable)
     pb_c_req.type = NRF_BLE_GQ_REQ_GATTC_WRITE;
     pb_c_req.error_handler.cb = gatt_error_handler;
     pb_c_req.error_handler.p_ctx = p_ble_pb_c;
-    pb_c_req.params.gattc_write.handle = p_ble_pb_c->peer_pb_db.pb_cccd_handle;
+    pb_c_req.params.gattc_write.handle = p_ble_pb_c->char_handles[conn_handle].cccd_handle;
     pb_c_req.params.gattc_write.len = BLE_CCCD_VALUE_LEN;
     pb_c_req.params.gattc_write.p_value = cccd;
     pb_c_req.params.gattc_write.write_op = BLE_GATT_OP_WRITE_REQ;
 
-    return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &pb_c_req, p_ble_pb_c->conn_handle);
+    return nrf_ble_gq_item_add(p_ble_pb_c->p_gatt_queue, &pb_c_req, conn_handle);
 }
 
-uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c)
+uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle)
 {
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
-    return cccd_configure(p_ble_pb_c, true);
+    return cccd_configure(p_ble_pb_c, conn_handle, true);
 }
 
 uint32_t ble_pb_c_handles_assign(ble_pb_c_t *p_ble_pb_c,
                                  uint16_t conn_handle,
-                                 const pb_db_t *p_peer_pb_handles)
+                                 const pb_db_t *p_peer_data_handles)
 {
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
-    p_ble_pb_c->conn_handle = conn_handle;
-    if (p_peer_pb_handles != NULL)
+    p_ble_pb_c->conn_handles[conn_handle] = conn_handle;
+    if (p_peer_data_handles != NULL)
     {
-        p_ble_pb_c->peer_pb_db = *p_peer_pb_handles;
+        p_ble_pb_c->char_handles[conn_handle] = *p_peer_data_handles;
     }
 
     return nrf_ble_gq_conn_handle_register(p_ble_pb_c->p_gatt_queue, conn_handle);

@@ -110,9 +110,11 @@ extern "C"
     /**@brief Structure containing the handles related to the Protobuf Service found on the peer. */
     typedef struct
     {
-        uint16_t pb_cccd_handle; /**< Handle of the CCCD of the Protobuf characteristic. */
-        uint16_t pb_handle;      /**< Handle of the Protobuf characteristic, as provided by the SoftDevice. */
+        uint16_t cccd_handle; /**< Handle of the CCCD of the Protobuf characteristic. */
+        uint16_t data_handle; /**< Handle of the Protobuf characteristic, as provided by the SoftDevice. */
     } pb_db_t;
+
+    // TODO: Create a context array of these handles. As they are unique on a per-connection basis.
 
     /**@brief Protobuf Event structure. */
     typedef struct
@@ -151,14 +153,15 @@ extern "C"
 
     /**@brief Protobuf Client structure.
  */
+    // TODO: this technically uses more memory than necssary.. May get hefty with more connections.
     struct ble_pb_c_s
     {
-        uint8_t uuid_type;                     /**< UUID type for DFU UUID. */
-        uint16_t conn_handle;                  /**< Connection handle, as provided by the SoftDevice. */
-        pb_db_t peer_pb_db;                    /**< Handles related to PB on the peer. */
-        ble_pb_c_evt_handler_t evt_handler;    /**< Application event handler to be called when there is an event related to the Protobuf Service. */
-        ble_srv_error_handler_t error_handler; /**< Function to be called in case of an error. */
-        nrf_ble_gq_t *p_gatt_queue;            /**< Pointer to the BLE GATT Queue instance. */
+        uint8_t uuid_type;                                   /**< UUID type for DFU UUID. */
+        uint16_t conn_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT]; /**< Connection handle, as provided by the SoftDevice. */
+        pb_db_t char_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];  /**< Handles related to PB on the peer. */
+        ble_pb_c_evt_handler_t evt_handler;                  /**< Application event handler to be called when there is an event related to the Protobuf Service. */
+        ble_srv_error_handler_t error_handler;               /**< Function to be called in case of an error. */
+        nrf_ble_gq_t *p_gatt_queue;                          /**< Pointer to the BLE GATT Queue instance. */
     };
 
     /**@brief Protobuf Client initialization structure.
@@ -178,7 +181,7 @@ extern "C"
  */
 
     // TODO: document this
-    uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint8_t *data, size_t size);
+    uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, uint8_t *data, size_t size);
 
     /**@brief     Function for initializing the Protobuf Client module.
  *
@@ -219,7 +222,7 @@ extern "C"
  * @retval	err_code	Otherwise, this function propagates the error code returned
  *                      by the SoftDevice API @ref sd_ble_gattc_write.
  */
-    uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c);
+    uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle);
 
     /**@brief     Function for handling events from the Database Discovery module.
  *

@@ -136,9 +136,15 @@ static void advertising_config_get(ble_adv_modes_config_t *p_config)
 {
     memset(p_config, 0, sizeof(ble_adv_modes_config_t));
 
+    p_config->ble_adv_extended_enabled = true;
+    p_config->ble_adv_primary_phy = BLE_GAP_PHY_CODED;
+    p_config->ble_adv_secondary_phy = BLE_GAP_PHY_1MBPS;
     p_config->ble_adv_fast_enabled = true;
     p_config->ble_adv_fast_interval = APP_ADV_INTERVAL;
     p_config->ble_adv_fast_timeout = APP_ADV_DURATION;
+
+    // Coded PHY
+    p_config->ble_adv_primary_phy = BLE_GAP_PHY_CODED;
 }
 
 /**@brief Function for handling advertising events.
@@ -174,8 +180,11 @@ static void advertising_init(void)
     uint32_t err_code;
     ble_advertising_init_t init;
 
+    int8_t tx_power = APP_ADV_TX_POWER;
+
     memset(&init, 0, sizeof(init));
 
+    init.advdata.p_tx_power_level = &tx_power; //8dBm
     init.advdata.name_type = BLE_ADVDATA_FULL_NAME;
     init.advdata.include_appearance = true;
     init.advdata.flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;

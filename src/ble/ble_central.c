@@ -28,7 +28,7 @@ NRF_LOG_MODULE_REGISTER();
 #define DEV_NAME_LEN ((BLE_GAP_ADV_SET_DATA_SIZE_MAX + 1) - \
                       AD_DATA_OFFSET) /**< Determines the device name length. */
 
-BLE_DB_DISCOVERY_ARRAY_DEF(m_db_discovery, 2);         /**< Database Discovery module instance. */
+BLE_DB_DISCOVERY_DEF(m_db_discovery);                  /**< Database Discovery module instance. */
 NRF_BLE_SCAN_DEF(m_scan);                              /**< Scanning Module instance. */
 BLE_PB_C_DEF(m_pb_c);                                  /**< Protobuf service client module instance. */
 NRF_BLE_QWRS_DEF(m_qwr, NRF_SDH_BLE_TOTAL_LINK_COUNT); /**< Context for the Queued Write module.*/
@@ -36,10 +36,8 @@ NRF_BLE_GQ_DEF(m_ble_gatt_queue,                       /**< BLE GATT Queue insta
                NRF_SDH_BLE_CENTRAL_LINK_COUNT,
                NRF_BLE_GQ_QUEUE_SIZE);
 
-static bool m_is_connected = false;                      /**< Flag to keep track of the BLE connections with peripheral devices. */
-static bool m_memory_access_in_progress = false;         /**< Flag to keep track of the ongoing operations on persistent memory. */
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Current connection handle. */
-static bool m_pb_notif_enabled = false;                  /**< Flag indicating that pb notification has been enabled. */
+static bool m_memory_access_in_progress = false; /**< Flag to keep track of the ongoing operations on persistent memory. */
+
 static ble_central_init_t m_config;
 
 static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
@@ -52,7 +50,8 @@ static ble_gap_scan_params_t const m_scan_param =
         .window = NRF_BLE_SCAN_SCAN_WINDOW,
         .filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL,
         .timeout = NRF_BLE_SCAN_SCAN_DURATION,
-        .scan_phys = BLE_GAP_PHY_1MBPS,
+        .scan_phys = BLE_GAP_PHY_CODED,
+        .extended = 1,
 };
 
 /**@brief Function for handling the Heart Rate Service Client and Battery Service Client errors.
@@ -96,7 +95,7 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
             APP_ERROR_CHECK(err_code);
 
             // Initiate bonding.
-            err_code = pm_conn_secure(p_pb_c->conn_handle, false);
+            err_code = pm_conn_secure(p_evt->conn_handle, false);
             if (err_code != NRF_ERROR_BUSY)
             {
                 APP_ERROR_CHECK(err_code);
@@ -105,7 +104,7 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
             NRF_LOG_INFO("Protobuf Service discovered ");
 
             // Enable notifications
-            err_code = ble_pb_c_notif_enable(p_pb_c);
+            err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
             APP_ERROR_CHECK(err_code);
 
             // Continue scan if not full yet.
@@ -125,8 +124,6 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
                 m_raw_evt_handler(&(p_evt->params.data));
             }
 
-            // TODO: determine if this is necessary
-            m_pb_notif_enabled = true;
             break;
 
         default:
@@ -301,20 +298,9 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
             APP_ERROR_CHECK(err_code);
 
             // Discover the peer services.
-            err_code = ble_db_discovery_start(&m_db_discovery[0],
+            err_code = ble_db_discovery_start(&m_db_discovery,
                                               p_gap_evt->conn_handle);
-            if (err_code == NRF_ERROR_BUSY)
-            {
-                err_code = ble_db_discovery_start(&m_db_discovery[1], p_gap_evt->conn_handle);
-                APP_ERROR_CHECK(err_code);
-            }
-            else
-            {
-                APP_ERROR_CHECK(err_code);
-            }
-
-            m_is_connected = true;
-            m_conn_handle = p_gap_evt->conn_handle;
+            APP_ERROR_CHECK(err_code);
 
             // Assign connection handle to the QWR module.
             multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
@@ -331,10 +317,6 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
             NRF_LOG_INFO("Disconnected. conn_handle: 0x%x, reason: 0x%x",
                          p_gap_evt->conn_handle,
                          p_gap_evt->params.disconnected.reason);
-
-            m_conn_handle = BLE_CONN_HANDLE_INVALID;
-            m_is_connected = false;
-            m_pb_notif_enabled = false;
 
             // Restart scanning.
             ble_central_scan_start();
@@ -467,6 +449,12 @@ static void nrf_qwr_error_handler(uint32_t nrf_error)
     APP_ERROR_HANDLER(nrf_error);
 }
 
+static void tx_power_init()
+{
+    ret_code_t err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_SCAN_INIT, 0, NRF_BLE_SCAN_TX_POWER);
+    APP_ERROR_CHECK(err_code);
+}
+
 void ble_central_init(ble_central_init_t *init)
 {
 
@@ -488,6 +476,7 @@ void ble_central_init(ble_central_init_t *init)
 
     NRF_SDH_SOC_OBSERVER(m_soc_observer, APP_SOC_OBSERVER_PRIO, soc_evt_handler, NULL);
 
+    tx_power_init(); // Set TX power
     db_discovery_init();
     pb_c_init();
     scan_init();
@@ -496,14 +485,24 @@ void ble_central_init(ble_central_init_t *init)
 void ble_central_write(uint8_t *data, size_t size)
 {
     // TODO: best way of handling non connection
-    ret_code_t err_code = ble_pb_c_write(&m_pb_c, data, size);
-    if (err_code == NRF_ERROR_INVALID_STATE)
+    // Write to all connection handles
+
+    for (int i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
     {
-        NRF_LOG_WARNING("Not connected. Unable to send message.");
-    }
-    else
-    {
-        APP_ERROR_CHECK(err_code);
+        uint16_t conn_handle = m_pb_c.conn_handles[i];
+
+        if (conn_handle != BLE_CONN_HANDLE_INVALID)
+        {
+            ret_code_t err_code = ble_pb_c_write(&m_pb_c, conn_handle, data, size);
+            if (err_code == NRF_ERROR_INVALID_STATE)
+            {
+                NRF_LOG_WARNING("Not connected. Unable to send message.");
+            }
+            else
+            {
+                APP_ERROR_CHECK(err_code);
+            }
+        }
     }
 }
 
