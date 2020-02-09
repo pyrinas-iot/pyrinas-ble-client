@@ -22,12 +22,11 @@ typedef enum _event_type {
 /* Struct definitions */
 typedef PB_BYTES_ARRAY_T(12) protobuf_event_t_name_t;
 typedef PB_BYTES_ARRAY_T(64) protobuf_event_t_data_t;
-typedef PB_BYTES_ARRAY_T(6) protobuf_event_t_addr_t;
 typedef struct _protobuf_event_t {
     event_type type;
     protobuf_event_t_name_t name;
     protobuf_event_t_data_t data;
-    protobuf_event_t_addr_t addr;
+    pb_byte_t addr[6];
 } protobuf_event_t;
 
 
@@ -38,8 +37,8 @@ typedef struct _protobuf_event_t {
 
 
 /* Initializer values for message structs */
-#define protobuf_event_t_init_default            {_event_type_MIN, {0, {0}}, {0, {0}}, {0, {0}}}
-#define protobuf_event_t_init_zero               {_event_type_MIN, {0, {0}}, {0, {0}}, {0, {0}}}
+#define protobuf_event_t_init_default            {_event_type_MIN, {0, {0}}, {0, {0}}, {0}}
+#define protobuf_event_t_init_zero               {_event_type_MIN, {0, {0}}, {0, {0}}, {0}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define protobuf_event_t_type_tag                1
@@ -52,7 +51,7 @@ typedef struct _protobuf_event_t {
 X(a, STATIC,   SINGULAR, UENUM,    type,              1) \
 X(a, STATIC,   SINGULAR, BYTES,    name,              2) \
 X(a, STATIC,   SINGULAR, BYTES,    data,              3) \
-X(a, STATIC,   SINGULAR, BYTES,    addr,              4)
+X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, addr,              4)
 #define protobuf_event_t_CALLBACK NULL
 #define protobuf_event_t_DEFAULT NULL
 

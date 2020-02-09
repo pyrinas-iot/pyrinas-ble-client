@@ -146,6 +146,11 @@ void ble_publish_raw(protobuf_event_t event)
 {
 
     NRF_LOG_DEBUG("publish raw: %s %s", event.name.bytes, event.data.bytes);
+    ble_gap_addr_t gap_addr;
+    sd_ble_gap_addr_get(&gap_addr);
+
+    // Copy over the address information
+    memcpy(event.addr, gap_addr.addr, sizeof(event.addr));
 
     // Encode value
     pb_byte_t output[protobuf_event_t_size];
