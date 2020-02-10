@@ -53,6 +53,8 @@
 #include "nrf_log_default_backends.h"
 #include "nrf_pwr_mgmt.h"
 
+#include "app.h"
+
 /**@brief Function for initializing nrf logger.
  */
 static void logs_init()
@@ -71,26 +73,6 @@ static void timer_init()
     APP_ERROR_CHECK(err_code);
 }
 
-static void back_handler(char *name, char *data)
-{
-    NRF_LOG_INFO("%s: %s", name, data);
-}
-
-/**@brief Function recieving events (central or peripheral)
- */
-static void ble_raw_evt_handler(protobuf_event_t *p_evt)
-{
-
-    static protobuf_event_t evt;
-
-    evt = *p_evt;
-
-    evt.name.bytes[evt.name.size++] = 0;
-    evt.data.bytes[evt.data.size++] = 0;
-
-    NRF_LOG_INFO("%s: %s", evt.name.bytes, evt.data.bytes);
-}
-
 /**@brief   Function for application main entry.
  *
  * @details Initializes BLE and NFC stacks and runs NFC Forum device task.
@@ -100,45 +82,7 @@ int main(void)
     logs_init();
     timer_init();
     buttons_init();
-
-// Replace BLE_STACK_PERIPH_DEF with BLE_STACK_CENTRAL_DEF for central mode
-#if BOARD_MODE == ble_mode_peripheral
-    BLE_STACK_PERIPH_DEF(init);
-#else
-    BLE_STACK_CENTRAL_DEF(init);
-
-    // TODO: move out of init. Adding a separate function "attaching"
-    // TODO: -> new devices.
-    // Add an address to scan for
-    ble_gap_addr_t dev = {
-        .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
-        .addr = {0x81, 0x64, 0x4C, 0xAD, 0x7D, 0xC0}};
-
-    // 7c:84:9d:32:8d:e4
-    ble_gap_addr_t two = {
-        .addr_type = BLE_GAP_ADDR_TYPE_RANDOM_STATIC,
-        .addr = {0x7c, 0x84, 0x9d, 0x32, 0x8d, 0xe4}};
-
-    init.config.devices[0] = dev;
-    init.config.devices[1] = two;
-
-    // Increment the device_count
-    init.config.device_count = 2;
-
-#endif
-
-    // Configuration for ble stack
-    ble_stack_init(&init);
-
-    // Subscribe to raw events
-    // For more advanced use cases
-    ble_subscribe_raw(ble_raw_evt_handler);
-
-    // Peer manager config
     peer_manager_init(false);
-
-    advertising_start();
-    scan_start();
 
     ble_gap_addr_t gap_addr;
     sd_ble_gap_addr_get(&gap_addr);
@@ -151,16 +95,16 @@ int main(void)
     NRF_LOG_INFO("Scaffolding started.");
     NRF_LOG_INFO("Address: %s", gap_addr_str);
 
-    // Publish test
-    ble_publish("ping", "");
-
-    // Subscribe test
-    ble_subscribe("back", back_handler);
+    // App side related
+    setup();
 
     while (true)
     {
         // Processing in main loop.
         ble_process();
+
+        // App side related
+        loop();
 
         // Manage power if there's nothing else to do.
         if (NRF_LOG_PROCESS() == false)

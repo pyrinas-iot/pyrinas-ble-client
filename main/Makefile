@@ -12,6 +12,18 @@ include $(PROJ_DIR)/../Makefile.modes
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := ble_app_buttonless_dfu_gcc_nrf52.ld
 
+ifdef APP_DIR
+# Source files in app directories
+SRC_FILES += \
+  $(wildcard $(APP_DIR)/*.c) \
+  $(wildcard $(APP_DIR)/lib/*.c)
+
+# Include folders for app
+INC_FOLDERS += \
+  $(APP_DIR)/ \
+  $(APP_DIR)/lib/
+endif
+
 # Source files common to all targets
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
@@ -105,6 +117,7 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/buttons_m.c \
   $(PROJ_DIR)/../src/pm_m.c \
   $(PROJ_DIR)/../src/util.c \
+  $(PROJ_DIR)/../src/app_weak.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
