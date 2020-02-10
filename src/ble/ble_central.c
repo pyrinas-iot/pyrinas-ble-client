@@ -37,6 +37,7 @@ NRF_BLE_GQ_DEF(m_ble_gatt_queue,                       /**< BLE GATT Queue insta
                NRF_BLE_GQ_QUEUE_SIZE);
 
 static bool m_memory_access_in_progress = false; /**< Flag to keep track of the ongoing operations on persistent memory. */
+static bool m_scan_on_disconnect_enabled = true;
 
 static ble_central_init_t m_config;
 
@@ -319,7 +320,7 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
                          p_gap_evt->params.disconnected.reason);
 
             // Restart scanning.
-            ble_central_scan_start();
+            if (m_scan_on_disconnect_enabled) ble_central_scan_start();
             break;
 
         case BLE_GAP_EVT_ADV_REPORT:
@@ -516,6 +517,9 @@ void ble_central_disconnect()
 
 
     ret_code_t err_code;
+
+    // Disable scanning on disconnect temporarily
+    m_scan_on_disconnect_enabled = false;
 
     // Stop scanning
     nrf_ble_scan_stop();
