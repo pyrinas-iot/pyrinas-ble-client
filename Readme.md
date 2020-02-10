@@ -49,24 +49,22 @@ Look for `S/N:` and you should see your serial!
 
 ## Debugging
 
-In order to debug a central and peripheral mode device at the same time you have to define `PROG_SERIAL` in `Makefile.modes`.
-If you only have one programmer, you will not be able to simultaneously debug.
+[ ] TODO: update this.
 
-Then start debugging for each board.
+In order to debug a central and peripheral mode device at the same time you have to define `PROG_SERIAL`
+and `PROG_PORT` in your app's Makefile. If you only have one programmer, you will not be able to simultaneously debug.
 
-Run these in two separate windows. You do not need to view them.
+To simultaneously debug, make sure that `PROG_PORT` is set to different values for each app you have. (Good port numbers
+are 19020, 19021, etc)
 
-```
-MODE=central make debug
-MODE=peripheral make debug
-```
-
-Then run these in two separate windows. These will have your log output.
+Then, run these in two separate windows. You do not need to view them.
 
 ```
-MODE=central make rtt
-MODE=peripheral make rtt
+make debug
+make rtt
 ```
+
+Open a pair of windows for each project you want see debug out put for.
 
 ## Uninstalling Toolchain or SDK
 
@@ -74,3 +72,8 @@ MODE=peripheral make rtt
 1. Run `make toolchain_clean` for the Toolchain
 
 Both options will remove the respective directories.
+
+## Adding a project.
+
+For more information on how to start your own project with Nucleus OS,
+[check out the template repository.](https://github.com/nucleus-iot/nucleus-template)
