@@ -535,7 +535,35 @@ void ble_central_disconnect()
         }
     }
 }
+
+void ble_central_pm_evt_handler(pm_evt_t const *p_evt)
+{
     ret_code_t err_code;
+
+    // ret_code_t err_code;
+    switch (p_evt->evt_id)
+    {
+        case PM_EVT_CONN_SEC_FAILED:
+            if (p_evt->params.conn_sec_failed.error == PM_CONN_SEC_ERROR_PIN_OR_KEY_MISSING)
+            {
+                // Rebond if one party has lost its keys.
+                err_code = pm_conn_secure(p_evt->conn_handle, true);
+                if (err_code != NRF_ERROR_BUSY)
+                {
+                    APP_ERROR_CHECK(err_code);
+                }
+            }
+            break;
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+            m_scan_on_disconnect_enabled = true;
+            ble_central_scan_start();
+            break;
+
+        default:
+            // No implementation needed.
+            break;
+    }
+}
 
 bool ble_central_is_connected(void)
 {

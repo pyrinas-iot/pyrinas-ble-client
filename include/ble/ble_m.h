@@ -54,6 +54,9 @@
 
 #include "ble_central.h"
 #include "ble_handlers.h"
+
+#include "peer_manager.h"
+
 #include "command.pb.h"
 
 //TODO: better place to define this
@@ -141,6 +144,9 @@ bool ble_is_connected(void);
  * @return Returns connection handle.
  */
 uint16_t ble_get_conn_handle(void);
+
+// TODO: Document this
+void ble_pm_evt_handler(pm_evt_t const *p_evt);
 
 // TODO: document this
 void ble_process();

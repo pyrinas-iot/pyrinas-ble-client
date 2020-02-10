@@ -199,6 +199,29 @@ static void advertising_init(void)
     ble_advertising_conn_cfg_tag_set(&m_advertising, APP_BLE_CONN_CFG_TAG);
 }
 
+void ble_peripheral_pm_evt_handler(pm_evt_t const *p_evt)
+{
+    switch (p_evt->evt_id)
+    {
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+            ble_peripheral_advertising_start(false);
+            break;
+
+        case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
+            if (p_evt->params.peer_data_update_succeeded.flash_changed && (p_evt->params.peer_data_update_succeeded.data_id == PM_PEER_DATA_ID_BONDING))
+            {
+                NRF_LOG_INFO("New Bond, add the peer to the whitelist if possible");
+                // Note: You should check on what kind of white list policy your application should use.
+
+                whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
 /**@brief Function for forwarding protobuf data from the BLE portion of things
  */
 // TODO: kill this event handler and set one up in init

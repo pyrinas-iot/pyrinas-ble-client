@@ -47,6 +47,8 @@
 #include "ble.h"
 #include "ble_handlers.h"
 
+#include "peer_manager.h"
+
 typedef struct
 {
     ble_gap_addr_t devices[NRF_SDH_BLE_CENTRAL_LINK_COUNT];
@@ -55,6 +57,7 @@ typedef struct
 
 //TODO: document this.
 bool ble_central_is_connected(void);
+void ble_central_pm_evt_handler(pm_evt_t const *p_evt);
 void ble_central_disconnect(void);
 void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler);
 void ble_central_write(uint8_t *data, size_t size);

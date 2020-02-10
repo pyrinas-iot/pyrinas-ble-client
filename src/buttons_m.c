@@ -44,7 +44,7 @@
 #include "peer_manager.h"
 #include "sdk_errors.h"
 
-#define NRF_LOG_MODULE_NAME BUTTONS_M
+#define NRF_LOG_MODULE_NAME buttons_m
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
 
@@ -62,7 +62,8 @@ static void bsp_event_handler(bsp_event_t event)
 
     switch (event)
     {
-        case APP_BTN_EVT_DISCONNECT:
+        case BSP_EVENT_KEY_0:
+
             if (ble_is_connected())
             {
                 NRF_LOG_INFO("Terminating BLE connection.");
@@ -75,11 +76,6 @@ static void bsp_event_handler(bsp_event_t event)
                 APP_ERROR_CHECK(err_code);
             }
             break;
-
-        case APP_BTN_EVT_PAIR:
-            NRF_LOG_INFO("Initiate NFC pairing.");
-            break;
-
         default:
             break;
     }
@@ -91,5 +87,8 @@ void buttons_init(void)
 
     // Initialize buttons and add bsp buttons task to the application timer.
     err_code = bsp_init(BSP_INIT_BUTTONS | BSP_INIT_LEDS, bsp_event_handler);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = bsp_event_to_button_action_assign(0, BSP_BUTTON_ACTION_LONG_PUSH, BSP_EVENT_KEY_0);
     APP_ERROR_CHECK(err_code);
 }

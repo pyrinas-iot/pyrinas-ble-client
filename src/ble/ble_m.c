@@ -68,12 +68,6 @@ NRF_LOG_MODULE_REGISTER();
 
 NRF_QUEUE_DEF(protobuf_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
 
-// TODO: connect to inner portions of cthe code
-static bool m_is_connected = false; /**< Flag to keep track of the BLE connections with peripheral devices. */
-
-// TODO: connect to inner portions of cthe code
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Current connection handle. */
-
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
 
 static ble_subscription_list_t m_subscribe_list; /**< Use for adding/removing subscriptions */
@@ -229,7 +223,7 @@ void advertising_start(void)
 
     if (m_config.mode == ble_mode_peripheral)
     {
-        ble_peripheral_advertising_start();
+        ble_peripheral_advertising_start(false);
     }
     else
     {
@@ -441,4 +435,17 @@ static int subscriber_search(protobuf_event_t_name_t *event_name)
     }
 
     return -1;
+}
+
+void ble_pm_evt_handler(pm_evt_t const *p_evt)
+{
+    switch (m_config.mode)
+    {
+        case ble_mode_peripheral:
+            ble_peripheral_pm_evt_handler(p_evt);
+            break;
+        case ble_mode_central:
+            ble_central_pm_evt_handler(p_evt);
+            break;
+    }
 }
