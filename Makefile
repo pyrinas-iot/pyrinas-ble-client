@@ -32,9 +32,18 @@ APP_FILENAME    := scaffolding
 # Board definition and Git versioning
 include Makefile.ver
 include Makefile.bid
-include Makefile.modes
 
-msg = Building app in $(MODE_DESC) mode for $(BOARD_DESC).
+# Check for errors. These should be set in the app.
+ifndef PROG_SERIAL
+$(error PROG_SERIAL must be defined!)
+endif
+
+ifndef PROG_PORT
+$(error PROG_PORT must be defined!)
+endif
+
+
+msg = Building app for $(BOARD_DESC).
 $(info )
 $(info $(msg))
 $(info )

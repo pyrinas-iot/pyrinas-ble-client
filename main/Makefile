@@ -7,7 +7,6 @@ PROJ_DIR := .
 
 include $(PROJ_DIR)/../Makefile.ver
 include $(PROJ_DIR)/../Makefile.bid
-include $(PROJ_DIR)/../Makefile.modes
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
   LINKER_SCRIPT  := ble_app_buttonless_dfu_gcc_nrf52.ld
@@ -193,7 +192,6 @@ CFLAGS += $(OPT)
 CFLAGS += -DDEBUG
 CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
-CFLAGS += -DBOARD_MODE=$(BOARD_MODE)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBL_SETTINGS_ACCESS_ONLY
@@ -219,7 +217,6 @@ CXXFLAGS += $(OPT)
 # Assembler flags common to all targets
 ASMFLAGS += -g3
 ASMFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
-ASMFLAGS += -DBOARD_MODE=$(BOARD_MODE)
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
