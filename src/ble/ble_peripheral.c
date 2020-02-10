@@ -42,7 +42,6 @@
 #include "app_error.h"
 #include "bsp.h"
 
-#include "ble.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_m.h"
@@ -61,8 +60,27 @@ NRF_LOG_MODULE_REGISTER();
 
 // Static defines
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
+static bool m_advertising_on_disconnect = true;
 
 static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
+
+static pm_peer_id_t m_peer_id; /**< Device reference handle to the current bonded central. */
+
+/**@brief Function for setting filtered device identities.
+ *
+ * @param[in] skip  Filter passed to @ref pm_peer_id_list.
+ */
+static void identities_set(pm_peer_id_list_skip_t skip)
+{
+    pm_peer_id_t peer_ids[BLE_GAP_DEVICE_IDENTITIES_MAX_COUNT];
+    uint32_t peer_id_count = BLE_GAP_DEVICE_IDENTITIES_MAX_COUNT;
+
+    ret_code_t err_code = pm_peer_id_list(peer_ids, &peer_id_count, PM_PEER_ID_INVALID, skip);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = pm_device_identities_list_set(peer_ids, peer_id_count);
+    APP_ERROR_CHECK(err_code);
+}
 
 /**@brief Function for handling BLE events.
  *
@@ -77,6 +95,11 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
     {
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Peripheral disconnected!");
+            m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+            // Only advertising on disconnect when enabled
+            if (m_advertising_on_disconnect) ble_peripheral_advertising_start(false);
+
             break;
 
         case BLE_GAP_EVT_CONNECTED:
@@ -116,26 +139,61 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
                                              BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
             APP_ERROR_CHECK(err_code);
             break;
-
         default:
             // No implementation needed.
             break;
     }
 }
 
+/**@brief Function for setting filtered whitelist.
+ *
+ * @param[in] skip  Filter passed to @ref pm_peer_id_list.
+ */
+static void whitelist_set(pm_peer_id_list_skip_t skip)
+{
+    pm_peer_id_t peer_ids[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
+    uint32_t peer_id_count = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
+
+    ret_code_t err_code = pm_peer_id_list(peer_ids, &peer_id_count, PM_PEER_ID_INVALID, skip);
+    APP_ERROR_CHECK(err_code);
+
+    NRF_LOG_DEBUG("\tm_whitelist_peer_cnt %d, MAX_PEERS_WLIST %d",
+                  peer_id_count + 1,
+                  BLE_GAP_WHITELIST_ADDR_MAX_COUNT);
+
+    err_code = pm_whitelist_set(peer_ids, peer_id_count);
+    APP_ERROR_CHECK(err_code);
+}
+
 /**@brief Function for starting advertising.
  */
-void ble_peripheral_advertising_start()
+void ble_peripheral_advertising_start(bool erase_bonds)
 {
+
     ret_code_t err_code;
-    err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-    APP_ERROR_CHECK(err_code);
+
+    if (erase_bonds == true)
+    {
+        err_code = pm_peers_delete();
+        APP_ERROR_CHECK(err_code);
+        // Advertising is started by PM_EVT_PEERS_DELETE_SUCCEEDED event.
+    }
+    else
+    {
+        whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
+
+        err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 static void advertising_config_get(ble_adv_modes_config_t *p_config)
 {
     memset(p_config, 0, sizeof(ble_adv_modes_config_t));
 
+    p_config->ble_adv_on_disconnect_disabled = true;
+    p_config->ble_adv_whitelist_enabled = true;
+    p_config->ble_adv_directed_enabled = false;
     p_config->ble_adv_extended_enabled = true;
     p_config->ble_adv_primary_phy = BLE_GAP_PHY_CODED;
     p_config->ble_adv_secondary_phy = BLE_GAP_PHY_1MBPS;
@@ -166,10 +224,66 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 
         case BLE_ADV_EVT_IDLE:
             break;
+        case BLE_ADV_EVT_WHITELIST_REQUEST:
+        {
+            ble_gap_addr_t whitelist_addrs[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
+            ble_gap_irk_t whitelist_irks[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
+            uint32_t addr_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
+            uint32_t irk_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
 
+            err_code = pm_whitelist_get(whitelist_addrs, &addr_cnt,
+                                        whitelist_irks, &irk_cnt);
+            APP_ERROR_CHECK(err_code);
+            NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist",
+                          addr_cnt, irk_cnt);
+
+            // Set the correct identities list (no excluding peers with no Central Address Resolution).
+            identities_set(PM_PEER_ID_LIST_SKIP_NO_IRK);
+
+            // Apply the whitelist.
+            err_code = ble_advertising_whitelist_reply(&m_advertising,
+                                                       whitelist_addrs,
+                                                       addr_cnt,
+                                                       whitelist_irks,
+                                                       irk_cnt);
+            APP_ERROR_CHECK(err_code);
+        }
+        break; //BLE_ADV_EVT_WHITELIST_REQUEST
+
+        case BLE_ADV_EVT_PEER_ADDR_REQUEST:
+        {
+            pm_peer_data_bonding_t peer_bonding_data;
+
+            // Only Give peer address if we have a handle to the bonded peer.
+            if (m_peer_id != PM_PEER_ID_INVALID)
+            {
+                err_code = pm_peer_data_bonding_load(m_peer_id, &peer_bonding_data);
+                if (err_code != NRF_ERROR_NOT_FOUND)
+                {
+                    APP_ERROR_CHECK(err_code);
+
+                    // Manipulate identities to exclude peers with no Central Address Resolution.
+                    identities_set(PM_PEER_ID_LIST_SKIP_ALL);
+
+                    ble_gap_addr_t *p_peer_addr = &(peer_bonding_data.peer_ble_id.id_addr_info);
+                    err_code = ble_advertising_peer_addr_reply(&m_advertising, p_peer_addr);
+                    APP_ERROR_CHECK(err_code);
+                }
+            }
+        }
+        break; //BLE_ADV_EVT_PEER_ADDR_REQUEST
         default:
             break;
     }
+}
+
+/**@brief Function for handling advertising errors.
+ *
+ * @param[in] nrf_error  Error code containing information about what went wrong.
+ */
+static void ble_advertising_error_handler(uint32_t nrf_error)
+{
+    APP_ERROR_HANDLER(nrf_error);
 }
 
 // TODO: configure with whitelist
@@ -192,6 +306,7 @@ static void advertising_init(void)
     advertising_config_get(&init.config);
 
     init.evt_handler = on_adv_evt;
+    init.error_handler = ble_advertising_error_handler;
 
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
@@ -204,6 +319,10 @@ void ble_peripheral_pm_evt_handler(pm_evt_t const *p_evt)
     switch (p_evt->evt_id)
     {
         case PM_EVT_PEERS_DELETE_SUCCEEDED:
+            // Re-enable advertising on disconnect
+            m_advertising_on_disconnect = true;
+
+            // Start advertising
             ble_peripheral_advertising_start(false);
             break;
 
@@ -309,6 +428,9 @@ void ble_peripheral_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
 
 void ble_peripheral_disconnect()
 {
+
+    // Disable advertising on disconnect.
+    m_advertising_on_disconnect = false;
 
     // TODO: handle this better?
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID)

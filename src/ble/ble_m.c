@@ -95,6 +95,7 @@ bool ble_is_connected(void)
 
     return is_connected;
 }
+
 void ble_disconnect(void)
 {
     switch (m_config.mode)
