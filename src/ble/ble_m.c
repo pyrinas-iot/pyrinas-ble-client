@@ -86,25 +86,31 @@ static int subscriber_search(protobuf_event_t_name_t *event_name); // Forward de
 
 bool ble_is_connected(void)
 {
-    return m_is_connected;
-}
 
-uint16_t ble_get_conn_handle(void)
-{
-    return m_conn_handle;
-}
+    bool is_connected = false;
 
+    switch (m_config.mode)
+    {
+        case ble_mode_peripheral:
+            is_connected = ble_peripheral_is_connected();
+            break;
+        case ble_mode_central:
+            is_connected = ble_central_is_connected();
+            break;
+    }
+
+    return is_connected;
+}
 void ble_disconnect(void)
 {
-    ret_code_t err_code;
-
-    if (m_is_connected)
+    switch (m_config.mode)
     {
-        err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-        if (err_code != NRF_ERROR_INVALID_STATE)
-        {
-            APP_ERROR_CHECK(err_code);
-        }
+        case ble_mode_peripheral:
+            ble_peripheral_disconnect();
+            break;
+        case ble_mode_central:
+            ble_central_disconnect();
+            break;
     }
 }
 

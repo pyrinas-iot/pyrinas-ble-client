@@ -510,3 +510,46 @@ void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
 {
     m_raw_evt_handler = raw_evt_handler;
 }
+
+void ble_central_disconnect()
+{
+
+
+    ret_code_t err_code;
+
+    // Stop scanning
+    nrf_ble_scan_stop();
+
+    // Check all the handles. If one is valid, return true
+    for (int i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
+    {
+        uint16_t conn_handle = m_pb_c.conn_handles[i];
+
+        if (conn_handle != BLE_CONN_HANDLE_INVALID)
+        {
+            err_code = sd_ble_gap_disconnect(conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            if (err_code != NRF_ERROR_INVALID_STATE)
+            {
+                APP_ERROR_CHECK(err_code);
+            }
+        }
+    }
+}
+    ret_code_t err_code;
+
+bool ble_central_is_connected(void)
+{
+
+    // Check all the handles. If one is valid, return true
+    for (int i = 0; i < NRF_SDH_BLE_TOTAL_LINK_COUNT; i++)
+    {
+        uint16_t conn_handle = m_pb_c.conn_handles[i];
+
+        if (conn_handle != BLE_CONN_HANDLE_INVALID)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

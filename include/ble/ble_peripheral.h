@@ -46,6 +46,8 @@
 #include <stdint.h>
 
 //TODO document
+bool ble_peripheral_is_connected(void);
+void ble_peripheral_disconnect(void);
 void ble_peripheral_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler);
 void ble_peripheral_write(uint8_t *data, size_t size);
 void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context);

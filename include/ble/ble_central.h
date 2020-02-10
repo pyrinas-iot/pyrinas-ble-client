@@ -54,6 +54,8 @@ typedef struct
 } ble_central_init_t;
 
 //TODO: document this.
+bool ble_central_is_connected(void);
+void ble_central_disconnect(void);
 void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler);
 void ble_central_write(uint8_t *data, size_t size);
 void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context);

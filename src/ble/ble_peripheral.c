@@ -283,3 +283,30 @@ void ble_peripheral_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
 {
     m_raw_evt_handler = raw_evt_handler;
 }
+
+void ble_peripheral_disconnect()
+{
+
+    // TODO: handle this better?
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        NRF_LOG_INFO("Disconnect");
+        ret_code_t err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        if (err_code != NRF_ERROR_INVALID_STATE)
+        {
+            APP_ERROR_CHECK(err_code);
+        }
+    }
+}
+
+bool ble_peripheral_is_connected(void)
+{
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
