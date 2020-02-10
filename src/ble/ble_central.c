@@ -1,3 +1,44 @@
+/**
+ * Copyright (c) 2016 - 2019, Nordic Semiconductor ASA
+ * Copyright (c) 2020, Jared Wolff
+ *
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
+ *
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ *
+ * THIS SOFTWARE IS PROVIDED BY NORDIC SEMICONDUCTOR ASA "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL NORDIC SEMICONDUCTOR ASA OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
 #include "app_timer.h"
 #include "bsp.h"
 #include "util.h"
@@ -89,46 +130,46 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
 
     switch (p_evt->evt_type)
     {
-        case BLE_PB_C_EVT_DISCOVERY_COMPLETE:
-            err_code = ble_pb_c_handles_assign(p_pb_c,
-                                               p_evt->conn_handle,
-                                               &p_evt->params.peer_db);
+    case BLE_PB_C_EVT_DISCOVERY_COMPLETE:
+        err_code = ble_pb_c_handles_assign(p_pb_c,
+                                           p_evt->conn_handle,
+                                           &p_evt->params.peer_db);
+        APP_ERROR_CHECK(err_code);
+
+        // Initiate bonding.
+        err_code = pm_conn_secure(p_evt->conn_handle, false);
+        if (err_code != NRF_ERROR_BUSY)
+        {
             APP_ERROR_CHECK(err_code);
+        }
 
-            // Initiate bonding.
-            err_code = pm_conn_secure(p_evt->conn_handle, false);
-            if (err_code != NRF_ERROR_BUSY)
-            {
-                APP_ERROR_CHECK(err_code);
-            }
+        NRF_LOG_INFO("Protobuf Service discovered ");
 
-            NRF_LOG_INFO("Protobuf Service discovered ");
+        // Enable notifications
+        err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
+        APP_ERROR_CHECK(err_code);
 
-            // Enable notifications
-            err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
-            APP_ERROR_CHECK(err_code);
+        // Continue scan if not full yet.
+        if ((ble_conn_state_central_conn_count() < m_config.device_count) &&
+            (ble_conn_state_central_conn_count() < NRF_SDH_BLE_CENTRAL_LINK_COUNT))
+        {
+            ble_central_scan_start();
+        }
 
-            // Continue scan if not full yet.
-            if ((ble_conn_state_central_conn_count() < m_config.device_count) &&
-                (ble_conn_state_central_conn_count() < NRF_SDH_BLE_CENTRAL_LINK_COUNT))
-            {
-                ble_central_scan_start();
-            }
+        break;
 
-            break;
+    case BLE_PB_C_EVT_NOTIFICATION:
 
-        case BLE_PB_C_EVT_NOTIFICATION:
+        // Forward to raw handler.
+        if (m_raw_evt_handler != NULL)
+        {
+            m_raw_evt_handler(&(p_evt->params.data));
+        }
 
-            // Forward to raw handler.
-            if (m_raw_evt_handler != NULL)
-            {
-                m_raw_evt_handler(&(p_evt->params.data));
-            }
+        break;
 
-            break;
-
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -153,14 +194,14 @@ static void scan_evt_handler(scan_evt_t const *p_scan_evt)
 {
     switch (p_scan_evt->scan_evt_id)
     {
-        case NRF_BLE_SCAN_EVT_SCAN_TIMEOUT:
-            NRF_LOG_DEBUG("Scan timed out.");
-            ble_central_scan_start();
+    case NRF_BLE_SCAN_EVT_SCAN_TIMEOUT:
+        NRF_LOG_DEBUG("Scan timed out.");
+        ble_central_scan_start();
 
-            break;
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -288,110 +329,111 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        // Upon connection, initiate secure bonding.
-        case BLE_GAP_EVT_CONNECTED:
+    // Upon connection, initiate secure bonding.
+    case BLE_GAP_EVT_CONNECTED:
 
-            NRF_LOG_INFO("Connected to handle 0x%x", p_gap_evt->conn_handle);
+        NRF_LOG_INFO("Connected to handle 0x%x", p_gap_evt->conn_handle);
 
-            // TODO: continue scanning..
+        // TODO: continue scanning..
 
-            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-            APP_ERROR_CHECK(err_code);
+        err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+        APP_ERROR_CHECK(err_code);
 
-            // Discover the peer services.
-            err_code = ble_db_discovery_start(&m_db_discovery,
-                                              p_gap_evt->conn_handle);
-            APP_ERROR_CHECK(err_code);
+        // Discover the peer services.
+        err_code = ble_db_discovery_start(&m_db_discovery,
+                                          p_gap_evt->conn_handle);
+        APP_ERROR_CHECK(err_code);
 
-            // Assign connection handle to the QWR module.
-            multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
+        // Assign connection handle to the QWR module.
+        multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
 
-            break;
+        break;
 
-        // Upon disconnection, reset the connection handle of the peer that disconnected
-        // and invalidate data taken from the NFC tag.
-        case BLE_GAP_EVT_DISCONNECTED:
+    // Upon disconnection, reset the connection handle of the peer that disconnected
+    // and invalidate data taken from the NFC tag.
+    case BLE_GAP_EVT_DISCONNECTED:
 
-            err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-            APP_ERROR_CHECK(err_code);
+        err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+        APP_ERROR_CHECK(err_code);
 
-            NRF_LOG_INFO("Disconnected. conn_handle: 0x%x, reason: 0x%x",
-                         p_gap_evt->conn_handle,
-                         p_gap_evt->params.disconnected.reason);
+        NRF_LOG_INFO("Disconnected. conn_handle: 0x%x, reason: 0x%x",
+                     p_gap_evt->conn_handle,
+                     p_gap_evt->params.disconnected.reason);
 
-            // Restart scanning.
-            if (m_scan_on_disconnect_enabled) ble_central_scan_start();
-            break;
+        // Restart scanning.
+        if (m_scan_on_disconnect_enabled)
+            ble_central_scan_start();
+        break;
 
-        case BLE_GAP_EVT_ADV_REPORT:
-            // TODO: necessary?
-            // on_adv_report(&p_gap_evt->params.adv_report);
-            UNUSED_VARIABLE(on_adv_report);
-            break;
+    case BLE_GAP_EVT_ADV_REPORT:
+        // TODO: necessary?
+        // on_adv_report(&p_gap_evt->params.adv_report);
+        UNUSED_VARIABLE(on_adv_report);
+        break;
 
-        case BLE_GAP_EVT_TIMEOUT:
-            if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_CONN)
-            {
-                NRF_LOG_INFO("Connection Request timed out.");
-            }
-            break;
-
-        case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
-            // Accept parameters requested by the the peer.
-            err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
-                                                    &p_gap_evt->params.conn_param_update_request.conn_params);
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
+    case BLE_GAP_EVT_TIMEOUT:
+        if (p_gap_evt->params.timeout.src == BLE_GAP_TIMEOUT_SRC_CONN)
         {
-            NRF_LOG_DEBUG("PHY update request.");
-            ble_gap_phys_t const phys =
-                {
-                    .rx_phys = BLE_GAP_PHY_AUTO,
-                    .tx_phys = BLE_GAP_PHY_AUTO,
-                };
-            err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-            APP_ERROR_CHECK(err_code);
+            NRF_LOG_INFO("Connection Request timed out.");
         }
         break;
 
-        case BLE_GATTC_EVT_TIMEOUT:
-            // Disconnect on GATT Client timeout event.
-            NRF_LOG_DEBUG("GATT Client Timeout.");
-            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
-                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-            APP_ERROR_CHECK(err_code);
-            break;
+    case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
+        // Accept parameters requested by the the peer.
+        err_code = sd_ble_gap_conn_param_update(p_gap_evt->conn_handle,
+                                                &p_gap_evt->params.conn_param_update_request.conn_params);
+        APP_ERROR_CHECK(err_code);
+        break;
 
-        case BLE_GATTS_EVT_TIMEOUT:
-            // Disconnect on GATT Server timeout event.
-            NRF_LOG_DEBUG("GATT Server Timeout.");
-            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
-                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-            APP_ERROR_CHECK(err_code);
-            break;
-
-        case BLE_GAP_EVT_AUTH_STATUS:
-            NRF_LOG_DEBUG("BLE_GAP_EVT_AUTH_STATUS");
-            if (p_ble_evt->evt.gap_evt.params.auth_status.auth_status == BLE_GAP_SEC_STATUS_SUCCESS)
+    case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
+    {
+        NRF_LOG_DEBUG("PHY update request.");
+        ble_gap_phys_t const phys =
             {
-                NRF_LOG_DEBUG("Authorization succeeded!");
-            }
-            else
-            {
-                NRF_LOG_WARNING("Authorization failed with code: %u!",
-                                p_ble_evt->evt.gap_evt.params.auth_status.auth_status);
-            }
-            break;
+                .rx_phys = BLE_GAP_PHY_AUTO,
+                .tx_phys = BLE_GAP_PHY_AUTO,
+            };
+        err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
+        APP_ERROR_CHECK(err_code);
+    }
+    break;
 
-        case BLE_GAP_EVT_CONN_SEC_UPDATE:
-            NRF_LOG_DEBUG("BLE_GAP_EVT_CONN_SEC_UPDATE");
-            break;
+    case BLE_GATTC_EVT_TIMEOUT:
+        // Disconnect on GATT Client timeout event.
+        NRF_LOG_DEBUG("GATT Client Timeout.");
+        err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
+                                         BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        APP_ERROR_CHECK(err_code);
+        break;
 
-        default:
-            // No implementation needed.
-            break;
+    case BLE_GATTS_EVT_TIMEOUT:
+        // Disconnect on GATT Server timeout event.
+        NRF_LOG_DEBUG("GATT Server Timeout.");
+        err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
+                                         BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+        APP_ERROR_CHECK(err_code);
+        break;
+
+    case BLE_GAP_EVT_AUTH_STATUS:
+        NRF_LOG_DEBUG("BLE_GAP_EVT_AUTH_STATUS");
+        if (p_ble_evt->evt.gap_evt.params.auth_status.auth_status == BLE_GAP_SEC_STATUS_SUCCESS)
+        {
+            NRF_LOG_DEBUG("Authorization succeeded!");
+        }
+        else
+        {
+            NRF_LOG_WARNING("Authorization failed with code: %u!",
+                            p_ble_evt->evt.gap_evt.params.auth_status.auth_status);
+        }
+        break;
+
+    case BLE_GAP_EVT_CONN_SEC_UPDATE:
+        NRF_LOG_DEBUG("BLE_GAP_EVT_CONN_SEC_UPDATE");
+        break;
+
+    default:
+        // No implementation needed.
+        break;
     }
 }
 
@@ -421,20 +463,20 @@ static void soc_evt_handler(uint32_t sys_evt, void *p_context)
 {
     switch (sys_evt)
     {
-        case NRF_EVT_FLASH_OPERATION_SUCCESS:
-            /* fall through */
+    case NRF_EVT_FLASH_OPERATION_SUCCESS:
+        /* fall through */
 
-        case NRF_EVT_FLASH_OPERATION_ERROR:
-            if (m_memory_access_in_progress)
-            {
-                m_memory_access_in_progress = false;
-                ble_central_scan_start();
-            }
-            break;
+    case NRF_EVT_FLASH_OPERATION_ERROR:
+        if (m_memory_access_in_progress)
+        {
+            m_memory_access_in_progress = false;
+            ble_central_scan_start();
+        }
+        break;
 
-        default:
-            // No implementation needed.
-            break;
+    default:
+        // No implementation needed.
+        break;
     }
 }
 
@@ -515,7 +557,6 @@ void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler)
 void ble_central_disconnect()
 {
 
-
     ret_code_t err_code;
 
     // Disable scanning on disconnect temporarily
@@ -547,25 +588,25 @@ void ble_central_pm_evt_handler(pm_evt_t const *p_evt)
     // ret_code_t err_code;
     switch (p_evt->evt_id)
     {
-        case PM_EVT_CONN_SEC_FAILED:
-            if (p_evt->params.conn_sec_failed.error == PM_CONN_SEC_ERROR_PIN_OR_KEY_MISSING)
+    case PM_EVT_CONN_SEC_FAILED:
+        if (p_evt->params.conn_sec_failed.error == PM_CONN_SEC_ERROR_PIN_OR_KEY_MISSING)
+        {
+            // Rebond if one party has lost its keys.
+            err_code = pm_conn_secure(p_evt->conn_handle, true);
+            if (err_code != NRF_ERROR_BUSY)
             {
-                // Rebond if one party has lost its keys.
-                err_code = pm_conn_secure(p_evt->conn_handle, true);
-                if (err_code != NRF_ERROR_BUSY)
-                {
-                    APP_ERROR_CHECK(err_code);
-                }
+                APP_ERROR_CHECK(err_code);
             }
-            break;
-        case PM_EVT_PEERS_DELETE_SUCCEEDED:
-            m_scan_on_disconnect_enabled = true;
-            ble_central_scan_start();
-            break;
+        }
+        break;
+    case PM_EVT_PEERS_DELETE_SUCCEEDED:
+        m_scan_on_disconnect_enabled = true;
+        ble_central_scan_start();
+        break;
 
-        default:
-            // No implementation needed.
-            break;
+    default:
+        // No implementation needed.
+        break;
     }
 }
 
