@@ -32,6 +32,24 @@
 
 #include "util.h"
 
+#include "ble.h"
+
+#include "nrf_log.h"
+
+// TODO: get this without SDH
+void util_print_device_address()
+{
+
+    ble_gap_addr_t gap_addr;
+    sd_ble_gap_addr_get(&gap_addr);
+    static char gap_addr_str[18];
+
+    // Convert address to readable string
+    addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
+
+    NRF_LOG_INFO("Address: %s", gap_addr_str);
+}
+
 void addr_strhex_delim(uint8_t *addr, int size, char *out)
 {
     static char hex_str[] = "0123456789abcdef";
