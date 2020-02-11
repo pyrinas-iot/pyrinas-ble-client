@@ -39,6 +39,9 @@
 
 #include "ble_m.h"
 
+#include "serial.h"
+#include "util.h"
+
 void setup(void);
 void loop(void);
 

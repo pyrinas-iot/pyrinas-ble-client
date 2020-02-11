@@ -47,6 +47,9 @@
 #define SLAVE_LATENCY 0                                    /**< Slave latency. */
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)   /**< Connection supervisory timeout (4 seconds). */
 
+// Serial related
+#define NRF_SERIAL_ENABLED true
+
 // PB Related
 #define BLE_PB_ENABLED true
 #define BLE_PB_CONFIG_LOG_ENABLED true
