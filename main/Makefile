@@ -60,6 +60,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/sortlist/nrf_sortlist.c \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
+  $(SDK_ROOT)/components/libraries/serial/nrf_serial.c \
   $(SDK_ROOT)/components/libraries/queue/nrf_queue.c \
   $(SDK_ROOT)/components/libraries/ecc/ecc.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
@@ -118,12 +119,14 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/pm_m.c \
   $(PROJ_DIR)/../src/util.c \
   $(PROJ_DIR)/../src/app_weak.c \
+  $(PROJ_DIR)/../src/serial.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(SDK_ROOT)/components/libraries/scheduler \
+  $(SDK_ROOT)/components/libraries/serial \
   $(SDK_ROOT)/modules/nrfx \
   $(SDK_ROOT)/components/libraries/pwr_mgmt \
   $(SDK_ROOT)/components/libraries/sortlist \
