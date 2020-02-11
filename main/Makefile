@@ -15,12 +15,13 @@ ifdef APP_DIR
 # Source files in app directories
 SRC_FILES += \
   $(wildcard $(APP_DIR)/*.c) \
-  $(wildcard $(APP_DIR)/lib/*.c)
+  $(wildcard $(APP_DIR)/lib/*/src/*.c)
 
 # Include folders for app
 INC_FOLDERS += \
   $(APP_DIR)/ \
-  $(APP_DIR)/lib/
+  $(wildcard $(APP_DIR)/lib/*/) \
+  $(wildcard $(APP_DIR)/lib/*/src/)
 endif
 
 # Source files common to all targets
