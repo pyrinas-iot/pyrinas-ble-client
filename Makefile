@@ -22,26 +22,25 @@ BL_SETTINGS_SD  := bl_settings_sd
 NANOPB_DIR      := $(EXTERNAL_DIR)/nanopb
 NANOPB_GEN      := $(NANOPB_DIR)/generator/nanopb_generator.py
 
-#############################################
-# TODO: Change these to match your settings
-
-# App filename
-APP_FILENAME    := scaffolding
-#############################################
-
 # Board definition and Git versioning
 include Makefile.ver
 include Makefile.bid
 
 # Check for errors. These should be set in the app.
 ifndef PROG_SERIAL
-$(error PROG_SERIAL must be defined!)
+$(info PROG_SERIAL not set. Using default of 1234)
+PROG_SERIAL := 1234
 endif
 
 ifndef PROG_PORT
-$(error PROG_PORT must be defined!)
+$(info PROG_PORT not set. Using default of 19020)
+PROG_PORT := 19020
 endif
 
+ifndef APP_FILENAME
+$(info APP_FILENAME not set. Using default of 19020)
+APP_FILENAME := nucleus
+endif
 
 msg = Building app for $(BOARD_DESC).
 $(info )
