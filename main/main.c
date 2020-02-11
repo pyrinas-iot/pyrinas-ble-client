@@ -84,16 +84,8 @@ int main(void)
     buttons_init();
     peer_manager_init(false);
 
-    ble_gap_addr_t gap_addr;
-    sd_ble_gap_addr_get(&gap_addr);
-    char gap_addr_str[18];
-
-    // Convert address to readable string
-    addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
-
     // Startup message
-    NRF_LOG_INFO("Scaffolding started.");
-    NRF_LOG_INFO("Address: %s", gap_addr_str);
+    NRF_LOG_DEBUG("Nucleus OS started.");
 
     // App side related
     setup();
