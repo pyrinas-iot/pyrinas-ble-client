@@ -25,7 +25,7 @@ NRF_SERIAL_BUFFERS_DEF(serial0_buffs, SERIAL_BUFF_TX_SIZE, SERIAL_BUFF_RX_SIZE);
 #define SERIAL_TIMEOUT_MS 100
 
 // TODO: set event handler. That way we can know when there's data!
-NRF_SERIAL_CONFIG_DEF(serial0_config, NRF_SERIAL_MODE_DMA,
+NRF_SERIAL_CONFIG_DEF(serial_config_dma, NRF_SERIAL_MODE_DMA,
                       &serial0_queues, &serial0_buffs, serial_evt_handler, NULL);
 
 char m_tx_buf[SERIAL_FIFO_TX_SIZE];
@@ -86,14 +86,14 @@ void serial_begin(uint32_t _baud)
   m_config.baudrate = baud;
   m_config.interrupt_priority = UART_DEFAULT_CONFIG_IRQ_PRIORITY;
 
-  ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial0_config);
+  ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial_config_dma);
   APP_ERROR_CHECK(err_code);
 }
 
 // TODO: confirm this works as expected.
 int serial_available()
 {
-  return nrf_queue_max_utilization_get(serial0_queues.p_rxq);
+  return nrf_queue_utilization_get(serial0_queues.p_rxq);
 }
 
 //TODO: adding /0 chars?
@@ -128,17 +128,9 @@ int serial_read()
     return -1;
 
   uint8_t data;
-  size_t bytes_read = 0;
 
-  // Read available bytes
-  uint32_t err_code = nrf_serial_read(&m_serial,
-                                      &data,
-                                      1,
-                                      &bytes_read,
-                                      0);
+  ret_code_t err_code = nrf_queue_pop(serial0_queues.p_rxq, &data);
+  APP_ERROR_CHECK(err_code);
 
-  if (err_code != NRF_SUCCESS)
-    return -1;
-  else
-    return data;
+  return data;
 }

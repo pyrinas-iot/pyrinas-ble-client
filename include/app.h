@@ -36,6 +36,7 @@
 #include <stdint.h>
 
 #include "nrf_log.h"
+#include "nrf_delay.h"
 
 #include "ble_m.h"
 
