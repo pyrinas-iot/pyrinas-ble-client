@@ -95,6 +95,9 @@ int main(void)
         // Processing in main loop.
         ble_process();
 
+        // Process serial errors
+        serial_process();
+
         // App side related
         loop();
 

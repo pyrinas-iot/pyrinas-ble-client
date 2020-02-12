@@ -2,6 +2,7 @@
 
 #include "nrf_serial.h"
 #include "nrf_log.h"
+#include "nrf_delay.h"
 
 #include "boards.h"
 
@@ -30,7 +31,8 @@ NRF_SERIAL_CONFIG_DEF(serial_config_dma, NRF_SERIAL_MODE_DMA,
 
 char m_tx_buf[SERIAL_FIFO_TX_SIZE];
 
-bool m_data_available = false;
+// Tracking if there are any peripheral errors
+bool m_driver_error = false;
 
 static void serial_evt_handler(struct nrf_serial_s const *p_serial,
                                nrf_serial_event_t event)
@@ -39,9 +41,13 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
   switch (event)
   {
   case NRF_SERIAL_EVENT_RX_DATA:
-    // Data is available!
-    NRF_LOG_INFO("data!");
-    m_data_available = true;
+    break;
+  case NRF_SERIAL_EVENT_DRV_ERR:
+  {
+    m_driver_error = true;
+    break;
+  }
+  case NRF_SERIAL_EVENT_FIFO_ERR:
     break;
   default:
     break;
@@ -85,6 +91,7 @@ void serial_begin(uint32_t _baud)
   m_config.parity = NRF_UART_PARITY_EXCLUDED;
   m_config.baudrate = baud;
   m_config.interrupt_priority = UART_DEFAULT_CONFIG_IRQ_PRIORITY;
+  m_config.use_easy_dma = true;
 
   ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial_config_dma);
   APP_ERROR_CHECK(err_code);
@@ -125,12 +132,43 @@ int serial_read()
 {
 
   if (serial_available() <= 0)
+  {
     return -1;
+  }
 
   uint8_t data;
+  size_t bytes_read = 0;
 
-  ret_code_t err_code = nrf_queue_pop(serial0_queues.p_rxq, &data);
+  ret_code_t err_code = nrf_serial_read(&m_serial,
+                                        &data,
+                                        1,
+                                        &bytes_read,
+                                        0);
   APP_ERROR_CHECK(err_code);
 
   return data;
+}
+
+void serial_process()
+{
+
+  if (m_driver_error)
+  {
+    m_driver_error = false;
+
+    // NRF_LOG_INFO("drvr error");
+
+    ret_code_t err_code;
+
+    err_code = nrf_serial_uninit(&m_serial);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_serial_init(&m_serial, &m_config, &serial_config_dma);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_delay_ms(1);
+
+    // Drain the queues
+    nrf_serial_rx_drain(&m_serial);
+  }
 }
