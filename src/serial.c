@@ -28,6 +28,8 @@ NRF_SERIAL_BUFFERS_DEF(serial0_buffs, SERIAL_BUFF_TX_SIZE, SERIAL_BUFF_RX_SIZE);
 NRF_SERIAL_CONFIG_DEF(serial0_config, NRF_SERIAL_MODE_DMA,
                       &serial0_queues, &serial0_buffs, serial_evt_handler, NULL);
 
+char m_tx_buf[SERIAL_FIFO_TX_SIZE];
+
 bool m_data_available = false;
 
 static void serial_evt_handler(struct nrf_serial_s const *p_serial,
@@ -38,6 +40,7 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
   {
   case NRF_SERIAL_EVENT_RX_DATA:
     // Data is available!
+    NRF_LOG_INFO("data!");
     m_data_available = true;
     break;
   default:
@@ -45,10 +48,10 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
   }
 }
 
-uint32_t serial_begin(uint32_t _baud)
+void serial_begin(uint32_t _baud)
 {
 
-  nrf_uart_baudrate_t baud;
+  nrf_uart_baudrate_t baud = NRF_UART_BAUDRATE_14400;
 
   // TODO: define these better
   switch (_baud)
@@ -70,7 +73,8 @@ uint32_t serial_begin(uint32_t _baud)
     break;
   default:
     NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
-    return NRF_ERROR_INVALID_PARAM;
+    APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+    return;
   }
 
   m_config.pselrxd = TX;
@@ -82,7 +86,8 @@ uint32_t serial_begin(uint32_t _baud)
   m_config.baudrate = baud;
   m_config.interrupt_priority = UART_DEFAULT_CONFIG_IRQ_PRIORITY;
 
-  return nrf_serial_init(&m_serial, &m_config, &serial0_config);
+  ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial0_config);
+  APP_ERROR_CHECK(err_code);
 }
 
 // TODO: confirm this works as expected.
@@ -91,19 +96,29 @@ int serial_available()
   return nrf_queue_max_utilization_get(serial0_queues.p_rxq);
 }
 
-uint32_t serial_println(const char *data)
+//TODO: adding /0 chars?
+size_t serial_println(const char *data)
 {
-
   size_t size = strlen(data);
   // Return if invalid
-  if (size > SERIAL_FIFO_TX_SIZE)
+  if (size + 1 > SERIAL_FIFO_TX_SIZE)
     return NRF_ERROR_INVALID_PARAM;
+
+  // Temp buffer for modifying
+  memcpy(m_tx_buf, data, SERIAL_FIFO_TX_SIZE);
+
+  // Add newline
+  m_tx_buf[size] = '\n';
+
+  // NRF_LOG_HEXDUMP_INFO(buf, size + 1);
 
   size_t bytes_written = 0;
 
   // Write the bytes
-  ret_code_t err_code = nrf_serial_write(&m_serial, data, size, &bytes_written, SERIAL_TIMEOUT_MS);
-  return err_code;
+  ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, 0);
+  APP_ERROR_CHECK(err_code);
+
+  return bytes_written;
 }
 
 int serial_read()
@@ -120,7 +135,8 @@ int serial_read()
                                       &data,
                                       1,
                                       &bytes_read,
-                                      SERIAL_TIMEOUT_MS);
+                                      0);
+
   if (err_code != NRF_SUCCESS)
     return -1;
   else

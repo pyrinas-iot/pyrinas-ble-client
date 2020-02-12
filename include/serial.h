@@ -2,6 +2,7 @@
 #define SERIAL_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 // typedef uint32_t (*serial_begin_t)(uint32_t baud);
 // typedef int (*serial_available_t)();
@@ -16,9 +17,9 @@
 //   serial_read_t read;
 // };
 
-uint32_t serial_begin(uint32_t baud);
+void serial_begin(uint32_t baud);
 int serial_available();
-uint32_t serial_println(const char *data);
+size_t serial_println(const char *data);
 int serial_read();
 
 #endif
