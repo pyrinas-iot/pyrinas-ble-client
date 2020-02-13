@@ -85,12 +85,12 @@ bool ble_is_connected(void)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            is_connected = ble_peripheral_is_connected();
-            break;
-        case ble_mode_central:
-            is_connected = ble_central_is_connected();
-            break;
+    case ble_mode_peripheral:
+        is_connected = ble_peripheral_is_connected();
+        break;
+    case ble_mode_central:
+        is_connected = ble_central_is_connected();
+        break;
     }
 
     return is_connected;
@@ -100,12 +100,12 @@ void ble_disconnect(void)
 {
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_disconnect();
-            break;
-        case ble_mode_central:
-            ble_central_disconnect();
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_disconnect();
+        break;
+    case ble_mode_central:
+        ble_central_disconnect();
+        break;
     }
 }
 
@@ -168,12 +168,12 @@ void ble_publish_raw(protobuf_event_t event)
     // TODO: send to connected device(s)
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_write(output, ostream.bytes_written);
-            break;
-        case ble_mode_central:
-            ble_central_write(output, ostream.bytes_written);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_write(output, ostream.bytes_written);
+        break;
+    case ble_mode_central:
+        ble_central_write(output, ostream.bytes_written);
+        break;
     }
 }
 
@@ -257,12 +257,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_evt_handler(p_ble_evt, p_context);
-            break;
-        case ble_mode_central:
-            ble_central_evt_handler(p_ble_evt, p_context);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_evt_handler(p_ble_evt, p_context);
+        break;
+    case ble_mode_central:
+        ble_central_evt_handler(p_ble_evt, p_context);
+        break;
     }
 }
 
@@ -307,6 +307,7 @@ static void gatt_init(void)
  */
 static void ble_raw_evt_handler(protobuf_event_t *evt)
 {
+
     // Queue events.
     ret_code_t ret = nrf_queue_push(&m_event_queue, evt);
     APP_ERROR_CHECK(ret);
@@ -357,21 +358,21 @@ void ble_stack_init(ble_stack_init_t *init)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            // Attach handler
-            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+    case ble_mode_peripheral:
+        // Attach handler
+        ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
 
-            // Init peripheral mode
-            ble_peripheral_init();
-            break;
+        // Init peripheral mode
+        ble_peripheral_init();
+        break;
 
-        case ble_mode_central:
-            // First, attach handler
-            ble_central_attach_raw_handler(ble_raw_evt_handler);
+    case ble_mode_central:
+        // First, attach handler
+        ble_central_attach_raw_handler(ble_raw_evt_handler);
 
-            // Initialize
-            ble_central_init(&m_config.config);
-            break;
+        // Initialize
+        ble_central_init(&m_config.config);
+        break;
     }
 }
 
@@ -442,11 +443,11 @@ void ble_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_pm_evt_handler(p_evt);
-            break;
-        case ble_mode_central:
-            ble_central_pm_evt_handler(p_evt);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_pm_evt_handler(p_evt);
+        break;
+    case ble_mode_central:
+        ble_central_pm_evt_handler(p_evt);
+        break;
     }
 }

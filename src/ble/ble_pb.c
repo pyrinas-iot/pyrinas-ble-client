@@ -201,19 +201,19 @@ void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GAP_EVT_CONNECTED:
-            on_connect(p_protobuf, p_ble_evt);
-            break;
-        case BLE_GAP_EVT_DISCONNECTED:
-            on_disconnect(p_protobuf, p_ble_evt);
-            break;
-        case BLE_GATTS_EVT_WRITE:
-            on_write(p_protobuf, p_ble_evt);
-            break;
+    case BLE_GAP_EVT_CONNECTED:
+        on_connect(p_protobuf, p_ble_evt);
+        break;
+    case BLE_GAP_EVT_DISCONNECTED:
+        on_disconnect(p_protobuf, p_ble_evt);
+        break;
+    case BLE_GATTS_EVT_WRITE:
+        on_write(p_protobuf, p_ble_evt);
+        break;
 
-        default:
-            // No implementation needed.
-            break;
+    default:
+        // No implementation needed.
+        break;
     }
 }
 

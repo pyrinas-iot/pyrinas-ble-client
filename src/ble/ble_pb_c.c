@@ -117,13 +117,12 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
     }
 
     NRF_LOG_DEBUG("Received HVX on link 0x%x, data_handle 0x%x",
-                  p_ble_evt->evt.gattc_evt.params.hvx.handle,
-                  p_ble_pb_c->char_handles[conn_handle].data_handle);
+                  conn_handle,
+                  p_ble_evt->evt.gattc_evt.params.hvx.handle);
 
     // Check if this is a protobuf notification.
-    if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->char_handles[conn_handle].cccd_handle)
+    if (p_ble_evt->evt.gattc_evt.params.hvx.handle == p_ble_pb_c->char_handles[conn_handle].data_handle)
     {
-
         // Decode the data
         ble_gattc_evt_hvx_t const *p_evt_data = &p_ble_evt->evt.gattc_evt.params.hvx;
 
@@ -267,16 +266,16 @@ void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GATTC_EVT_HVX:
-            on_hvx(p_ble_pb_c, p_ble_evt);
-            break;
+    case BLE_GATTC_EVT_HVX:
+        on_hvx(p_ble_pb_c, p_ble_evt);
+        break;
 
-        case BLE_GAP_EVT_DISCONNECTED:
-            on_disconnected(p_ble_pb_c, p_ble_evt);
-            break;
+    case BLE_GAP_EVT_DISCONNECTED:
+        on_disconnected(p_ble_pb_c, p_ble_evt);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -285,7 +284,8 @@ uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, uint8_t *d
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
     // Return an error if the handle is not set.
-    if (!handle_is_valid(p_ble_pb_c, conn_handle)) return NRF_ERROR_INVALID_PARAM;
+    if (!handle_is_valid(p_ble_pb_c, conn_handle))
+        return NRF_ERROR_INVALID_PARAM;
 
     NRF_LOG_DEBUG("Writing %d bytes", size);
 
@@ -311,7 +311,8 @@ static uint32_t cccd_configure(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, boo
 {
 
     // Return an error if the handle is not set.
-    if (!handle_is_valid(p_ble_pb_c, conn_handle)) return NRF_ERROR_INVALID_PARAM;
+    if (!handle_is_valid(p_ble_pb_c, conn_handle))
+        return NRF_ERROR_INVALID_PARAM;
 
     NRF_LOG_DEBUG("Configuring CCCD. CCCD Handle = %d, Connection Handle = %d",
                   p_ble_pb_c->char_handles[conn_handle].cccd_handle,
