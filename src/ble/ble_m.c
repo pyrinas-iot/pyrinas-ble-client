@@ -136,8 +136,8 @@ void ble_publish(char *name, char *data)
     };
 
     // Copy contentsof message over
-    memcpy(event.name.bytes, name, member_size(protobuf_event_t_name_t, bytes));
-    memcpy(event.data.bytes, data, member_size(protobuf_event_t_data_t, bytes));
+    memcpy(event.name.bytes, name, name_length);
+    memcpy(event.data.bytes, data, data_length);
 
     // Then publish it as a raw format.
     ble_publish_raw(event);
