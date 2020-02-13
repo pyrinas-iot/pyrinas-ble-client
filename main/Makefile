@@ -128,6 +128,7 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/util.c \
   $(PROJ_DIR)/../src/app_weak.c \
   $(PROJ_DIR)/../src/serial.c \
+  $(PROJ_DIR)/../src/timer.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
