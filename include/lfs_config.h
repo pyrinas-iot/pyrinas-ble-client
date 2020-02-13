@@ -4,8 +4,8 @@
  * Copyright (c) 2017, Arm Limited. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#ifndef LFS_UTIL_H
-#define LFS_UTIL_H
+#ifndef LFS_CONFIG_H
+#define LFS_CONFIG_H
 
 // Users can override lfs_util.h with their own configuration by defining
 // LFS_CONFIG as a header file to include (-DLFS_CONFIG=lfs_config.h).
@@ -13,6 +13,12 @@
 // If LFS_CONFIG is used, none of the default utils will be emitted and must be
 // provided by the config file. To start, I would suggest copying lfs_util.h
 // and modifying as needed.
+
+#include "inttypes.h"
+#include "stddef.h"
+
+#include "nrf_assert.h"
+#include "nrf_log.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -25,36 +31,32 @@ extern "C"
 
 // Logging functions
 #ifdef LFS_YES_TRACE
-#define LFS_TRACE(fmt, ...) \
-    printf("lfs_trace:%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#define LFS_TRACE(fmt, ...) NRF_LOG_DEBUG(fmt, __VA_ARGS__)
 #else
 #define LFS_TRACE(fmt, ...)
 #endif
 
 #ifndef LFS_NO_DEBUG
-#define LFS_DEBUG(fmt, ...) \
-    printf("lfs_debug:%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#define LFS_DEBUG(fmt, ...) NRF_LOG_INFO(fmt, __VA_ARGS__)
 #else
 #define LFS_DEBUG(fmt, ...)
 #endif
 
 #ifndef LFS_NO_WARN
-#define LFS_WARN(fmt, ...) \
-    printf("lfs_warn:%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#define LFS_WARN(fmt, ...) NRF_LOG_WARNING(fmt, __VA_ARGS__)
 #else
 #define LFS_WARN(fmt, ...)
 #endif
 
 #ifndef LFS_NO_ERROR
-#define LFS_ERROR(fmt, ...) \
-    printf("lfs_error:%d: " fmt "\n", __LINE__, __VA_ARGS__)
+#define LFS_ERROR(fmt, ...) NRF_LOG_ERROR(fmt, __VA_ARGS__)
 #else
 #define LFS_ERROR(fmt, ...)
 #endif
 
 // Runtime assertions
 #ifndef LFS_NO_ASSERT
-#define LFS_ASSERT(test) assert(test)
+#define LFS_ASSERT(test) ASSERT(test)
 #else
 #define LFS_ASSERT(test)
 #endif
