@@ -13,9 +13,17 @@ $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
 
 ifdef APP_DIR
 # Source files in app directories
-SRC_FILES += \
+APP_SRC_FILES := \
   $(wildcard $(APP_DIR)/*.c) \
   $(wildcard $(APP_DIR)/lib/*/src/*.c)
+
+# Add these separately
+SRC_FILES += $(APP_SRC_FILES)
+
+# Get the object file names
+APP_SRC_FILES_STRIPED := $(APP_SRC_FILES:$(APP_DIR)/%=%)
+APP_OBJ_FILES := $(APP_SRC_FILES_STRIPED:.c=.c.o)
+APP_D_FILES := $(APP_SRC_FILES_STRIPED:.c=.c.d)
 
 # Include folders for app
 INC_FOLDERS += \
@@ -277,7 +285,7 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-.PHONY: flash flash_softdevice erase
+.PHONY: flash flash_softdevice erase clean_app
 
 # Flash the program
 flash: default
@@ -298,3 +306,9 @@ SDK_CONFIG_FILE := ../config/sdk_config.h
 CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar
 sdk_config:
 	java -jar $(CMSIS_CONFIG_TOOL) $(SDK_CONFIG_FILE)
+
+# Cleans app files
+clean_app:
+	@echo Cleaning app files.
+	@$(foreach var,$(APP_OBJ_FILES),rm -f $(OUTPUT_DIRECTORY)/$(TARGETS)/$(var);)
+	@$(foreach var,$(APP_D_FILES),rm -f $(OUTPUT_DIRECTORY)/$(TARGETS)/$(var);)
