@@ -95,6 +95,11 @@ void serial_begin(uint32_t _baud)
 
   ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial_config_dma);
   APP_ERROR_CHECK(err_code);
+
+  nrf_delay_ms(1);
+
+  // Drain the queues
+  nrf_serial_rx_drain(&m_serial);
 }
 
 // TODO: confirm this works as expected.
