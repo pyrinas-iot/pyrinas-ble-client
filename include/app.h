@@ -42,6 +42,7 @@
 #include "ble_m.h"
 
 #include "boards.h"
+#include "fs.h"
 #include "pins.h"
 #include "serial.h"
 #include "timer.h"

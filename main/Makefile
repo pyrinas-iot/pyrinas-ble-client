@@ -79,6 +79,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_qspi.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
   $(PROJ_DIR)/main.c \
@@ -117,6 +118,7 @@ SRC_FILES += \
   $(PROJ_DIR)/../external/nanopb/pb_common.c \
   $(PROJ_DIR)/../external/nanopb/pb_encode.c \
   $(PROJ_DIR)/../external/nanopb/pb_decode.c \
+  $(PROJ_DIR)/../external/littlefs/lfs.c \
   $(PROJ_DIR)/../src/proto/command.pb.c \
   $(PROJ_DIR)/../src/ble/ble_m.c \
   $(PROJ_DIR)/../src/ble/ble_peripheral.c \
@@ -129,6 +131,9 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/app_weak.c \
   $(PROJ_DIR)/../src/serial.c \
   $(PROJ_DIR)/../src/timer.c \
+  $(PROJ_DIR)/../src/flash.c \
+  $(PROJ_DIR)/../src/fs.c \
+  $(PROJ_DIR)/../src/lfs_util.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -184,6 +189,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu \
   $(SDK_ROOT)/external/fprintf \
+  $(PROJ_DIR)/../external/littlefs \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/../include \
@@ -203,6 +209,10 @@ OPT = -Os -g3
 # C flags common to all targets
 CFLAGS += $(OPT)
 CFLAGS += -DDEBUG
+CFLAGS += -DLFS_NO_MALLOC
+CFLAGS += -DLFS_NO_ASSERT
+CFLAGS += -DLFS_YES_TRACE
+CFLAGS += -DLFS_CONFIG=lfs_config.h
 CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DAPP_TIMER_V2

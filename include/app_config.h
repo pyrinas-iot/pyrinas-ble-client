@@ -78,6 +78,12 @@
 #define SEC_PARAM_MIN_KEY_SIZE 7                       /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE 16                      /**< Maximum encryption key size. */
 
+// SPI flash reated
+#define NRFX_QSPI_ENABLED 1
+#define NRFX_QSPI_CONFIG_XIP_OFFSET 0
+#define NRFX_QSPI_FLASH_IRQ_PRIORITY 6
+#define NRFX_QSPI_CONFIG_SCK_DELAY 1
+
 // Gatt Queue related
 #define NRF_BLE_GQ_ENABLED 1
 #define NRF_BLE_GQ_QUEUE_SIZE 4
