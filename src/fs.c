@@ -14,6 +14,7 @@
 #define FS_LOOK_AHEAD_SIZE 128
 
 // Buffers used by FS
+static uint8_t file_buffer[FS_BUFFER_SIZE];
 static uint8_t read_buffer[FS_BUFFER_SIZE];
 static uint8_t prog_buffer[FS_BUFFER_SIZE];
 static uint8_t lookahead_buffer[FS_LOOK_AHEAD_SIZE];
@@ -21,6 +22,11 @@ static uint8_t lookahead_buffer[FS_LOOK_AHEAD_SIZE];
 // Variables used by the filesystem
 lfs_t lfs;
 lfs_file_t file;
+
+// Configuration for file
+const struct lfs_file_config file_cfg = {
+    .buffer = file_buffer,
+};
 
 // Configuration of the filesystem is provided by this struct
 const struct lfs_config cfg = {
@@ -51,8 +57,11 @@ static void test()
 {
     // read current count
     uint32_t boot_count = 0;
-    lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
+
+    lfs_file_opencfg(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT, &file_cfg);
     lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+
+    NRF_LOG_INFO("Boot count: %d", boot_count);
 
     // update boot count
     boot_count += 1;
@@ -76,9 +85,15 @@ void fs_init()
     // this should only happen on the first boot
     if (err)
     {
-        lfs_format(&lfs, &cfg);
-        err = lfs_mount(&lfs, &cfg);
+        NRF_LOG_ERROR("Unable to mount fs.");
 
+        err = lfs_format(&lfs, &cfg);
+        if (err)
+        {
+            APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
+        }
+
+        err = lfs_mount(&lfs, &cfg);
         // Borks if there's still an error
         if (err)
             APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
