@@ -71,10 +71,9 @@ NRF_QUEUE_DEF(protobuf_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
 
 static ble_subscription_list_t m_subscribe_list; /**< Use for adding/removing subscriptions */
-
-static ble_stack_init_t m_config; /**< Init config */
-
+static ble_stack_init_t m_config;                /**< Init config */
 static raw_susbcribe_handler_t m_raw_handler_ext;
+static bool m_init_complete = false;
 
 static int subscriber_search(protobuf_event_t_name_t *event_name); // Forward declaration of subscriber_search
 
@@ -85,12 +84,12 @@ bool ble_is_connected(void)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        is_connected = ble_peripheral_is_connected();
-        break;
-    case ble_mode_central:
-        is_connected = ble_central_is_connected();
-        break;
+        case ble_mode_peripheral:
+            is_connected = ble_peripheral_is_connected();
+            break;
+        case ble_mode_central:
+            is_connected = ble_central_is_connected();
+            break;
     }
 
     return is_connected;
@@ -100,12 +99,12 @@ void ble_disconnect(void)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_disconnect();
-        break;
-    case ble_mode_central:
-        ble_central_disconnect();
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_disconnect();
+            break;
+        case ble_mode_central:
+            ble_central_disconnect();
+            break;
     }
 }
 
@@ -168,12 +167,12 @@ void ble_publish_raw(protobuf_event_t event)
     // TODO: send to connected device(s)
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_write(output, ostream.bytes_written);
-        break;
-    case ble_mode_central:
-        ble_central_write(output, ostream.bytes_written);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_write(output, ostream.bytes_written);
+            break;
+        case ble_mode_central:
+            ble_central_write(output, ostream.bytes_written);
+            break;
     }
 }
 
@@ -257,12 +256,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_evt_handler(p_ble_evt, p_context);
-        break;
-    case ble_mode_central:
-        ble_central_evt_handler(p_ble_evt, p_context);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_evt_handler(p_ble_evt, p_context);
+            break;
+        case ble_mode_central:
+            ble_central_evt_handler(p_ble_evt, p_context);
+            break;
     }
 }
 
@@ -358,22 +357,25 @@ void ble_stack_init(ble_stack_init_t *init)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        // Attach handler
-        ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_peripheral:
+            // Attach handler
+            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
 
-        // Init peripheral mode
-        ble_peripheral_init();
-        break;
+            // Init peripheral mode
+            ble_peripheral_init();
+            break;
 
-    case ble_mode_central:
-        // First, attach handler
-        ble_central_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_central:
+            // First, attach handler
+            ble_central_attach_raw_handler(ble_raw_evt_handler);
 
-        // Initialize
-        ble_central_init(&m_config.config);
-        break;
+            // Initialize
+            ble_central_init(&m_config.config);
+            break;
     }
+
+    // Init complete
+    m_init_complete = true;
 }
 
 // Passthrough function for subscribing to RAW events
@@ -386,6 +388,9 @@ void ble_subscribe_raw(raw_susbcribe_handler_t handler)
 // deque messages, fire off the appropriate handlers
 void ble_process()
 {
+
+    // Return if this module is not initalized
+    if (!m_init_complete) return;
 
     // Dequeue one item if not empty
     if (!nrf_queue_is_empty(&m_event_queue))
@@ -443,11 +448,11 @@ void ble_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_pm_evt_handler(p_evt);
-        break;
-    case ble_mode_central:
-        ble_central_pm_evt_handler(p_evt);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_pm_evt_handler(p_evt);
+            break;
+        case ble_mode_central:
+            ble_central_pm_evt_handler(p_evt);
+            break;
     }
 }
