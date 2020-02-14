@@ -48,6 +48,7 @@
 #include "pm_m.h"
 #include "util.h"
 
+#include "nrf_clock.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
@@ -69,6 +70,13 @@ static void logs_init()
  */
 static void timer_init()
 {
+    // Check if LF clock is running
+    if (!nrf_clock_lf_is_running())
+    {
+        nrf_clock_task_trigger(NRF_CLOCK_TASK_LFCLKSTART);
+    }
+
+    // Then init!
     ret_code_t err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
 }
