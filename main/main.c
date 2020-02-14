@@ -45,6 +45,8 @@
 #include "app_timer.h"
 #include "ble_m.h"
 #include "buttons_m.h"
+#include "flash.h"
+#include "fs.h"
 #include "pm_m.h"
 #include "util.h"
 
@@ -91,6 +93,9 @@ int main(void)
     timer_init();
     buttons_init();
     peer_manager_init(false);
+
+    flash_init();
+    fs_init();
 
     // Startup message
     NRF_LOG_INFO("Pyrinas started.");

@@ -10,14 +10,13 @@
 // #include "nrf_log_ctrl.h"
 // NRF_LOG_MODULE_REGISTER();
 
-#define FS_MAX_READ_SIZE 128
-#define FS_MAX_WRITE_SIZE 256
-#define FS_MAX_LOOK_AHEAD_SIZE 256
+#define FS_BUFFER_SIZE 256
+#define FS_LOOK_AHEAD_SIZE 128
 
 // Buffers used by FS
-uint8_t read_buffer[FS_MAX_READ_SIZE] __attribute__((aligned(4)));
-uint8_t prog_buffer[FS_MAX_WRITE_SIZE] __attribute__((aligned(4)));
-uint8_t lookahead_buffer[FS_MAX_LOOK_AHEAD_SIZE] __attribute__((aligned(4)));
+static uint8_t read_buffer[FS_BUFFER_SIZE];
+static uint8_t prog_buffer[FS_BUFFER_SIZE];
+static uint8_t lookahead_buffer[FS_LOOK_AHEAD_SIZE];
 
 // Variables used by the filesystem
 lfs_t lfs;
@@ -34,12 +33,12 @@ const struct lfs_config cfg = {
 
     // block device configuration
     // TODO: tenative size is 256
-    .read_size = 256,
-    .prog_size = 256,
+    .read_size = FS_BUFFER_SIZE,
+    .prog_size = FS_BUFFER_SIZE,
     .block_size = 4096,
     .block_count = 512, /* 2 Mbyte external flash */
-    .cache_size = 256,
-    .lookahead_size = 256,
+    .lookahead_size = FS_LOOK_AHEAD_SIZE,
+    .cache_size = FS_BUFFER_SIZE,
     .block_cycles = 500,
 
     // Buffers!
@@ -69,8 +68,7 @@ static void test()
 
 void fs_init()
 {
-    NRF_LOG_INFO("fs_init");
-    NRF_LOG_PROCESS();
+
     // mount the filesystem
     int err = lfs_mount(&lfs, &cfg);
 
@@ -82,18 +80,71 @@ void fs_init()
         err = lfs_mount(&lfs, &cfg);
 
         // Borks if there's still an error
-        if (err) APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
+        if (err)
+            APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
     }
 
-    UNUSED_VARIABLE(test);
+    // UNUSED_VARIABLE(test);
+    test();
+    // lfs_unmount(&lfs);
 }
 
-void fs_write_raw(const char *filename, const char *data, size_t size)
+void fs_write(const char *filename, const char *data, size_t size)
 {
+    int err = 0;
+
+    // Mount the fs
+    err = lfs_mount(&lfs, &cfg);
+    if (err)
+        ASSERT(true);
+
+    // Open the file for writing
+    err = lfs_file_open(&lfs, &file, filename, LFS_O_RDWR | LFS_O_CREAT);
+    if (err)
+        ASSERT(true);
+
+    // Write the data
+    err = lfs_file_write(&lfs, &file, data, size);
+    if (err)
+        ASSERT(true);
+
+    // remember the storage is not updated until the file is closed successfully
+    err = lfs_file_close(&lfs, &file);
+    if (err)
+        ASSERT(true);
+
+    // release any resources we were using
+    err = lfs_unmount(&lfs);
+    if (err)
+        ASSERT(true);
 }
 
-void fw_read(const char *filename, const char *data, size_t size)
+void fs_read(const char *filename, char *data, size_t size)
 {
+    // Mount the fs
+    int err = lfs_mount(&lfs, &cfg);
+    if (err)
+        ASSERT(true);
+
+    // Open the file for writing
+    err = lfs_file_open(&lfs, &file, filename, LFS_O_RDONLY);
+    if (err)
+        ASSERT(true);
+
+    // Write the data
+    err = lfs_file_read(&lfs, &file, data, size);
+    if (err)
+        ASSERT(true);
+
+    // remember the storage is not updated until the file is closed successfully
+    err = lfs_file_close(&lfs, &file);
+    if (err)
+        ASSERT(true);
+
+    // release any resources we were using
+    err = lfs_unmount(&lfs);
+    if (err)
+        ASSERT(true);
 }
 
 void fs_delete();

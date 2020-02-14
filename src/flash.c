@@ -9,6 +9,7 @@
 
 #define NRF_LOG_MODULE_NAME flash
 #include "nrf_log.h"
+#include "nrf_log_ctrl.h"
 NRF_LOG_MODULE_REGISTER();
 
 volatile bool m_finished = false;
@@ -31,8 +32,6 @@ static void qspi_handler(nrfx_qspi_evt_t event, void *p_context)
 {
     UNUSED_PARAMETER(event);
     UNUSED_PARAMETER(p_context);
-
-    NRF_LOG_INFO("event complete");
     m_finished = true;
 }
 
@@ -97,25 +96,25 @@ static int test()
     err_code = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, 0);
     APP_ERROR_CHECK(err_code);
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Process of erasing first block start");
+    NRF_LOG_DEBUG("Process of erasing first block start");
 
     err_code = nrfx_qspi_write(m_buffer_tx, QSPI_TEST_DATA_SIZE, 0);
     APP_ERROR_CHECK(err_code);
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Process of writing data start");
+    NRF_LOG_DEBUG("Process of writing data start");
 
     err_code = nrfx_qspi_read(m_buffer_rx, QSPI_TEST_DATA_SIZE, 0);
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Data read");
+    NRF_LOG_DEBUG("Data read");
 
-    NRF_LOG_INFO("Compare...");
+    NRF_LOG_DEBUG("Compare...");
     if (memcmp(m_buffer_tx, m_buffer_rx, QSPI_TEST_DATA_SIZE) == 0)
     {
-        NRF_LOG_INFO("Data consistent");
+        NRF_LOG_DEBUG("Data consistent");
     }
     else
     {
-        NRF_LOG_INFO("Data inconsistent");
+        NRF_LOG_DEBUG("Data inconsistent");
     }
 
     // nrfx_qspi_uninit();
@@ -164,20 +163,18 @@ void flash_init()
     // Wake up?
     wake();
 
+    // Clean buffers
+    memset(m_buffer_tx, 0, sizeof(m_buffer_tx));
+    memset(m_buffer_rx, 0, sizeof(m_buffer_rx));
+
     // Do a test;
-    // UNUSED_VARIABLE(test());
-    NRF_LOG_INFO("%x", NRF_QSPI->IFCONFIG1);
-    test();
-    NRF_LOG_INFO("%x", NRF_QSPI->IFCONFIG1);
-    // test();
+    UNUSED_VARIABLE(test);
 }
 
 // TODO: handling reading and writing > buffer size
 int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size)
 {
     ret_code_t err_code;
-
-    NRF_LOG_INFO("flash read %d offset %d", block, off);
 
     // Calculate the  max size/address that is accessible
     const uint32_t max_size = c->block_count * c->block_size;
@@ -192,13 +189,17 @@ int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, voi
     // Calculate the memory address by multiplying the blocks and adding the offset.
     uint32_t addr = block * c->block_size + off;
 
+    // Clear the read buffer before use.
+    memset(m_buffer_rx, 0, sizeof(m_buffer_rx));
     // Read the data
-    err_code = nrfx_qspi_read(buffer, size, addr);
+    err_code = nrfx_qspi_read(m_buffer_rx, size, addr);
     APP_ERROR_CHECK(err_code);
 
     // TODO: kill this.
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Data read");
+
+    // Copy to outgoing buffer
+    memcpy((uint8_t *)buffer, m_buffer_rx, size);
 
     return 0;
 }
@@ -209,7 +210,7 @@ int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, con
 
     ret_code_t err_code;
 
-    NRF_LOG_INFO("flash prog %d offset %d", block, off);
+    NRF_LOG_DEBUG("flash write %d offset %d size %d", block, off, size);
 
     // Calculate the  max size/address that is accessible
     const uint32_t max_size = c->block_count * c->block_size;
@@ -224,13 +225,16 @@ int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, con
     // Calculate the memory address by multiplying the blocks and adding the offset.
     uint32_t addr = block * c->block_size + off;
 
+    // Clean tx buffer, copy to tx buff
+    memset(m_buffer_tx, 0, sizeof(m_buffer_tx));
+    memcpy(m_buffer_tx, (const uint8_t *)buffer, size);
+
     // Read the data
-    err_code = nrfx_qspi_write(buffer, size, addr);
+    err_code = nrfx_qspi_write(m_buffer_tx, size, addr);
     APP_ERROR_CHECK(err_code);
 
     // TODO: kill this.
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Data written");
 
     return 0;
 }
@@ -240,7 +244,7 @@ int flash_erase(const struct lfs_config *c, lfs_block_t block)
 
     ret_code_t err_code;
 
-    NRF_LOG_INFO("erase block %d", block);
+    NRF_LOG_DEBUG("erase block %d", block);
 
     // Check to make sure the block is correct.
     if (block > c->block_count)
@@ -251,13 +255,14 @@ int flash_erase(const struct lfs_config *c, lfs_block_t block)
     // Calculate the memory address by multiplying the blocks and adding the offset.
     uint32_t addr = block * c->block_size;
 
+    NRF_LOG_DEBUG("erase block %d    %d", block, addr);
+
     // Erase at a certain address
     err_code = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_4KB, addr);
     APP_ERROR_CHECK(err_code);
 
     // TODO: kill this.
     WAIT_FOR_PERIPH();
-    NRF_LOG_INFO("Process of erasing first block start");
 
     return 0;
 }
