@@ -206,9 +206,12 @@ OPT = -Os -g3
 # Uncomment the line below to enable link time optimization
 #OPT += -flto
 
+# Debug related
+CFLAGS += -DDEBUG_NRF
+CFLAGS += -DDEBUG
+
 # C flags common to all targets
 CFLAGS += $(OPT)
-CFLAGS += -DDEBUG
 CFLAGS += -DLFS_NO_MALLOC
 CFLAGS += -DLFS_NO_ASSERT
 CFLAGS += -DLFS_YES_TRACE
