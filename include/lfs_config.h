@@ -31,13 +31,13 @@ extern "C"
 
 // Logging functions
 #ifdef LFS_YES_TRACE
-#define LFS_TRACE(fmt, ...) NRF_LOG_DEBUG(fmt, __VA_ARGS__)
+#define LFS_TRACE(fmt, ...) //NRF_LOG_DEBUG(fmt, __VA_ARGS__)
 #else
 #define LFS_TRACE(fmt, ...)
 #endif
 
 #ifndef LFS_NO_DEBUG
-#define LFS_DEBUG(fmt, ...) NRF_LOG_INFO(fmt, __VA_ARGS__)
+#define LFS_DEBUG(fmt, ...) //NRF_LOG_INFO(fmt, __VA_ARGS__)
 #else
 #define LFS_DEBUG(fmt, ...)
 #endif
