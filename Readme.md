@@ -1,4 +1,4 @@
-# Scaffolding Project for Particle Xenon using nRF SDK v16
+# Pyrinas: for Particle Xenon using nRF SDK v16
 
 This repository is a scaffold that anyone can use to get started with the nRF52 DK.
 Currently the only board definition available is for the Particle Xenon.
@@ -75,5 +75,5 @@ Both options will remove the respective directories.
 
 ## Adding a project.
 
-For more information on how to start your own project with Nucleus OS,
-[check out the template repository.](https://github.com/nucleus-iot/nucleus-template)
+For more information on how to start your own project with Pyrinas,
+[check out the template repository.](https://github.com/pyrinas-iot/pyrinas-template)

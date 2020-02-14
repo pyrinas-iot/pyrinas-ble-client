@@ -85,7 +85,7 @@ int main(void)
     peer_manager_init(false);
 
     // Startup message
-    NRF_LOG_DEBUG("Nucleus OS started.");
+    NRF_LOG_INFO("Pyrinas started.");
 
     // App side related
     setup();

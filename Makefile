@@ -39,7 +39,7 @@ endif
 
 ifndef APP_FILENAME
 $(info APP_FILENAME not set. Using default of 19020)
-APP_FILENAME := nucleus
+APP_FILENAME := pyrinas
 endif
 
 msg = Building app for $(BOARD_DESC).
