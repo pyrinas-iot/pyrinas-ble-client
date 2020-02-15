@@ -39,17 +39,22 @@
 
 #include "nrf_gpio.h"
 
-__STATIC_INLINE void pin_config_output(uint8_t pin_number);
-__STATIC_INLINE void pin_write(uint8_t pin_number, bool value);
-
-__STATIC_INLINE void pin_config_output(uint8_t pin_number)
+typedef enum
 {
-    nrf_gpio_cfg_output(pin_number);
-}
+    LOW,
+    HIGH
+} pin_output_t;
 
-__STATIC_INLINE void pin_write(uint8_t pin_number, bool value)
-{
-    nrf_gpio_pin_write(pin_number, value);
-}
+// Configure a pin as output
+#define pin_config_output nrf_gpio_cfg_output
+
+// Write the pin
+#define pin_write nrf_gpio_pin_write
+
+// Configure pin as input
+#define pin_config_input nrf_gpio_cfg_input
+
+// Read the input pin
+#define pin_read nrf_gpio_pin_read
 
 #endif
