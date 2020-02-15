@@ -1,3 +1,35 @@
+/**
+ *
+ * Copyright (c) 2020, Jared Wolff
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
 #include "serial.h"
 
 #include "nrf_delay.h"
@@ -40,17 +72,17 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
 
     switch (event)
     {
-        case NRF_SERIAL_EVENT_RX_DATA:
-            break;
-        case NRF_SERIAL_EVENT_DRV_ERR:
-        {
-            m_driver_error = true;
-            break;
-        }
-        case NRF_SERIAL_EVENT_FIFO_ERR:
-            break;
-        default:
-            break;
+    case NRF_SERIAL_EVENT_RX_DATA:
+        break;
+    case NRF_SERIAL_EVENT_DRV_ERR:
+    {
+        m_driver_error = true;
+        break;
+    }
+    case NRF_SERIAL_EVENT_FIFO_ERR:
+        break;
+    default:
+        break;
     }
 }
 
@@ -67,25 +99,25 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
     // TODO: define these better
     switch (_baud)
     {
-        case 9600:
-            baud = NRF_UART_BAUDRATE_9600;
-            break;
-        case 14400:
-            baud = NRF_UART_BAUDRATE_14400;
-            break;
-        case 28800:
-            baud = NRF_UART_BAUDRATE_28800;
-            break;
-        case 38400:
-            baud = NRF_UART_BAUDRATE_38400;
-            break;
-        case 115200:
-            baud = NRF_UART_BAUDRATE_115200;
-            break;
-        default:
-            NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
-            APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-            return;
+    case 9600:
+        baud = NRF_UART_BAUDRATE_9600;
+        break;
+    case 14400:
+        baud = NRF_UART_BAUDRATE_14400;
+        break;
+    case 28800:
+        baud = NRF_UART_BAUDRATE_28800;
+        break;
+    case 38400:
+        baud = NRF_UART_BAUDRATE_38400;
+        break;
+    case 115200:
+        baud = NRF_UART_BAUDRATE_115200;
+        break;
+    default:
+        NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
+        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+        return;
     }
 
     m_config.pselrxd = rx;
