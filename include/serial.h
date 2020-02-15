@@ -40,6 +40,9 @@ void serial_begin(uint32_t baud);
 void serial_begin_pins(uint32_t baud, uint8_t tx, uint8_t rx);
 int serial_available(void);
 size_t serial_println(const char *data);
+size_t serial_write(const char data);
+size_t serial_write_bytes(const char *data, size_t size);
+size_t serial_read_bytes(char *data, size_t size);
 int serial_read(void);
 void serial_process(void);
 

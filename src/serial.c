@@ -72,17 +72,17 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
 
     switch (event)
     {
-    case NRF_SERIAL_EVENT_RX_DATA:
-        break;
-    case NRF_SERIAL_EVENT_DRV_ERR:
-    {
-        m_driver_error = true;
-        break;
-    }
-    case NRF_SERIAL_EVENT_FIFO_ERR:
-        break;
-    default:
-        break;
+        case NRF_SERIAL_EVENT_RX_DATA:
+            break;
+        case NRF_SERIAL_EVENT_DRV_ERR:
+        {
+            m_driver_error = true;
+            break;
+        }
+        case NRF_SERIAL_EVENT_FIFO_ERR:
+            break;
+        default:
+            break;
     }
 }
 
@@ -99,25 +99,25 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
     // TODO: define these better
     switch (_baud)
     {
-    case 9600:
-        baud = NRF_UART_BAUDRATE_9600;
-        break;
-    case 14400:
-        baud = NRF_UART_BAUDRATE_14400;
-        break;
-    case 28800:
-        baud = NRF_UART_BAUDRATE_28800;
-        break;
-    case 38400:
-        baud = NRF_UART_BAUDRATE_38400;
-        break;
-    case 115200:
-        baud = NRF_UART_BAUDRATE_115200;
-        break;
-    default:
-        NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
-        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-        return;
+        case 9600:
+            baud = NRF_UART_BAUDRATE_9600;
+            break;
+        case 14400:
+            baud = NRF_UART_BAUDRATE_14400;
+            break;
+        case 28800:
+            baud = NRF_UART_BAUDRATE_28800;
+            break;
+        case 38400:
+            baud = NRF_UART_BAUDRATE_38400;
+            break;
+        case 115200:
+            baud = NRF_UART_BAUDRATE_115200;
+            break;
+        default:
+            NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
+            APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+            return;
     }
 
     m_config.pselrxd = rx;
@@ -143,6 +143,41 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
 int serial_available()
 {
     return nrf_queue_utilization_get(serial0_queues.p_rxq);
+}
+
+size_t serial_write(const char data)
+{
+
+    // Temp buffer for modifying
+    memcpy(m_tx_buf, &data, 1);
+
+    size_t bytes_written = 0;
+
+    // Write the bytes
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, 0);
+    APP_ERROR_CHECK(err_code);
+
+    return bytes_written;
+}
+
+size_t serial_write_bytes(const char *data, size_t size)
+{
+
+    if (size > SERIAL_FIFO_TX_SIZE)
+    {
+        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+    }
+
+    // Temp buffer for modifying
+    memcpy(m_tx_buf, data, size);
+
+    size_t bytes_written = 0;
+
+    // Write the bytes
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, 0);
+    APP_ERROR_CHECK(err_code);
+
+    return bytes_written;
 }
 
 //TODO: adding /0 chars?
@@ -189,6 +224,20 @@ int serial_read()
     APP_ERROR_CHECK(err_code);
 
     return data;
+}
+
+size_t serial_read_bytes(char *data, size_t size)
+{
+    size_t bytes_read = 0;
+
+    ret_code_t err_code = nrf_serial_read(&m_serial,
+                                          &data,
+                                          size,
+                                          &bytes_read,
+                                          0);
+    APP_ERROR_CHECK(err_code);
+
+    return bytes_read;
 }
 
 void serial_process()
