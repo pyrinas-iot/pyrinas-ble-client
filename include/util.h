@@ -34,6 +34,10 @@
 #define UTIL_H
 
 #include <stdint.h>
+#include "nrf_delay.h"
+
+// Delay wrapper
+#define delay nrf_delay_ms
 
 #define member_size(type, member) sizeof(((type *)0)->member)
 
