@@ -5,8 +5,8 @@
 #include "lfs_util.h"
 
 void fs_init();
-void fs_write(const char *filename, const char *data, size_t size);
-void fs_read(const char *filename, char *data, size_t size);
+void fs_write(const char *filename, const void *data, size_t size);
+void fs_read(const char *filename, void *data, size_t size);
 void fs_delete(const char *filename);
 
 #endif

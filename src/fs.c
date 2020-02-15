@@ -53,7 +53,17 @@ const struct lfs_config cfg = {
     .lookahead_buffer = lookahead_buffer,
 };
 
-static void test()
+__STATIC_INLINE void fs_check_error(int error)
+{
+    // App error if < 0
+    if (error < 0)
+    {
+        NRF_LOG_ERROR("fs error");
+        APP_ERROR_CHECK(NRF_ERROR_INTERNAL);
+    }
+}
+
+static void fs_boot_count()
 {
     // read current count
     uint32_t boot_count = 0;
@@ -99,67 +109,81 @@ void fs_init()
             APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
     }
 
-    // UNUSED_VARIABLE(test);
-    test();
-    // lfs_unmount(&lfs);
+    fs_boot_count();
 }
-
-void fs_write(const char *filename, const char *data, size_t size)
+void fs_write(const char *filename, const void *data, size_t size)
 {
     int err = 0;
 
     // Mount the fs
     err = lfs_mount(&lfs, &cfg);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // Open the file for writing
-    err = lfs_file_open(&lfs, &file, filename, LFS_O_RDWR | LFS_O_CREAT);
+    err = lfs_file_opencfg(&lfs, &file, filename, LFS_O_RDWR | LFS_O_CREAT, &file_cfg);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // Write the data
     err = lfs_file_write(&lfs, &file, data, size);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // remember the storage is not updated until the file is closed successfully
     err = lfs_file_close(&lfs, &file);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // release any resources we were using
     err = lfs_unmount(&lfs);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 }
 
-void fs_read(const char *filename, char *data, size_t size)
+void fs_read(const char *filename, void *data, size_t size)
 {
     // Mount the fs
     int err = lfs_mount(&lfs, &cfg);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // Open the file for writing
-    err = lfs_file_open(&lfs, &file, filename, LFS_O_RDONLY);
+    err = lfs_file_opencfg(&lfs, &file, filename, LFS_O_RDONLY, &file_cfg);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // Write the data
     err = lfs_file_read(&lfs, &file, data, size);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // remember the storage is not updated until the file is closed successfully
     err = lfs_file_close(&lfs, &file);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 
     // release any resources we were using
     err = lfs_unmount(&lfs);
     if (err)
-        ASSERT(true);
+        fs_check_error(err);
 }
 
-void fs_delete();
+void fs_delete(const char *filename)
+{
+    // Mount the fs
+    int err = lfs_mount(&lfs, &cfg);
+    if (err)
+        fs_check_error(err);
+
+    // Delete the file
+    err = lfs_remove(&lfs, filename);
+    if (err)
+        fs_check_error(err);
+
+    // release any resources we were using
+    err = lfs_unmount(&lfs);
+    if (err)
+        fs_check_error(err);
+    fs_check_error(err);
+}
