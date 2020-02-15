@@ -50,6 +50,16 @@ void util_print_device_address()
     NRF_LOG_INFO("Address: %s", gap_addr_str);
 }
 
+// TODO: simplify this if possible.
+void util_get_device_address(char *addr)
+{
+    ble_gap_addr_t gap_addr;
+    sd_ble_gap_addr_get(&gap_addr);
+
+    // Convert address to readable string
+    addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, addr);
+}
+
 void addr_strhex_delim(uint8_t *addr, int size, char *out)
 {
     static char hex_str[] = "0123456789abcdef";

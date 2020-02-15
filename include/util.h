@@ -46,5 +46,6 @@
 
 void util_print_device_address();
 void addr_strhex_delim(uint8_t *addr, int size, char *result);
+void util_get_device_address(char *addr);
 
 #endif
