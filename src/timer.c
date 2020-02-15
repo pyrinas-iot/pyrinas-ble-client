@@ -34,36 +34,82 @@
 
 #include "app_error.h"
 
-timer_evt_t m_evt_handler = NULL;
+#include "nrf_log.h"
+#include "nrf_queue.h"
+
+NRF_QUEUE_DEF(timer_id_t, m_timer_event_queue, 8, NRF_QUEUE_MODE_OVERFLOW);
 
 static void app_timer_timeout_handler(void *p_context)
 {
-    if (m_evt_handler != NULL)
-        m_evt_handler();
+    // Convert to callback
+    timer_id_t *timer_id = (timer_id_t *)p_context;
+
+    // Depending on how it's configured, this will
+    // queue the event handler or run it right now
+    if (timer_id->raw_evt_enabled)
+    {
+        timer_id->timer_evt();
+    }
+    else
+    {
+        ret_code_t ret = nrf_queue_push(&m_timer_event_queue, timer_id);
+        APP_ERROR_CHECK(ret);
+    }
+
+    // TODO: allow "raw" access?
 }
 
-void timer_create(const app_timer_id_t *p_timer_id, timer_mode_t mode,
+void timer_create(timer_id_t *p_timer_id, timer_mode_t mode,
                   timer_evt_t timeout_handler)
 {
 
+    // Set timeout handler
     if (timeout_handler != NULL)
     {
-        m_evt_handler = timeout_handler;
+        p_timer_id->timer_evt = timeout_handler;
     }
 
-    ret_code_t err_code = app_timer_create(p_timer_id, mode, app_timer_timeout_handler);
+    ret_code_t err_code = app_timer_create(p_timer_id->timer_id, mode, app_timer_timeout_handler);
     APP_ERROR_CHECK(err_code);
 }
 
-void timer_start(const app_timer_id_t *p_timer_id, uint32_t timeout_ms)
+void timer_start(timer_id_t *p_timer_id, uint32_t timeout_ms)
 {
-
-    ret_code_t err_code = app_timer_start(*p_timer_id, APP_TIMER_TICKS(timeout_ms), NULL);
+    ret_code_t err_code = app_timer_start(*p_timer_id->timer_id, APP_TIMER_TICKS(timeout_ms), (void *)p_timer_id);
     APP_ERROR_CHECK(err_code);
 }
 
-void timer_stop(const app_timer_id_t *p_timer_id)
+void timer_stop(timer_id_t *p_timer_id)
 {
-    ret_code_t err_code = app_timer_stop(*p_timer_id);
+    ret_code_t err_code = app_timer_stop(*p_timer_id->timer_id);
     APP_ERROR_CHECK(err_code);
+}
+
+bool timer_is_active(timer_id_t *p_timer_id)
+{
+    return (*p_timer_id->timer_id)->active;
+}
+
+void timer_process()
+{
+    // Dequeue one item if not empty
+    if (!nrf_queue_is_empty(&m_timer_event_queue))
+    {
+
+        // Grab the event handler and run it in main context
+        timer_id_t timer_id;
+        ret_code_t ret = nrf_queue_pop(&m_timer_event_queue, &timer_id);
+        APP_ERROR_CHECK(ret);
+
+        // Execute the evt if for realises
+        if (timer_id.timer_evt != NULL)
+        {
+            timer_id.timer_evt();
+        }
+    }
+}
+
+void timer_raw_evt_enabled(timer_id_t *p_timer_id, bool enabled)
+{
+    p_timer_id->raw_evt_enabled = enabled;
 }

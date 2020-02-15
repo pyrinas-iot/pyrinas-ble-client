@@ -111,6 +111,9 @@ int main(void)
         // Process serial errors
         serial_process();
 
+        // Process timers
+        timer_process();
+
         // App side related
         loop();
 

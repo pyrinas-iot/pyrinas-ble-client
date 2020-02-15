@@ -36,7 +36,27 @@
 
 #include "app_timer.h"
 
-#define timer_define(_id) _APP_TIMER_DEF(_id)
+#define timer_define(name) _timer_define(name)
+
+// Callback
+typedef void (*timer_evt_t)();
+
+// Struct for keeping track of timer_id and event handler
+typedef struct
+{
+    const app_timer_id_t *timer_id;
+    timer_evt_t timer_evt;
+    volatile bool raw_evt_enabled;
+} timer_id_t;
+
+// Initializer
+#define _timer_define(name)                \
+    APP_TIMER_DEF(CONCAT_2(name, _app));   \
+    static timer_id_t name = {             \
+        .timer_id = &CONCAT_2(name, _app), \
+        .timer_evt = NULL,                 \
+        .raw_evt_enabled = false,          \
+    }
 
 /**@brief Timer modes. */
 typedef enum
@@ -45,13 +65,19 @@ typedef enum
     TIMER_REPEATED = APP_TIMER_MODE_REPEATED        /**< The timer will restart each time it expires. */
 } timer_mode_t;
 
-typedef void (*timer_evt_t)();
-
-void timer_create(const app_timer_id_t *p_timer_id, timer_mode_t mode,
+void timer_create(timer_id_t *p_timer_id, timer_mode_t mode,
                   timer_evt_t timeout_handler);
 
-void timer_start(const app_timer_id_t *p_timer_id, uint32_t timeout_ms);
+void timer_start(timer_id_t *p_timer_id, uint32_t timeout_ms);
 
-void timer_stop(const app_timer_id_t *p_timer_id);
+void timer_stop(timer_id_t *p_timer_id);
+
+bool timer_is_active(timer_id_t *p_timer_id);
+
+void timer_reset(timer_id_t *p_timer_id);
+
+void timer_raw_evt_enabled(timer_id_t *p_timer_id, bool enabled);
+
+void timer_process();
 
 #endif
