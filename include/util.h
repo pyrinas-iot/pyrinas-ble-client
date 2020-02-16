@@ -34,12 +34,15 @@
 #define UTIL_H
 
 #include <stdint.h>
+
+#include "app_timer.h"
 #include "nrf_delay.h"
 
 // Delay wrapper
 #define delay nrf_delay_ms
 
 #define member_size(type, member) sizeof(((type *)0)->member)
+#define millis() ROUNDED_DIV(app_timer_cnt_get() * 1000, APP_TIMER_CLOCK_FREQ)
 
 #define STRX(a) #a
 #define STR(a) STRX(a)
