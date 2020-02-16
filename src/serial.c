@@ -55,7 +55,7 @@ NRF_SERIAL_QUEUES_DEF(serial0_queues, SERIAL_FIFO_TX_SIZE, SERIAL_FIFO_RX_SIZE);
 
 NRF_SERIAL_BUFFERS_DEF(serial0_buffs, SERIAL_BUFF_TX_SIZE, SERIAL_BUFF_RX_SIZE);
 
-#define SERIAL_TIMEOUT_MS 100
+#define SERIAL_TIMEOUT_MS 20
 
 // TODO: set event handler. That way we can know when there's data!
 NRF_SERIAL_CONFIG_DEF(serial_config_dma, NRF_SERIAL_MODE_DMA,
@@ -72,17 +72,17 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
 
     switch (event)
     {
-        case NRF_SERIAL_EVENT_RX_DATA:
-            break;
-        case NRF_SERIAL_EVENT_DRV_ERR:
-        {
-            m_driver_error = true;
-            break;
-        }
-        case NRF_SERIAL_EVENT_FIFO_ERR:
-            break;
-        default:
-            break;
+    case NRF_SERIAL_EVENT_RX_DATA:
+        break;
+    case NRF_SERIAL_EVENT_DRV_ERR:
+    {
+        m_driver_error = true;
+        break;
+    }
+    case NRF_SERIAL_EVENT_FIFO_ERR:
+        break;
+    default:
+        break;
     }
 }
 
@@ -99,25 +99,25 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
     // TODO: define these better
     switch (_baud)
     {
-        case 9600:
-            baud = NRF_UART_BAUDRATE_9600;
-            break;
-        case 14400:
-            baud = NRF_UART_BAUDRATE_14400;
-            break;
-        case 28800:
-            baud = NRF_UART_BAUDRATE_28800;
-            break;
-        case 38400:
-            baud = NRF_UART_BAUDRATE_38400;
-            break;
-        case 115200:
-            baud = NRF_UART_BAUDRATE_115200;
-            break;
-        default:
-            NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
-            APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-            return;
+    case 9600:
+        baud = NRF_UART_BAUDRATE_9600;
+        break;
+    case 14400:
+        baud = NRF_UART_BAUDRATE_14400;
+        break;
+    case 28800:
+        baud = NRF_UART_BAUDRATE_28800;
+        break;
+    case 38400:
+        baud = NRF_UART_BAUDRATE_38400;
+        break;
+    case 115200:
+        baud = NRF_UART_BAUDRATE_115200;
+        break;
+    default:
+        NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
+        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+        return;
     }
 
     m_config.pselrxd = rx;
@@ -154,7 +154,7 @@ size_t serial_write(const char data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, SERIAL_TIMEOUT_MS);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -174,7 +174,7 @@ size_t serial_write_bytes(const char *data, size_t size)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, SERIAL_TIMEOUT_MS);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -199,7 +199,7 @@ size_t serial_println(const char *data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, SERIAL_TIMEOUT_MS);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
