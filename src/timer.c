@@ -75,7 +75,11 @@ void timer_create(timer_id_t *p_timer_id, timer_mode_t mode,
 
 void timer_start(timer_id_t *p_timer_id, uint32_t timeout_ms)
 {
-    ret_code_t err_code = app_timer_start(*p_timer_id->timer_id, APP_TIMER_TICKS(timeout_ms), (void *)p_timer_id);
+    // Update the ms value
+    p_timer_id->timeout = timeout_ms;
+
+    // Start the timer
+    ret_code_t err_code = app_timer_start(*p_timer_id->timer_id, APP_TIMER_TICKS(p_timer_id->timeout), (void *)p_timer_id);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -112,4 +116,11 @@ void timer_process()
 void timer_raw_evt_enabled(timer_id_t *p_timer_id, bool enabled)
 {
     p_timer_id->raw_evt_enabled = enabled;
+}
+
+// Uses the previous timeout and restarts
+void timer_restart(timer_id_t *p_timer_id)
+{
+    timer_stop(p_timer_id);
+    timer_start(p_timer_id, p_timer_id->timeout);
 }

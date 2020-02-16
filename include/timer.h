@@ -47,6 +47,7 @@ typedef struct
     const app_timer_id_t *timer_id;
     timer_evt_t timer_evt;
     volatile bool raw_evt_enabled;
+    uint32_t timeout;
 } timer_id_t;
 
 // Initializer
@@ -56,6 +57,7 @@ typedef struct
         .timer_id = &CONCAT_2(name, _app), \
         .timer_evt = NULL,                 \
         .raw_evt_enabled = false,          \
+        .timeout = 0,                      \
     }
 
 /**@brief Timer modes. */
@@ -74,7 +76,7 @@ void timer_stop(timer_id_t *p_timer_id);
 
 bool timer_is_active(timer_id_t *p_timer_id);
 
-void timer_reset(timer_id_t *p_timer_id);
+void timer_restart(timer_id_t *p_timer_id);
 
 void timer_raw_evt_enabled(timer_id_t *p_timer_id, bool enabled);
 
