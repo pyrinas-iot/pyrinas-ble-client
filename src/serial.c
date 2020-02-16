@@ -220,7 +220,7 @@ int serial_read()
                                           &data,
                                           1,
                                           &bytes_read,
-                                          0);
+                                          SERIAL_TIMEOUT_MS);
     APP_ERROR_CHECK(err_code);
 
     return data;
@@ -234,7 +234,7 @@ size_t serial_read_bytes(char *data, size_t size)
                                           &data,
                                           size,
                                           &bytes_read,
-                                          0);
+                                          SERIAL_TIMEOUT_MS);
     APP_ERROR_CHECK(err_code);
 
     return bytes_read;
