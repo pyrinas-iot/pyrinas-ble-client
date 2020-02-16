@@ -26,7 +26,8 @@ typedef struct _protobuf_event_t {
     event_type type;
     protobuf_event_t_name_t name;
     protobuf_event_t_data_t data;
-    pb_byte_t addr[6];
+    pb_byte_t faddr[6];
+    pb_byte_t taddr[6];
 } protobuf_event_t;
 
 
@@ -37,21 +38,23 @@ typedef struct _protobuf_event_t {
 
 
 /* Initializer values for message structs */
-#define protobuf_event_t_init_default            {_event_type_MIN, {0, {0}}, {0, {0}}, {0}}
-#define protobuf_event_t_init_zero               {_event_type_MIN, {0, {0}}, {0, {0}}, {0}}
+#define protobuf_event_t_init_default            {_event_type_MIN, {0, {0}}, {0, {0}}, {0}, {0}}
+#define protobuf_event_t_init_zero               {_event_type_MIN, {0, {0}}, {0, {0}}, {0}, {0}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define protobuf_event_t_type_tag                1
 #define protobuf_event_t_name_tag                2
 #define protobuf_event_t_data_tag                3
-#define protobuf_event_t_addr_tag                4
+#define protobuf_event_t_faddr_tag               4
+#define protobuf_event_t_taddr_tag               5
 
 /* Struct field encoding specification for nanopb */
 #define protobuf_event_t_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, UENUM,    type,              1) \
 X(a, STATIC,   SINGULAR, BYTES,    name,              2) \
 X(a, STATIC,   SINGULAR, BYTES,    data,              3) \
-X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, addr,              4)
+X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, faddr,             4) \
+X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, taddr,             5)
 #define protobuf_event_t_CALLBACK NULL
 #define protobuf_event_t_DEFAULT NULL
 
@@ -61,7 +64,7 @@ extern const pb_msgdesc_t protobuf_event_t_msg;
 #define protobuf_event_t_fields &protobuf_event_t_msg
 
 /* Maximum encoded size of messages (where known) */
-#define protobuf_event_t_size                    96
+#define protobuf_event_t_size                    104
 
 #ifdef __cplusplus
 } /* extern "C" */

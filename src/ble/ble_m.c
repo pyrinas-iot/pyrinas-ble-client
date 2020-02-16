@@ -134,7 +134,7 @@ void ble_publish(char *name, char *data)
         .data.size = data_length,
     };
 
-    // Copy contentsof message over
+    // Copy contents of message over
     memcpy(event.name.bytes, name, name_length);
     memcpy(event.data.bytes, data, data_length);
 
@@ -150,7 +150,7 @@ void ble_publish_raw(protobuf_event_t event)
     sd_ble_gap_addr_get(&gap_addr);
 
     // Copy over the address information
-    memcpy(event.addr, gap_addr.addr, sizeof(event.addr));
+    memcpy(event.faddr, gap_addr.addr, sizeof(event.faddr));
 
     // Encode value
     pb_byte_t output[protobuf_event_t_size];
@@ -390,7 +390,8 @@ void ble_process()
 {
 
     // Return if this module is not initalized
-    if (!m_init_complete) return;
+    if (!m_init_complete)
+        return;
 
     // Dequeue one item if not empty
     if (!nrf_queue_is_empty(&m_event_queue))

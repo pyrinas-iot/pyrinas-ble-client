@@ -12,5 +12,6 @@ message protobuf_event_t {
   event_type type = 1;
   bytes      name = 2;
   bytes      data = 3;
-  bytes      addr = 4;
+  bytes      faddr = 4;
+  bytes      taddr = 5;
 }
