@@ -231,7 +231,7 @@ size_t serial_read_bytes(char *data, size_t size)
     size_t bytes_read = 0;
 
     ret_code_t err_code = nrf_serial_read(&m_serial,
-                                          &data,
+                                          data,
                                           size,
                                           &bytes_read,
                                           SERIAL_TIMEOUT_MS);
