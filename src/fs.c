@@ -95,6 +95,23 @@ __STATIC_INLINE void fs_check_error(int error)
     }
 }
 
+static void fs_folder_init(const char *filename)
+{
+
+    // Mount the fs
+    int err = lfs_mount(&lfs, &cfg);
+    if (err)
+        fs_check_error(err);
+
+    // Mkdir no matter what.
+    lfs_mkdir(&lfs, filename);
+
+    // release any resources we were using
+    err = lfs_unmount(&lfs);
+    if (err)
+        fs_check_error(err);
+}
+
 static void fs_boot_count()
 {
     // read current count
@@ -141,7 +158,12 @@ void fs_init()
             APP_ERROR_CHECK(NRF_ERROR_INVALID_STATE);
     }
 
+    // Count boot attempts
     fs_boot_count();
+
+    // Set up /run folder
+    fs_folder_init(FS_RUN_DIR);
+    fs_folder_init(FS_ETC_DIR);
 }
 void fs_write(const char *filename, const void *data, size_t size)
 {
@@ -217,5 +239,29 @@ void fs_delete(const char *filename)
     err = lfs_unmount(&lfs);
     if (err)
         fs_check_error(err);
-    fs_check_error(err);
+}
+
+bool fs_file_exists(const char *filename)
+{
+
+    struct lfs_info info;
+
+    // Mount the fs
+    int err = lfs_mount(&lfs, &cfg);
+    if (err)
+        fs_check_error(err);
+
+    // Check if it exists
+    err = lfs_stat(&lfs, filename, &info);
+    if (err)
+    {
+        return false;
+    }
+
+    // release any resources we were using
+    err = lfs_unmount(&lfs);
+    if (err)
+        fs_check_error(err);
+
+    return true;
 }

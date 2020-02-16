@@ -36,9 +36,13 @@
 #include "lfs.h"
 #include "lfs_util.h"
 
+#define FS_RUN_DIR "/run"
+#define FS_ETC_DIR "/etc"
+
 void fs_init();
 void fs_write(const char *filename, const void *data, size_t size);
 void fs_read(const char *filename, void *data, size_t size);
 void fs_delete(const char *filename);
+bool fs_file_exists(const char *filename);
 
 #endif
