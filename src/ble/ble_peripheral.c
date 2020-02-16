@@ -409,7 +409,8 @@ static void services_init(void)
 void ble_peripheral_write(uint8_t *data, size_t size)
 {
     ret_code_t err_code = ble_protobuf_write(&m_protobuf, data, size);
-    if (err_code == NRF_ERROR_INVALID_STATE || err_code == NRF_ERROR_FORBIDDEN)
+    if (err_code == NRF_ERROR_INVALID_STATE || err_code == NRF_ERROR_FORBIDDEN ||
+        err_code == NRF_ERROR_RESOURCES)
     {
         NRF_LOG_WARNING("Not connected. Unable to send message.");
     }
