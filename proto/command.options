@@ -1,4 +1,4 @@
-protobuf_event_t.data	max_size:64
+protobuf_event_t.data	max_size:128
 protobuf_event_t.name	max_size:18
 
 protobuf_event_t.faddr	max_size:6 fixed_length:true

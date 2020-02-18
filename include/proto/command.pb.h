@@ -21,7 +21,7 @@ typedef enum _event_type {
 
 /* Struct definitions */
 typedef PB_BYTES_ARRAY_T(18) protobuf_event_t_name_t;
-typedef PB_BYTES_ARRAY_T(64) protobuf_event_t_data_t;
+typedef PB_BYTES_ARRAY_T(128) protobuf_event_t_data_t;
 typedef struct _protobuf_event_t {
     event_type type;
     protobuf_event_t_name_t name;
@@ -64,7 +64,7 @@ extern const pb_msgdesc_t protobuf_event_t_msg;
 #define protobuf_event_t_fields &protobuf_event_t_msg
 
 /* Maximum encoded size of messages (where known) */
-#define protobuf_event_t_size                    104
+#define protobuf_event_t_size                    169
 
 #ifdef __cplusplus
 } /* extern "C" */
