@@ -45,5 +45,6 @@ size_t serial_write_bytes(const char *data, size_t size);
 size_t serial_read_bytes(char *data, size_t size);
 int serial_read(void);
 void serial_process(void);
+void serial_drain(void);
 
 #endif

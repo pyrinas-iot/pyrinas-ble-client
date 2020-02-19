@@ -263,3 +263,8 @@ void serial_process()
         nrf_serial_rx_drain(&m_serial);
     }
 }
+
+void serial_drain()
+{
+    nrf_serial_rx_drain(&m_serial);
+}
