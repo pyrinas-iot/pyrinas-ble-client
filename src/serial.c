@@ -94,6 +94,12 @@ void serial_begin(uint32_t _baud)
 void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
 {
 
+    serial_begin_flow_control(_baud, tx, rx, 0, 0);
+}
+
+void serial_begin_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint8_t rts, uint8_t cts)
+{
+
     nrf_uart_baudrate_t baud = NRF_UART_BAUDRATE_14400;
 
     // TODO: define these better
@@ -125,9 +131,22 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
 
     m_config.pselrxd = rx;
     m_config.pseltxd = tx;
-    m_config.pselrts = 0;
-    m_config.pselcts = 0;
-    m_config.hwfc = NRF_UART_HWFC_DISABLED;
+
+    // Determine flow control or not
+    if (rts && cts)
+    {
+        m_config.pselrts = rts;
+        m_config.pselcts = cts;
+        m_config.hwfc = NRF_UART_HWFC_ENABLED;
+    }
+    else
+    {
+        m_config.pselrts = 0;
+        m_config.pselcts = 0;
+        m_config.hwfc = NRF_UART_HWFC_DISABLED;
+    }
+
+    // Remainder of settings.
     m_config.parity = NRF_UART_PARITY_EXCLUDED;
     m_config.baudrate = baud;
     m_config.interrupt_priority = UART_DEFAULT_CONFIG_IRQ_PRIORITY;

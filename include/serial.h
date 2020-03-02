@@ -38,6 +38,7 @@
 
 void serial_begin(uint32_t baud);
 void serial_begin_pins(uint32_t baud, uint8_t tx, uint8_t rx);
+void serial_begin_flow_control(uint32_t baud, uint8_t tx, uint8_t rx, uint8_t rts, uint8_t cts);
 int serial_available(void);
 size_t serial_println(const char *data);
 size_t serial_write(const char data);
