@@ -114,6 +114,9 @@ void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
     case 115200:
         baud = NRF_UART_BAUDRATE_115200;
         break;
+    case 250000:
+        baud = NRF_UART_BAUDRATE_250000;
+        break;
     default:
         NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
         APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
@@ -154,7 +157,7 @@ size_t serial_write(const char data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, SERIAL_TIMEOUT_MS);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, 0);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -174,7 +177,7 @@ size_t serial_write_bytes(const char *data, size_t size)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, SERIAL_TIMEOUT_MS);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, 0);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -199,7 +202,7 @@ size_t serial_println(const char *data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, SERIAL_TIMEOUT_MS);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, 0);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -220,7 +223,7 @@ int serial_read()
                                           &data,
                                           1,
                                           &bytes_read,
-                                          SERIAL_TIMEOUT_MS);
+                                          0);
     APP_ERROR_CHECK(err_code);
 
     return data;
@@ -234,7 +237,7 @@ size_t serial_read_bytes(char *data, size_t size)
                                           data,
                                           size,
                                           &bytes_read,
-                                          SERIAL_TIMEOUT_MS);
+                                          0);
     APP_ERROR_CHECK(err_code);
 
     return bytes_read;

@@ -182,12 +182,13 @@ toolchain:
 %.pb: %.proto
 	protoc -I$(PROTO_DIR) --go_out=$(PROTO_DIR) $<
 	protoc -I$(PROTO_DIR) -o$*.pb $<
-	@$(NANOPB_GEN) -I$(PROTO_DIR) -D$(PROTO_DIR) $@
+	@$(NANOPB_GEN) -I$(PROTO_DIR) $@
 	pbjs -t static-module -p$(PROTO_DIR) $*.proto > $@.js
 	@mkdir -p $(SOURCE_DIR)/proto
 	@mkdir -p $(INCLUDE_DIR)/proto
 	@mv $*.pb.c $(SOURCE_DIR)/proto
 	@mv $*.pb.h $(INCLUDE_DIR)/proto
+	protoc -I$(PROTO_DIR) --cpp_out=$(PROTO_DIR) $<
 
 protobuf: protoclean $(PROTO_PB)
 	@echo building the protocol buffers $(PROTO_PB)

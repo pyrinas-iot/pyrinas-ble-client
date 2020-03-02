@@ -38,6 +38,7 @@
 #include "nrf_delay.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
+#include "nrf_nvic.h"
 
 #include "ble_m.h"
 
