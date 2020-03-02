@@ -206,7 +206,7 @@ OPT = -Os -g3
 #OPT += -flto
 
 # Debug related
-ifdef DEBUG
+ifeq ("$(DEBUG)","true")
 $(info Debug mode enabled)
 CFLAGS += -DDEBUG_NRF
 CFLAGS += -DDEBUG

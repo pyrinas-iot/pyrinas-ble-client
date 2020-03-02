@@ -87,9 +87,9 @@ settings:
 	$(NRFUTIL) settings generate --family $(BOARD_FAM) --application $(MAIN_DIR)/_build/$(BUILD_IDENT).hex --application-version-string $(VER_STRING) --bootloader-version 1 --bl-settings-version 1 $(BUILD_DIR)/$(SETTINGS).hex
 
 build:
-	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(MAIN_DIR) clean_app
-	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(BOOTLOADER_DIR) -j
-	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && make -C $(MAIN_DIR) -j
+	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) DEBUG=$(DEBUG) && make -C $(MAIN_DIR) clean_app
+	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) DEBUG=$(DEBUG) && make -C $(BOOTLOADER_DIR) -j
+	@export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) DEBUG=$(DEBUG) && make -C $(MAIN_DIR) -j
 
 merge: build settings
 	@mkdir -p $(BUILD_DIR)
