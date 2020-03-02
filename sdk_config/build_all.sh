@@ -13,6 +13,7 @@ if [ ! -f micro-ecc/uECC.c ]; then
     git clone https://github.com/kmackay/micro-ecc.git
 fi
 
+export PATH=$GCC_ARM_TOOLCHAIN:$PATH &&
 make -C nrf51_armgcc/armgcc &&
 make -C nrf51_iar/armgcc &&
 make -C nrf51_keil/armgcc &&

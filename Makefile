@@ -29,12 +29,12 @@ include Makefile.bid
 # Check for errors. These should be set in the app.
 ifndef PROG_SERIAL
 $(info PROG_SERIAL not set. Using default of 1234)
-PROG_SERIAL := 1234
+PROG_SERIAL := 682978319
 endif
 
 ifndef PROG_PORT
 $(info PROG_PORT not set. Using default of 19020)
-PROG_PORT := 19020
+PROG_PORT := 19021
 endif
 
 ifndef APP_FILENAME
@@ -72,7 +72,7 @@ SOFT_DEVICE := $(SDK_ROOT)/components/softdevice/$(BUILD_SD)/hex/$(BUILD_SD)_$(B
 PROTO_SRC   := $(wildcard $(PROTO_DIR)/*.proto)
 PROTO_PB    := $(PROTO_SRC:.proto=.pb)
 
-.PHONY: sdk sdk_clean clean build debug merge merge_all erase flash flash_all flash_softdevice ota settings default gen_key toolchain toolchain_clean sdk sdk_clean
+.PHONY: sdk sdk_clean setup clean build debug merge merge_all erase flash flash_all flash_softdevice ota settings default gen_key toolchain toolchain_clean sdk sdk_clean
 
 default: build
 
@@ -135,6 +135,9 @@ debug:
 rtt:
 	jlinkrttclient -RTTTelnetPort $(PROG_PORT)
 
+setup: toolchain sdk
+	@echo Setting up pyrinas
+
 sdk:
 	@echo Installing NRF SDK
 	@if [ ! -d $(SDK_ROOT) ]; then \
@@ -154,7 +157,7 @@ sdk:
 	@cp -f $(SDK_CONFIG_DIR)/Makefile.posix $(SDK_ROOT)/components/toolchain/gcc/
 	@echo Building Microecc
 	@cp -f $(SDK_CONFIG_DIR)/build_all.sh $(SDK_ROOT)/external/micro-ecc/
-	@cd $(SDK_ROOT)/external/micro-ecc/ && sh build_all.sh
+	@cd $(SDK_ROOT)/external/micro-ecc/ && export GCC_ARM_TOOLCHAIN=$(PROJ_DIR)/$(TOOLCHAIN_DIR) && sh build_all.sh
 	@echo SDK deps download and install complete.
 	@rm -rf $(SDK_ZIP) $(SDK_TEMP) $(GCC_ARCHIVE)
 

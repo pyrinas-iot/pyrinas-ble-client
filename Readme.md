@@ -7,8 +7,9 @@ Currently the only board definition available is for the Particle Xenon.
 
 **Note:** want to add your platform? Pull requests are appreciated! :)
 
-1. Run `make sdk`. This will download and extract a copy of the SDK to `_sdk`
-1. Run `make toolchain`. This will download and extract a copy of the toolchain.
+1. Clone this repository into a folder on your machine. `git clone https://github.com/pyrinas-iot/pyrinas-os.git`
+1. Change directories to `pyrinas-os`
+1. Run `make setup`. This will download and extract a copy of the toolchain, and SDK.
 1. For a first time startup, you'll have to run `make gen_key`. This key is used for secure DFU.
 
 ## Other setup
