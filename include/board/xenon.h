@@ -42,10 +42,6 @@
 #define SDA NRF_GPIO_PIN_MAP(0, 26)
 #define SCL NRF_GPIO_PIN_MAP(0, 27)
 
-// UART
-#define TX NRF_GPIO_PIN_MAP(0, 6)
-#define RX NRF_GPIO_PIN_MAP(0, 8)
-
 // Digital input/output
 #define D2 NRF_GPIO_PIN_MAP(1, 1)
 #define D3 NRF_GPIO_PIN_MAP(1, 2)
@@ -54,6 +50,12 @@
 #define D6 NRF_GPIO_PIN_MAP(1, 11)
 #define D7 NRF_GPIO_PIN_MAP(1, 12)
 #define D8 NRF_GPIO_PIN_MAP(1, 3)
+
+// UART
+#define TX NRF_GPIO_PIN_MAP(0, 6)
+#define RX NRF_GPIO_PIN_MAP(0, 8)
+#define RTS D2
+#define CTS D3
 
 // Analog related
 #define A0 NRF_GPIO_PIN_MAP(0, 3)
