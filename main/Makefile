@@ -206,8 +206,13 @@ OPT = -Os -g3
 #OPT += -flto
 
 # Debug related
+ifdef DEBUG
+$(info Debug mode enabled)
 CFLAGS += -DDEBUG_NRF
 CFLAGS += -DDEBUG
+else
+$(info Production mode enabled)
+endif
 
 # C flags common to all targets
 CFLAGS += $(OPT)
