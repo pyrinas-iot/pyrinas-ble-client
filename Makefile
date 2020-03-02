@@ -136,7 +136,7 @@ rtt:
 	jlinkrttclient -RTTTelnetPort $(PROG_PORT)
 
 setup: toolchain sdk
-	@echo Setting up pyrinas
+	@echo Pyrinas setup complete!
 
 sdk:
 	@echo Installing NRF SDK
@@ -146,7 +146,8 @@ sdk:
 			curl -o $(SDK_ZIP) $(NRF_SDK_URL); \
 		fi; \
 		if [ "`md5 -q $(SDK_ZIP)`" != "$(NRF_SDK_MD5)" ]; then \
-			echo SDK archive MD5 does not match. Delete and reinstall.; \
+			echo SDK archive MD5 does not match. Please re-run make setup.; \
+			rm -f $(SDK_ZIP); \
 			exit 1; \
 		fi; \
 		if [ ! -f $(SDK_ROOT) ]; then \
@@ -169,7 +170,8 @@ toolchain:
 			curl -o $(GCC_ARCHIVE) $(GCC_URL); \
 		fi; \
 		if [ "`md5 -q $(GCC_ARCHIVE)`" != "$(GCC_MD5)" ]; then \
-			echo GCC archive MD5 does not match. Delete and reinstall.; \
+			echo GCC archive MD5 does not match. Please re-run make setup.; \
+			rm -f $(GCC_ARCHIVE); \
 			exit 1; \
 		fi; \
 		if [ ! -d $(GCC_OUTPUT_FOLDER) ]; then \
