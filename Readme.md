@@ -12,6 +12,8 @@ Currently the only board definition available is for the Particle Xenon.
 1. Run `make setup`. This will download and extract a copy of the toolchain, and SDK.
 1. For a first time startup, you'll have to run `make gen_key`. This key is used for secure DFU.
 
+*Note* if `make setup` fails at any point, you can always run `make toolchain_clean` and `make sdk_clean` and then re-run `make setup`
+
 ## Other setup
 
 You should update two variables in the main `Makefile`:
