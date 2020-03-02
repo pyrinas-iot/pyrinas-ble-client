@@ -5,6 +5,8 @@ Currently the only board definition available is for the Particle Xenon.
 
 ## Install (Mac OSX Only)
 
+**Note:** want to add your platform? Pull requests are appreciated! :)
+
 1. Run `make sdk`. This will download and extract a copy of the SDK to `_sdk`
 1. Run `make toolchain`. This will download and extract a copy of the toolchain.
 1. For a first time startup, you'll have to run `make gen_key`. This key is used for secure DFU.
@@ -77,3 +79,7 @@ Both options will remove the respective directories.
 
 For more information on how to start your own project with Pyrinas,
 [check out the template repository.](https://github.com/pyrinas-iot/pyrinas-template)
+
+## What's in the pipeline?
+
+[All future tasks are located here.](https://github.com/pyrinas-iot/pyrinas-os/projects/1)
