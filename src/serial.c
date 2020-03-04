@@ -72,32 +72,32 @@ static void serial_evt_handler(struct nrf_serial_s const *p_serial,
 
     switch (event)
     {
-    case NRF_SERIAL_EVENT_RX_DATA:
-        break;
-    case NRF_SERIAL_EVENT_DRV_ERR:
-    {
-        m_driver_error = true;
-        break;
-    }
-    case NRF_SERIAL_EVENT_FIFO_ERR:
-        break;
-    default:
-        break;
+        case NRF_SERIAL_EVENT_RX_DATA:
+            break;
+        case NRF_SERIAL_EVENT_DRV_ERR:
+        {
+            m_driver_error = true;
+            break;
+        }
+        case NRF_SERIAL_EVENT_FIFO_ERR:
+            break;
+        default:
+            break;
     }
 }
 
 void serial_begin(uint32_t _baud)
 {
-    serial_begin_pins(_baud, TX, RX);
+    serial_begin_with_pins(_baud, TX, RX);
 }
 
-void serial_begin_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
+void serial_begin_with_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
 {
 
-    serial_begin_flow_control(_baud, tx, rx, 0, 0);
+    serial_begin_with_flow_control(_baud, tx, rx, 0, 0);
 }
 
-void serial_begin_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint8_t rts, uint8_t cts)
+void serial_begin_with_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint8_t rts, uint8_t cts)
 {
 
     nrf_uart_baudrate_t baud = NRF_UART_BAUDRATE_14400;
@@ -105,28 +105,28 @@ void serial_begin_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint8_t r
     // TODO: define these better
     switch (_baud)
     {
-    case 9600:
-        baud = NRF_UART_BAUDRATE_9600;
-        break;
-    case 14400:
-        baud = NRF_UART_BAUDRATE_14400;
-        break;
-    case 28800:
-        baud = NRF_UART_BAUDRATE_28800;
-        break;
-    case 38400:
-        baud = NRF_UART_BAUDRATE_38400;
-        break;
-    case 115200:
-        baud = NRF_UART_BAUDRATE_115200;
-        break;
-    case 250000:
-        baud = NRF_UART_BAUDRATE_250000;
-        break;
-    default:
-        NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
-        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-        return;
+        case 9600:
+            baud = NRF_UART_BAUDRATE_9600;
+            break;
+        case 14400:
+            baud = NRF_UART_BAUDRATE_14400;
+            break;
+        case 28800:
+            baud = NRF_UART_BAUDRATE_28800;
+            break;
+        case 38400:
+            baud = NRF_UART_BAUDRATE_38400;
+            break;
+        case 115200:
+            baud = NRF_UART_BAUDRATE_115200;
+            break;
+        case 250000:
+            baud = NRF_UART_BAUDRATE_250000;
+            break;
+        default:
+            NRF_LOG_ERROR("BAUD %d is not supported.", _baud);
+            APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+            return;
     }
 
     m_config.pselrxd = rx;
