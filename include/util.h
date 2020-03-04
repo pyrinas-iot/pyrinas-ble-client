@@ -42,7 +42,7 @@
 #define delay nrf_delay_ms
 
 #define member_size(type, member) sizeof(((type *)0)->member)
-#define millis() ROUNDED_DIV(app_timer_cnt_get() * 1000, APP_TIMER_CLOCK_FREQ)
+#define millis() ROUNDED_DIV(app_timer_cnt_get() * 1000 * (APP_TIMER_CONFIG_RTC_FREQUENCY + 1), APP_TIMER_CLOCK_FREQ)
 
 #define STRX(a) #a
 #define STR(a) STRX(a)
