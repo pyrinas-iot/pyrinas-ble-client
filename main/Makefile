@@ -133,6 +133,8 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/flash.c \
   $(PROJ_DIR)/../src/fs.c \
   $(PROJ_DIR)/../src/lfs_util.c \
+  $(PROJ_DIR)/../src/error.c \
+  $(PROJ_DIR)/../src/systick.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \

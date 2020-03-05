@@ -48,6 +48,7 @@
 #include "serial.h"
 #include "timer.h"
 #include "util.h"
+#include "systick.h"
 
 void setup(void);
 void loop(void);

@@ -81,6 +81,9 @@ static void timer_init()
     // Then init!
     ret_code_t err_code = app_timer_init();
     APP_ERROR_CHECK(err_code);
+
+    // Start systick
+    systick_init();
 }
 
 /**@brief   Function for application main entry.
