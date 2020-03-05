@@ -125,7 +125,7 @@ ota: build
 	@echo Generating OTA package
 	@mkdir -p $(OTA_DIR)
 	$(NRFUTIL) pkg generate --sd-req $(NRFUTIL_SD_REQ) --hw-version 52 --key-file $(DFU_DIR)/$(DFU_CERT) \
-		--application-version-string $(VER_STRING) --application $(BUILD_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).hex \
+		--application-version-string $(VER_STRING) --application $(MAIN_DIR)/_build/$(BUILD_IDENT).hex \
 		$(OTA_DIR)/$(APP_FILENAME).app.$(VER_STRING_W_GITHASH).zip
 
 debug:
