@@ -340,9 +340,21 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         APP_ERROR_CHECK(err_code);
 
         // Discover the peer services.
+        // TODO: handle error case if discovery is busy..
         err_code = ble_db_discovery_start(&m_db_discovery,
                                           p_gap_evt->conn_handle);
-        APP_ERROR_CHECK(err_code);
+        if (err_code == NRF_ERROR_BUSY)
+        {
+            NRF_LOG_WARNING("Discovery busy. Disconnecting...");
+            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            break;
+        }
+        else
+        {
+            APP_ERROR_CHECK(err_code);
+        }
 
         // Assign connection handle to the QWR module.
         multi_qwr_conn_handle_assign(p_gap_evt->conn_handle);
