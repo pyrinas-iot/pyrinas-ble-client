@@ -95,68 +95,68 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-    case BLE_GAP_EVT_DISCONNECTED:
-        NRF_LOG_INFO("Peripheral disconnected!");
+        case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("Peripheral disconnected!");
 
-        // Reset variables.
-        m_conn_handle = BLE_CONN_HANDLE_INVALID;
-        m_connected = false;
-        m_notifications_enabled = false;
+            // Reset variables.
+            m_conn_handle = BLE_CONN_HANDLE_INVALID;
+            m_connected = false;
+            m_notifications_enabled = false;
 
-        // Only advertising on disconnect when enabled
-        if (m_advertising_on_disconnect)
-            ble_peripheral_advertising_start(false);
+            // Only advertising on disconnect when enabled
+            if (m_advertising_on_disconnect)
+                ble_peripheral_advertising_start(false);
 
-        break;
+            break;
 
-    case BLE_GAP_EVT_CONNECTED:
-        // Set connected flag
-        m_connected = true;
+        case BLE_GAP_EVT_CONNECTED:
+            // Set connected flag
+            m_connected = true;
 
-        // Set LED
-        err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-        APP_ERROR_CHECK(err_code);
+            // Set LED
+            err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+            APP_ERROR_CHECK(err_code);
 
-        // Set connection handle
-        m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            // Set connection handle
+            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
-        // Assign QWR
-        err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
-        APP_ERROR_CHECK(err_code);
+            // Assign QWR
+            err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
+            APP_ERROR_CHECK(err_code);
 
-        break;
+            break;
 
-    case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
-    {
-        NRF_LOG_DEBUG("PHY update request.");
-        ble_gap_phys_t const phys =
-            {
-                .rx_phys = BLE_GAP_PHY_AUTO,
-                .tx_phys = BLE_GAP_PHY_AUTO,
-            };
-        err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-        APP_ERROR_CHECK(err_code);
-        break;
-    }
+        case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
+        {
+            NRF_LOG_DEBUG("PHY update request.");
+            ble_gap_phys_t const phys =
+                {
+                    .rx_phys = BLE_GAP_PHY_AUTO,
+                    .tx_phys = BLE_GAP_PHY_AUTO,
+                };
+            err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
+            APP_ERROR_CHECK(err_code);
+            break;
+        }
 
-    case BLE_GATTC_EVT_TIMEOUT:
-        // Disconnect on GATT Client timeout event.
-        NRF_LOG_DEBUG("GATT Client Timeout.");
-        err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
-                                         BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-        APP_ERROR_CHECK(err_code);
-        break;
+        case BLE_GATTC_EVT_TIMEOUT:
+            // Disconnect on GATT Client timeout event.
+            NRF_LOG_DEBUG("GATT Client Timeout.");
+            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            break;
 
-    case BLE_GATTS_EVT_TIMEOUT:
-        // Disconnect on GATT Server timeout event.
-        NRF_LOG_DEBUG("GATT Server Timeout.");
-        err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
-                                         BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-        APP_ERROR_CHECK(err_code);
-        break;
-    default:
-        // No implementation needed.
-        break;
+        case BLE_GATTS_EVT_TIMEOUT:
+            // Disconnect on GATT Server timeout event.
+            NRF_LOG_DEBUG("GATT Server Timeout.");
+            err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
+                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            APP_ERROR_CHECK(err_code);
+            break;
+        default:
+            // No implementation needed.
+            break;
     }
 }
 
@@ -232,63 +232,63 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 
     switch (ble_adv_evt)
     {
-    case BLE_ADV_EVT_FAST:
-        err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-        APP_ERROR_CHECK(err_code);
-        break;
+        case BLE_ADV_EVT_FAST:
+            err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
+            APP_ERROR_CHECK(err_code);
+            break;
 
-    case BLE_ADV_EVT_IDLE:
-        break;
-    case BLE_ADV_EVT_WHITELIST_REQUEST:
-    {
-        ble_gap_addr_t whitelist_addrs[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
-        ble_gap_irk_t whitelist_irks[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
-        uint32_t addr_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
-        uint32_t irk_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
-
-        err_code = pm_whitelist_get(whitelist_addrs, &addr_cnt,
-                                    whitelist_irks, &irk_cnt);
-        APP_ERROR_CHECK(err_code);
-        NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist",
-                        addr_cnt, irk_cnt);
-
-        // Set the correct identities list (no excluding peers with no Central Address Resolution).
-        identities_set(PM_PEER_ID_LIST_SKIP_NO_IRK);
-
-        // Apply the whitelist.
-        err_code = ble_advertising_whitelist_reply(&m_advertising,
-                                                    whitelist_addrs,
-                                                    addr_cnt,
-                                                    whitelist_irks,
-                                                    irk_cnt);
-        APP_ERROR_CHECK(err_code);
-    }
-    break; //BLE_ADV_EVT_WHITELIST_REQUEST
-
-    case BLE_ADV_EVT_PEER_ADDR_REQUEST:
-    {
-        pm_peer_data_bonding_t peer_bonding_data;
-
-        // Only Give peer address if we have a handle to the bonded peer.
-        if (m_peer_id != PM_PEER_ID_INVALID)
+        case BLE_ADV_EVT_IDLE:
+            break;
+        case BLE_ADV_EVT_WHITELIST_REQUEST:
         {
-            err_code = pm_peer_data_bonding_load(m_peer_id, &peer_bonding_data);
-            if (err_code != NRF_ERROR_NOT_FOUND)
+            ble_gap_addr_t whitelist_addrs[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
+            ble_gap_irk_t whitelist_irks[BLE_GAP_WHITELIST_ADDR_MAX_COUNT];
+            uint32_t addr_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
+            uint32_t irk_cnt = BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
+
+            err_code = pm_whitelist_get(whitelist_addrs, &addr_cnt,
+                                        whitelist_irks, &irk_cnt);
+            APP_ERROR_CHECK(err_code);
+            NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist",
+                          addr_cnt, irk_cnt);
+
+            // Set the correct identities list (no excluding peers with no Central Address Resolution).
+            identities_set(PM_PEER_ID_LIST_SKIP_NO_IRK);
+
+            // Apply the whitelist.
+            err_code = ble_advertising_whitelist_reply(&m_advertising,
+                                                       whitelist_addrs,
+                                                       addr_cnt,
+                                                       whitelist_irks,
+                                                       irk_cnt);
+            APP_ERROR_CHECK(err_code);
+        }
+        break; //BLE_ADV_EVT_WHITELIST_REQUEST
+
+        case BLE_ADV_EVT_PEER_ADDR_REQUEST:
+        {
+            pm_peer_data_bonding_t peer_bonding_data;
+
+            // Only Give peer address if we have a handle to the bonded peer.
+            if (m_peer_id != PM_PEER_ID_INVALID)
             {
-                APP_ERROR_CHECK(err_code);
+                err_code = pm_peer_data_bonding_load(m_peer_id, &peer_bonding_data);
+                if (err_code != NRF_ERROR_NOT_FOUND)
+                {
+                    APP_ERROR_CHECK(err_code);
 
-                // Manipulate identities to exclude peers with no Central Address Resolution.
-                identities_set(PM_PEER_ID_LIST_SKIP_ALL);
+                    // Manipulate identities to exclude peers with no Central Address Resolution.
+                    identities_set(PM_PEER_ID_LIST_SKIP_ALL);
 
-                ble_gap_addr_t *p_peer_addr = &(peer_bonding_data.peer_ble_id.id_addr_info);
-                err_code = ble_advertising_peer_addr_reply(&m_advertising, p_peer_addr);
-                APP_ERROR_CHECK(err_code);
+                    ble_gap_addr_t *p_peer_addr = &(peer_bonding_data.peer_ble_id.id_addr_info);
+                    err_code = ble_advertising_peer_addr_reply(&m_advertising, p_peer_addr);
+                    APP_ERROR_CHECK(err_code);
+                }
             }
         }
-    }
-    break; //BLE_ADV_EVT_PEER_ADDR_REQUEST
-    default:
-        break;
+        break; //BLE_ADV_EVT_PEER_ADDR_REQUEST
+        default:
+            break;
     }
 }
 
@@ -333,26 +333,26 @@ void ble_peripheral_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (p_evt->evt_id)
     {
-    case PM_EVT_PEERS_DELETE_SUCCEEDED:
-        // Re-enable advertising on disconnect
-        m_advertising_on_disconnect = true;
+        case PM_EVT_PEERS_DELETE_SUCCEEDED:
+            // Re-enable advertising on disconnect
+            m_advertising_on_disconnect = true;
 
-        // Start advertising
-        ble_peripheral_advertising_start(false);
-        break;
+            // Start advertising
+            ble_peripheral_advertising_start(false);
+            break;
 
-    case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
-        if (p_evt->params.peer_data_update_succeeded.flash_changed && (p_evt->params.peer_data_update_succeeded.data_id == PM_PEER_DATA_ID_BONDING))
-        {
-            NRF_LOG_INFO("New Bond, add the peer to the whitelist if possible");
-            // Note: You should check on what kind of white list policy your application should use.
+        case PM_EVT_PEER_DATA_UPDATE_SUCCEEDED:
+            if (p_evt->params.peer_data_update_succeeded.flash_changed && (p_evt->params.peer_data_update_succeeded.data_id == PM_PEER_DATA_ID_BONDING))
+            {
+                NRF_LOG_INFO("New Bond, add the peer to the whitelist if possible");
+                // Note: You should check on what kind of white list policy your application should use.
 
-            whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
-        }
-        break;
+                whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
+            }
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 }
 
@@ -364,23 +364,23 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt)
 
     switch (p_evt->evt_type)
     {
-    case BLE_PB_EVT_NOTIFICATION_ENABLED:
-        NRF_LOG_INFO("Notifications enabled!")
-        m_notifications_enabled = true;
-        break;
-    case BLE_PB_EVT_NOTIFICATION_DISABLED:
-        NRF_LOG_INFO("Notifications disabled!")
-        break;
-    case BLE_PB_EVT_DATA:
-        NRF_LOG_DEBUG("Data!");
+        case BLE_PB_EVT_NOTIFICATION_ENABLED:
+            NRF_LOG_INFO("Notifications enabled!")
+            m_notifications_enabled = true;
+            break;
+        case BLE_PB_EVT_NOTIFICATION_DISABLED:
+            NRF_LOG_INFO("Notifications disabled!")
+            break;
+        case BLE_PB_EVT_DATA:
+            NRF_LOG_DEBUG("Data!");
 
-        // Forward to raw handler.
-        if (m_raw_evt_handler != NULL)
-        {
-            m_raw_evt_handler(&(p_evt->params.data));
-        }
+            // Forward to raw handler.
+            if (m_raw_evt_handler != NULL)
+            {
+                m_raw_evt_handler(&(p_evt->params.data));
+            }
 
-        break;
+            break;
     }
 }
 
