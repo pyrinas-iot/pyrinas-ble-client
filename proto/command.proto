@@ -6,12 +6,18 @@ enum event_type {
   response = 1;
 }
 
+message rssi {
+  int32 rx = 1;
+  int32 tx = 2;
+}
+
 // Main event that goes over BLE.
 // TODO: flush out the need for a specific address
 message protobuf_event_t {
-  event_type type = 1;
-  bytes      name = 2;
-  bytes      data = 3;
+  event_type type  = 1;
+  bytes      name  = 2;
+  bytes      data  = 3;
   bytes      faddr = 4;
   bytes      taddr = 5;
+  rssi       rssi  = 6;
 }
