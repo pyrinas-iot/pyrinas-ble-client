@@ -62,6 +62,7 @@ NRF_LOG_MODULE_REGISTER();
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 static bool m_advertising_on_disconnect = true;
 static bool m_connected = false;
+static bool m_notifications_enabled = false;
 
 static raw_susbcribe_handler_t m_raw_evt_handler = NULL;
 
@@ -96,8 +97,11 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
     {
     case BLE_GAP_EVT_DISCONNECTED:
         NRF_LOG_INFO("Peripheral disconnected!");
+
+        // Reset variables.
         m_conn_handle = BLE_CONN_HANDLE_INVALID;
         m_connected = false;
+        m_notifications_enabled = false;
 
         // Only advertising on disconnect when enabled
         if (m_advertising_on_disconnect)
@@ -106,9 +110,17 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         break;
 
     case BLE_GAP_EVT_CONNECTED:
+        // Set connected flag
+        m_connected = true;
+
+        // Set LED
         err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
         APP_ERROR_CHECK(err_code);
+
+        // Set connection handle
         m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
+        // Assign QWR
         err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
         APP_ERROR_CHECK(err_code);
 
@@ -238,17 +250,17 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
                                     whitelist_irks, &irk_cnt);
         APP_ERROR_CHECK(err_code);
         NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist",
-                      addr_cnt, irk_cnt);
+                        addr_cnt, irk_cnt);
 
         // Set the correct identities list (no excluding peers with no Central Address Resolution).
         identities_set(PM_PEER_ID_LIST_SKIP_NO_IRK);
 
         // Apply the whitelist.
         err_code = ble_advertising_whitelist_reply(&m_advertising,
-                                                   whitelist_addrs,
-                                                   addr_cnt,
-                                                   whitelist_irks,
-                                                   irk_cnt);
+                                                    whitelist_addrs,
+                                                    addr_cnt,
+                                                    whitelist_irks,
+                                                    irk_cnt);
         APP_ERROR_CHECK(err_code);
     }
     break; //BLE_ADV_EVT_WHITELIST_REQUEST
@@ -354,7 +366,7 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt)
     {
     case BLE_PB_EVT_NOTIFICATION_ENABLED:
         NRF_LOG_INFO("Notifications enabled!")
-        m_connected = true;
+        m_notifications_enabled = true;
         break;
     case BLE_PB_EVT_NOTIFICATION_DISABLED:
         NRF_LOG_INFO("Notifications disabled!")
@@ -408,6 +420,22 @@ static void services_init(void)
 
 void ble_peripheral_write(uint8_t *data, size_t size)
 {
+
+    // Shoots out a warning that it's not connected.. yet.
+    if (!m_connected)
+    {
+        NRF_LOG_WARNING("Unable to write. Not connected!");
+        return;
+    }
+
+    // Shoots out a warning that it's not connected.. yet.
+    if (!m_notifications_enabled)
+    {
+        NRF_LOG_WARNING("Unable to write. Notifications not enabled!");
+        return;
+    }
+
+    // Otherwise writes the data.
     ret_code_t err_code = ble_protobuf_write(&m_protobuf, data, size);
     if (err_code == NRF_ERROR_INVALID_STATE || err_code == NRF_ERROR_FORBIDDEN ||
         err_code == NRF_ERROR_RESOURCES)
