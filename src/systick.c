@@ -23,8 +23,6 @@ uint32_t systick_init(void)
     ret_code_t err_code = app_timer_create(&m_timer, APP_TIMER_MODE_REPEATED, systick_timer_handler);
     VERIFY_SUCCESS(err_code);
 
-    NRF_LOG_INFO("Tick? %d", APP_TIMER_TICKS(1));
-
     // Then start
     err_code = app_timer_start(m_timer, APP_TIMER_TICKS(1), NULL);
     VERIFY_SUCCESS(err_code);
