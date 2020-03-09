@@ -136,6 +136,7 @@ rtt:
 	jlinkrttclient -RTTTelnetPort $(PROG_PORT)
 
 setup: toolchain sdk
+	git submodule update --init --recursive
 	@echo Pyrinas setup complete!
 
 sdk:
