@@ -93,6 +93,7 @@ build:
 
 merge: build settings
 	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(OUT_DIR)
 	@echo Merging settings with bootloader
 	@$(MERGEHEX) -m $(BOOTLOADER_DIR)/_build/$(BUILD_IDENT)_$(BUILD_SD).hex $(BUILD_DIR)/$(SETTINGS).hex -o $(BUILD_DIR)/$(BL_SETTINGS).hex
 	@echo Merging app with bootloader + settings
