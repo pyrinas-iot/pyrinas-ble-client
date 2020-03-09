@@ -78,8 +78,8 @@ default: build
 
 gen_key:
 	@echo Generating pem key. You should only run this once!
-	cd $(DFU_DIR) && $(NRFUTIL) keys generate private.pem
-	cd $(DFU_DIR) && $(NRFUTIL) keys display --key pk --format code private.pem > dfu_public_key.c
+	cd $(DFU_DIR) && ../$(NRFUTIL) keys generate private.pem
+	cd $(DFU_DIR) && ../$(NRFUTIL) keys display --key pk --format code private.pem > dfu_public_key.c
 
 settings:
 	@echo Generating settings .hex file
