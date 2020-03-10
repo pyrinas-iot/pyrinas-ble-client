@@ -86,3 +86,11 @@ For more information on how to start your own project with Pyrinas,
 ## What's in the pipeline?
 
 [All future tasks are located here.](https://github.com/pyrinas-iot/pyrinas-os/projects/1)
+
+## Special Thanks
+
+There are a few projects that if they did not exist, so would this project! In no particular order:
+
+* [NanoPB](https://github.com/nanopb/nanopb) is a low level C implementation of Protocol Buffers.
+* [LittleFS](https://github.com/ARMmbed/littlefs) is a filesystem implementation used by many embedded systems.
+* [Nordic's SDK](https://developer.nordicsemi.com) maybe it's too obvious, but without the great work of Nordic nothing here would exist!
