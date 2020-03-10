@@ -1,5 +1,7 @@
 # Pyrinas: for Particle Xenon using nRF SDK v16
 
+![Pyrinas](docs/images/pyrinas.jpg)
+
 This repository is a scaffold that anyone can use to get started with the nRF52 DK.
 Currently the only board definition available is for the Particle Xenon.
 
@@ -54,23 +56,39 @@ Look for `S/N:` and you should see your serial!
 
 ## Debugging
 
-[ ] TODO: update this.
-
 In order to debug a central and peripheral mode device at the same time you have to define `PROG_SERIAL`
 and `PROG_PORT` in your app's Makefile. If you only have one programmer, you will not be able to simultaneously debug.
+
+To get your programmer serial plug in your J-link capable board and run `jlinkexe`:
+
+jlinkexe
+    SEGGER J-Link Commander V6.62a (Compiled Jan 31 2020 12:59:22)
+    DLL version V6.62a, compiled Jan 31 2020 12:59:05
+
+    Connecting to J-Link via USB...O.K.
+    Firmware: J-Link OB-SAM3U128-V2-NordicSemi compiled Jan 21 2020 17:30:48
+    Hardware version: V1.00
+    S/N: 581758669
+    License(s): RDI, FlashBP, FlashDL, JFlash, GDB
+    VTref=3.300V
+
+
+    Type "connect" to establish a target connection, '?' for help
+    J-Link>
+
+Find the **S/N** area. This is your serial number!
 
 To simultaneously debug, make sure that `PROG_PORT` is set to different values for each app you have. (Good port numbers
 are 19020, 19021, etc)
 
-Then, run these in two separate windows. You do not need to view them.
+Then, run these in two separate windows. The window you'll care about is the window that `make rtt` is run in.
 
 ```
 make debug
 make rtt
 ```
 
-Open a pair of windows for each project you want see debug out put for.
-
+You'll have to do this for each project you want to debug.
 ## Uninstalling Toolchain or SDK
 
 1. Run `make sdk_clean` for the SDK
