@@ -5,6 +5,12 @@
 This repository is a scaffold that anyone can use to get started with the nRF52 DK.
 Currently the only board definition available is for the Particle Xenon.
 
+## Getting started
+
+A brief walkthrough of Pyrinas can be [found here.](https://www.jaredwolff.com/meet-pyrinas-a-new-way-to-use-your-xenon/)
+
+Files for that blog post are located in the `examples/intro/` folder.
+
 ## Install (Mac OSX Only)
 
 **Note:** want to add your platform? Pull requests are appreciated! :)
