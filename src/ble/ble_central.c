@@ -145,9 +145,24 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
 
         NRF_LOG_INFO("Protobuf Service discovered ");
 
-        // Enable notifications
-        err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
-        APP_ERROR_CHECK(err_code);
+        // Get security status
+        pm_conn_sec_status_t status;
+        pm_conn_sec_status_get(p_evt->conn_handle, &status);
+
+        NRF_LOG_DEBUG("Status %s %s %s", status.connected ? "connected" : "", status.bonded ? "bonded" : "", status.encrypted ? "encrypted" : "");
+
+        // Check if secure...
+        if (status.bonded == 1 && status.encrypted == 1)
+        {
+            // Enable notifications
+            err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
+            APP_ERROR_CHECK(err_code);
+        }
+        else
+        {
+            // Set the flag to be handled later in the pm_evt
+            m_pb_c.notify_enable_on_secure[p_evt->conn_handle] = true;
+        }
 
         // Continue scan if not full yet.
         if ((ble_conn_state_central_conn_count() < m_config.device_count) &&
@@ -600,6 +615,21 @@ void ble_central_pm_evt_handler(pm_evt_t const *p_evt)
     // ret_code_t err_code;
     switch (p_evt->evt_id)
     {
+    case PM_EVT_CONN_SEC_SUCCEEDED:
+        NRF_LOG_INFO("Conn secure");
+
+        // If the notification_enable flag is set do it here
+        if (m_pb_c.notify_enable_on_secure[p_evt->conn_handle])
+        {
+            // Enable notifications
+            err_code = ble_pb_c_notif_enable(&m_pb_c, p_evt->conn_handle);
+            APP_ERROR_CHECK(err_code);
+
+            // Disable
+            m_pb_c.notify_enable_on_secure[p_evt->conn_handle] = false;
+        }
+
+        break;
     case PM_EVT_CONN_SEC_FAILED:
         if (p_evt->params.conn_sec_failed.error == PM_CONN_SEC_ERROR_PIN_OR_KEY_MISSING)
         {
