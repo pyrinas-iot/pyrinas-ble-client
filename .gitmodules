@@ -4,3 +4,6 @@
 [submodule "external/littlefs"]
 	path = external/littlefs
 	url = https://github.com/ARMmbed/littlefs.git
+[submodule "external/cellular"]
+	path = external/cellular
+	url = https://github.com/u-blox/cellular.git
