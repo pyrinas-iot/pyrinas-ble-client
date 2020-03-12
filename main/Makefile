@@ -43,6 +43,10 @@ SRC_FILES += \
   $(wildcard $(PROJ_DIR)/../external/nanopb/*.c) \
   $(PROJ_DIR)/../external/littlefs/lfs.c
 
+# Cellular related
+SRC_FILES += \
+  $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/cellular_port_os.c \
+  $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/cellular_port_gpio.c
 
 # FreeRTOS Related
 SRC_FILES += \
