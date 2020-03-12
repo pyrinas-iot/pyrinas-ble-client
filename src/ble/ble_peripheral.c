@@ -98,6 +98,10 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Peripheral disconnected!");
 
+            // Set LED
+            err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+            APP_ERROR_CHECK(err_code);
+
             // Reset variables.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             m_connected = false;
@@ -195,8 +199,13 @@ void ble_peripheral_advertising_start(bool erase_bonds)
     }
     else
     {
+        // Be double sure advertising is stopped
+        sd_ble_gap_adv_stop(m_advertising.adv_handle);
+
+        // Then set whitelist
         whitelist_set(PM_PEER_ID_LIST_SKIP_NO_ID_ADDR);
 
+        // Then, start advertising!
         err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
         APP_ERROR_CHECK(err_code);
     }
