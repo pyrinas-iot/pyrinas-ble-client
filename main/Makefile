@@ -32,7 +32,29 @@ INC_FOLDERS += \
   $(wildcard $(APP_DIR)/lib/*/src/)
 endif
 
-# Source files common to all targets
+# Source for Pyrinas
+SRC_FILES += \
+  $(wildcard $(PROJ_DIR)/../src/*.c) \
+  $(wildcard $(PROJ_DIR)/../src/ble/*.c) \
+  $(wildcard $(PROJ_DIR)/../src/proto/*.c)
+
+# External files
+SRC_FILES += \
+  $(wildcard $(PROJ_DIR)/../external/nanopb/*.c) \
+  $(PROJ_DIR)/../external/littlefs/lfs.c
+
+
+# FreeRTOS Related
+SRC_FILES += \
+  $(SDK_ROOT)/components/softdevice/common/nrf_sdh_freertos.c \
+  $(wildcard $(SDK_ROOT)/external/freertos/source/*.c) \
+  $(SDK_ROOT)/external/freertos/portable/GCC/nrf52/port.c \
+  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis.c \
+  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c \
+  $(SDK_ROOT)/components/libraries/timer/app_timer_freertos.c \
+  $(SDK_ROOT)/external/freertos/source/portable/MemMang/heap_1.c
+
+# SDK source files common to all targets
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
@@ -48,7 +70,6 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
   $(SDK_ROOT)/components/libraries/scheduler/app_scheduler.c \
-  $(SDK_ROOT)/components/libraries/timer/app_timer2.c \
   $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
   $(SDK_ROOT)/components/libraries/crc16/crc16.c \
   $(SDK_ROOT)/components/libraries/timer/drv_rtc.c \
@@ -114,27 +135,12 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
-  $(PROJ_DIR)/../external/nanopb/pb_common.c \
-  $(PROJ_DIR)/../external/nanopb/pb_encode.c \
-  $(PROJ_DIR)/../external/nanopb/pb_decode.c \
-  $(PROJ_DIR)/../external/littlefs/lfs.c \
-  $(PROJ_DIR)/../src/proto/command.pb.c \
-  $(PROJ_DIR)/../src/ble/ble_m.c \
-  $(PROJ_DIR)/../src/ble/ble_peripheral.c \
-  $(PROJ_DIR)/../src/ble/ble_central.c \
-  $(PROJ_DIR)/../src/ble/ble_pb.c \
-  $(PROJ_DIR)/../src/ble/ble_pb_c.c \
-  $(PROJ_DIR)/../src/buttons_m.c \
-  $(PROJ_DIR)/../src/pm_m.c \
-  $(PROJ_DIR)/../src/util.c \
-  $(PROJ_DIR)/../src/app_weak.c \
-  $(PROJ_DIR)/../src/serial.c \
-  $(PROJ_DIR)/../src/timer.c \
-  $(PROJ_DIR)/../src/flash.c \
-  $(PROJ_DIR)/../src/fs.c \
-  $(PROJ_DIR)/../src/lfs_util.c \
-  $(PROJ_DIR)/../src/error.c \
-  $(PROJ_DIR)/../src/systick.c \
+
+# FreeRTOS related
+INC_FOLDERS += \
+  $(SDK_ROOT)/external/freertos/source/include \
+  $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52 \
+  $(SDK_ROOT)/external/freertos/portable/GCC/nrf52
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -191,6 +197,13 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu \
   $(SDK_ROOT)/external/fprintf \
   $(PROJ_DIR)/../external/littlefs \
+  $(PROJ_DIR)/../external/cellular \
+  $(PROJ_DIR)/../external/cellular/cfg \
+  $(PROJ_DIR)/../external/cellular/ctrl \
+  $(PROJ_DIR)/../external/cellular/port \
+  $(PROJ_DIR)/../external/cellular/port/api \
+  $(PROJ_DIR)/../external/cellular/sock \
+  $(PROJ_DIR)/../external/cellular/port/platform/nordic-sdk/cfg \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/../include \
@@ -225,9 +238,9 @@ CFLAGS += -DLFS_CONFIG=lfs_config.h
 CFLAGS += -DUSE_APP_CONFIG
 CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DAPP_TIMER_V2
-CFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 CFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 CFLAGS += -DBOARD_CUSTOM
+CFLAGS += -DFREERTOS
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
@@ -252,8 +265,8 @@ ASMFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+ASMFLAGS += -DFREERTOS
 ASMFLAGS += -DAPP_TIMER_V2
-ASMFLAGS += -DAPP_TIMER_V2_RTC1_ENABLED
 ASMFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 ASMFLAGS += -DBOARD_CUSTOM
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
