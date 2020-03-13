@@ -34,6 +34,7 @@
 #define CUSTOM_BOARD_H
 
 #define XENON 0
+#define BORON 1
 
 #ifndef BOARD_VARIANT
 #define BOARD_VARIANT XENON
@@ -41,6 +42,8 @@
 
 #if BOARD_VARIANT == XENON
 #include "xenon.h"
+#else if BOARD_VARIANT == BORON
+#include "boron.h"
 #else
 #error BOARD_VARIANT is not defined!
 #endif

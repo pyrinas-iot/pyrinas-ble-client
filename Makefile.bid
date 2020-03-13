@@ -2,6 +2,10 @@ ifneq (,$(BOARD))
 ifeq ("$(BOARD)","xenon")
 BOARD_VARIANT = 0
 endif
+
+ifeq ("$(BOARD)","boron")
+BOARD_VARIANT = 1
+endif
 endif
 
 ifndef BOARD_VARIANT
@@ -10,6 +14,15 @@ endif
 
 ifeq ("$(BOARD_VARIANT)","0")
 BOARD_DESC=Xenon
+BOARD_FAM=NRF52840
+BUILD_SD=s140
+BUILD_SD_VER=nrf52_7.0.1
+BUILD_IDENT=nrf52840_xxaa
+NRFUTIL_SD_REQ=0xCA
+endif
+
+ifeq ("$(BOARD_VARIANT)","1")
+BOARD_DESC=Boron
 BOARD_FAM=NRF52840
 BUILD_SD=s140
 BUILD_SD_VER=nrf52_7.0.1
