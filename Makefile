@@ -60,10 +60,12 @@ SDK_ZIP     := .nrf_sdk.zip
 NRF_SDK_FOLDER_NAME := nRF5_SDK_16.0.0_98a08e2.zip
 NRF_SDK_URL := https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v16.x.x/nRF5_SDK_16.0.0_98a08e2.zip
 NRF_SDK_MD5 := cc2ccb57d2c7159fd37f9e04fca6cc64
-GCC_ARCHIVE := .gcc-arm-none-eabi-6-2017-q2-update-mac.tar.bz2
-GCC_OUTPUT_FOLDER := gcc-arm-none-eabi-6-2017-q2-update
-GCC_URL := https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/6-2017q2/gcc-arm-none-eabi-6-2017-q2-update-mac.tar.bz2
-GCC_MD5 := d536d7fb167c04b24f7f0d40cd739cac
+
+# Toolchain related
+GCC_NAME := gcc-arm-none-eabi-7-2018-q2-update-mac
+GCC_ARCHIVE := .$(GCC_NAME).tar.bz2
+GCC_URL := https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/7-2018q2/$(GCC_NAME).tar.bz2
+GCC_MD5 := a66be9828cf3c57d7d21178e07cd8904
 
 # Soft device info
 SOFT_DEVICE := $(SDK_ROOT)/components/softdevice/$(BUILD_SD)/hex/$(BUILD_SD)_$(BUILD_SD_VER)_softdevice.hex
