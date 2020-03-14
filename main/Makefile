@@ -36,7 +36,8 @@ endif
 SRC_FILES += \
   $(wildcard $(PROJ_DIR)/../src/*.c) \
   $(wildcard $(PROJ_DIR)/../src/ble/*.c) \
-  $(wildcard $(PROJ_DIR)/../src/proto/*.c)
+  $(wildcard $(PROJ_DIR)/../src/proto/*.c) \
+  $(wildcard $(PROJ_DIR)/../src/cellular/*.c)
 
 # External files
 SRC_FILES += \
@@ -45,8 +46,10 @@ SRC_FILES += \
 
 # Cellular related
 SRC_FILES += \
-  $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/cellular_port_os.c \
-  $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/cellular_port_gpio.c
+  $(wildcard $(PROJ_DIR)/../external/cellular/ctrl/src/*.c) \
+  $(wildcard $(PROJ_DIR)/../external/cellular/port/clib/*.c) \
+  $(wildcard $(PROJ_DIR)/../external/cellular/sock/src/*.c) \
+  $(wildcard $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/*.c) \
 
 # FreeRTOS Related
 SRC_FILES += \
@@ -146,6 +149,25 @@ INC_FOLDERS += \
   $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52 \
   $(SDK_ROOT)/external/freertos/portable/GCC/nrf52
 
+# Cellular Related
+INC_FOLDERS += \
+  $(PROJ_DIR)/../external/cellular \
+  $(PROJ_DIR)/../external/cellular/cfg \
+  $(PROJ_DIR)/../external/cellular/ctrl \
+  $(PROJ_DIR)/../external/cellular/ctrl/api \
+  $(PROJ_DIR)/../external/cellular/ctrl/src \
+  $(PROJ_DIR)/../external/cellular/port \
+  $(PROJ_DIR)/../external/cellular/port/api \
+  $(PROJ_DIR)/../external/cellular/sock \
+  $(PROJ_DIR)/../external/cellular/sock/api \
+  $(PROJ_DIR)/../external/cellular/port/platform/nordic/cfg
+
+# Comms related
+INC_FOLDERS += \
+  $(PROJ_DIR)/../include/lwip \
+  $(PROJ_DIR)/../include/lwip/arch \
+  $(PROJ_DIR)/../external/lwip/src/include
+
 # Include folders common to all targets
 INC_FOLDERS += \
   $(SDK_ROOT)/components \
@@ -200,21 +222,22 @@ INC_FOLDERS += \
   $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/components/ble/ble_services/ble_dfu \
   $(SDK_ROOT)/external/fprintf \
-  $(PROJ_DIR)/../external/littlefs \
-  $(PROJ_DIR)/../external/cellular \
-  $(PROJ_DIR)/../external/cellular/cfg \
-  $(PROJ_DIR)/../external/cellular/ctrl \
-  $(PROJ_DIR)/../external/cellular/port \
-  $(PROJ_DIR)/../external/cellular/port/api \
-  $(PROJ_DIR)/../external/cellular/sock \
-  $(PROJ_DIR)/../external/cellular/port/platform/nordic-sdk/cfg \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(SDK_ROOT)/components/libraries/mem_manager \
+
+# Pyrinas related
+INC_FOLDERS += \
   $(PROJ_DIR)/../include \
   $(PROJ_DIR)/../include/board \
   $(PROJ_DIR)/../include/proto \
   $(PROJ_DIR)/../include/ble \
+  $(PROJ_DIR)/../include/cellular
+
+# External files
+INC_FOLDERS += \
   $(PROJ_DIR)/../external/nanopb \
+  $(PROJ_DIR)/../external/littlefs
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -244,6 +267,7 @@ CFLAGS += -DBOARD_VARIANT=$(BOARD_VARIANT)
 CFLAGS += -DAPP_TIMER_V2
 CFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 CFLAGS += -DBOARD_CUSTOM
+CFLAGS += -DSOCKLEN_T_DEFINED
 CFLAGS += -DFREERTOS
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
@@ -273,6 +297,7 @@ ASMFLAGS += -DFREERTOS
 ASMFLAGS += -DAPP_TIMER_V2
 ASMFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 ASMFLAGS += -DBOARD_CUSTOM
+ASMFLAGS += -DSOCKLEN_T_DEFINED
 ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
 ASMFLAGS += -DFLOAT_ABI_HARD
 ASMFLAGS += -DNRF52840_XXAA
