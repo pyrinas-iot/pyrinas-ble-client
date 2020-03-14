@@ -43,12 +43,13 @@
 #include "ble_m.h"
 
 #include "boards.h"
+#include "cellular.h"
 #include "fs.h"
 #include "pins.h"
 #include "serial.h"
+#include "systick.h"
 #include "timer.h"
 #include "util.h"
-#include "systick.h"
 
 void setup(void);
 void loop(void);
