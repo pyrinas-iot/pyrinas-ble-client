@@ -42,7 +42,7 @@
 
 #if BOARD_VARIANT == XENON
 #include "xenon.h"
-#else if BOARD_VARIANT == BORON
+#elif BOARD_VARIANT == BORON
 #include "boron.h"
 #else
 #error BOARD_VARIANT is not defined!
