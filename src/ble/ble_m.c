@@ -315,6 +315,7 @@ static void ble_raw_evt_handler(protobuf_event_t *evt)
 static void radio_switch_init()
 {
 
+#if BOARD_VARIANT == XENON
     nrf_gpio_cfg_output(VCTL1);
     nrf_gpio_cfg_output(VCTL2);
 
@@ -322,6 +323,13 @@ static void radio_switch_init()
     // VCTL1 low, Output 1
     nrf_gpio_pin_clear(VCTL2);
     nrf_gpio_pin_set(VCTL1);
+#elif BOARD_VARIANT == BORON
+    nrf_gpio_cfg_output(ANT_SEL);
+
+    nrf_gpio_pin_set(ANT_SEL);
+#else
+#error Unknown board defined.
+#endif
 }
 
 // TODO: transmit power
