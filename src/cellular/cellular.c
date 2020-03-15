@@ -28,6 +28,10 @@ uint32_t cellular_init(void)
 
     int32_t errorCode;
 
+    // Buffer power/enable
+    nrf_gpio_cfg_output(UB_BUF_PWR);
+    nrf_gpio_pin_set(UB_BUF_PWR);
+
     // Init function (which does nothing)
     errorCode = cellularPortInit();
 
