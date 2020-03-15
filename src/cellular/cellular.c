@@ -15,6 +15,8 @@
 #include "boards.h"
 #include "cellular.h"
 
+#include "nrf_delay.h"
+#include "nrf_gpio.h"
 #include "nrf_log.h"
 
 // Used to check if we're initialized
@@ -76,5 +78,12 @@ uint32_t cellular_init(void)
                          errorCode);
     }
 
-    return NRF_SUCCESS;
+    // Power it on!
+    if (m_initialized && (cellularCtrlPowerOn(NULL) == 0))
+    {
+        cellularPortLog("CELLULAR: WIFI_On() cellular powered on.\n");
+        errorCode = NRF_SUCCESS;
+    }
+
+    return errorCode;
 }
