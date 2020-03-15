@@ -76,9 +76,11 @@
 #define BLUE_LED D7
 
 // Ublox Related
+#define UB_VINT NRF_GPIO_PIN_MAP(0, 2)
 #define UB_RST NRF_GPIO_PIN_MAP(0, 12)
 #define UB_PWR_ON NRF_GPIO_PIN_MAP(0, 16)
 #define UB_BUF_PWR NRF_GPIO_PIN_MAP(0, 25)
+
 #define UB_RX NRF_GPIO_PIN_MAP(1, 4)
 #define UB_TX NRF_GPIO_PIN_MAP(1, 5)
 #define UB_CTS NRF_GPIO_PIN_MAP(1, 6)
