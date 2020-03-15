@@ -56,24 +56,24 @@ uint32_t cellular_init(void)
             if (errorCode == 0)
             {
                 m_initialized = true;
-                NRF_LOG_ERROR("CELLULAR_IOT_WIFI: WIFI_On() initialised.\n");
+                NRF_LOG_RAW_INFO("CELLULAR: initialised.\n");
             }
             else
             {
-                NRF_LOG_ERROR("CELLULAR_IOT_WIFI: cellularCtrlInit() failed (%d).\n",
-                              errorCode);
+                NRF_LOG_RAW_INFO("CELLULAR: cellularCtrlInit() failed (%d).\n",
+                                 errorCode);
             }
         }
         else
         {
-            NRF_LOG_ERROR("CELLULAR_IOT_WIFI: cellularPortUartInit() failed (%d).\n",
-                          errorCode);
+            NRF_LOG_RAW_INFO("CELLULAR: cellularPortUartInit() failed (%d).\n",
+                             errorCode);
         }
     }
     else
     {
-        NRF_LOG_ERROR("CELLULAR_IOT_WIFI: cellularPortInit() failed (%d).\n",
-                      errorCode);
+        NRF_LOG_RAW_INFO("CELLULAR: cellularPortInit() failed (%d).\n",
+                         errorCode);
     }
 
     return NRF_SUCCESS;
