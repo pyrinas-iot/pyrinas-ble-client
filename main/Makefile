@@ -15,6 +15,7 @@ ifdef APP_DIR
 # Source files in app directories
 APP_SRC_FILES := \
   $(wildcard $(APP_DIR)/*.c) \
+  $(wildcard $(APP_DIR)/src/*.c) \
   $(wildcard $(APP_DIR)/lib/*/src/*.c)
 
 # Add these separately
@@ -29,7 +30,8 @@ APP_D_FILES := $(APP_SRC_FILES_STRIPED:.c=.c.d)
 INC_FOLDERS += \
   $(APP_DIR)/ \
   $(wildcard $(APP_DIR)/lib/*/) \
-  $(wildcard $(APP_DIR)/lib/*/src/)
+  $(wildcard $(APP_DIR)/lib/*/src/) \
+  $(APP_DIR)/src/
 endif
 
 # Source files common to all targets
@@ -114,6 +116,9 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twim.c \
   $(PROJ_DIR)/../external/nanopb/pb_common.c \
   $(PROJ_DIR)/../external/nanopb/pb_encode.c \
   $(PROJ_DIR)/../external/nanopb/pb_decode.c \

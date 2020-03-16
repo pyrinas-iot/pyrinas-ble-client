@@ -50,6 +50,10 @@
 // Serial related
 #define NRF_SERIAL_ENABLED true
 
+// Two-wire inferface
+#define TWI_ENABLED 1
+#define TWI0_ENABLED 1
+
 // PB Related
 #define BLE_PB_ENABLED true
 #define BLE_PB_CONFIG_LOG_ENABLED true
