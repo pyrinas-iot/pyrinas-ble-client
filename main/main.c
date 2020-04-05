@@ -47,6 +47,7 @@
 #include "buttons_m.h"
 #include "flash.h"
 #include "fs.h"
+#include "hardfault.h"
 #include "pm_m.h"
 #include "util.h"
 
@@ -99,6 +100,9 @@ int main(void)
 
     // Startup message
     NRF_LOG_INFO("Pyrinas started.");
+
+    // Cellular
+    cellular_init();
 
     // App side related
     setup();

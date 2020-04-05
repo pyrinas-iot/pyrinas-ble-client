@@ -59,7 +59,7 @@ SRC_FILES += \
   $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis.c \
   $(SDK_ROOT)/external/freertos/portable/CMSIS/nrf52/port_cmsis_systick.c \
   $(SDK_ROOT)/components/libraries/timer/app_timer_freertos.c \
-  $(SDK_ROOT)/external/freertos/source/portable/MemMang/heap_1.c
+  $(SDK_ROOT)/external/freertos/source/portable/MemMang/heap_4.c
 
 # SDK source files common to all targets
 SRC_FILES += \
@@ -98,6 +98,8 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
   $(SDK_ROOT)/components/libraries/serial/nrf_serial.c \
   $(SDK_ROOT)/components/libraries/queue/nrf_queue.c \
+  $(SDK_ROOT)/components/libraries/hardfault/hardfault_implementation.c \
+  $(SDK_ROOT)/components/libraries/hardfault/nrf52/handler/hardfault_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/ecc/ecc.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
@@ -225,6 +227,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/svc \
   $(SDK_ROOT)/components/libraries/log/src \
   $(SDK_ROOT)/components/libraries/mem_manager \
+  $(SDK_ROOT)/components/libraries/hardfault \
 
 # Pyrinas related
 INC_FOLDERS += \
