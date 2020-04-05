@@ -34,6 +34,14 @@ uint32_t cellular_init(void)
     nrf_gpio_cfg_output(UB_BUF_PWR);
     nrf_gpio_pin_set(UB_BUF_PWR);
 
+    // Reset pin
+    nrf_gpio_cfg_output(UB_RST);
+    nrf_gpio_pin_set(UB_RST);
+
+    // RTS must be low at all times
+    nrf_gpio_cfg_output(UB_RTS);
+    nrf_gpio_pin_clear(UB_RTS);
+
     // Init function (which does nothing)
     errorCode = cellularPortInit();
 
