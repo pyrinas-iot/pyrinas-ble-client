@@ -49,6 +49,7 @@
 
 // Cellular related
 #define HARDFAULT_HANDLER_ENABLED 1
+
 // Serial related
 #define NRF_SERIAL_ENABLED true
 
@@ -128,5 +129,13 @@
 
 // Queue
 #define NRF_QUEUE_ENABLED 1
+
+// UARTE Configuration
+#ifdef UART_PRESENT
+#undef UART_PRESENT
+#endif
+#define NRFX_UARTE_ENABLED 1
+#define NRFX_UARTE0_ENABLED 1
+#define NRFX_UARTE1_ENABLED 1
 
 #endif //SETUP_H
