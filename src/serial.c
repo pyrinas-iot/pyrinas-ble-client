@@ -150,7 +150,6 @@ void serial_begin_with_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint
     m_config.parity = NRF_UART_PARITY_EXCLUDED;
     m_config.baudrate = baud;
     m_config.interrupt_priority = UART_DEFAULT_CONFIG_IRQ_PRIORITY;
-    m_config.use_easy_dma = true;
 
     ret_code_t err_code = nrf_serial_init(&m_serial, &m_config, &serial_config_dma);
     APP_ERROR_CHECK(err_code);
