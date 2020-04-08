@@ -91,13 +91,13 @@ void serial_begin(uint32_t _baud)
     serial_begin_with_pins(_baud, TX, RX);
 }
 
-void serial_begin_with_pins(uint32_t _baud, uint8_t tx, uint8_t rx)
+void serial_begin_with_pins(uint32_t _baud, uint32_t tx, uint32_t rx)
 {
 
-    serial_begin_with_flow_control(_baud, tx, rx, 0, 0);
+    serial_begin_with_flow_control(_baud, tx, rx, NRF_UARTE_PSEL_DISCONNECTED, NRF_UARTE_PSEL_DISCONNECTED);
 }
 
-void serial_begin_with_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint8_t rts, uint8_t cts)
+void serial_begin_with_flow_control(uint32_t _baud, uint32_t tx, uint32_t rx, uint32_t rts, uint32_t cts)
 {
 
     nrf_uart_baudrate_t baud = NRF_UART_BAUDRATE_14400;
@@ -131,18 +131,16 @@ void serial_begin_with_flow_control(uint32_t _baud, uint8_t tx, uint8_t rx, uint
 
     m_config.pselrxd = rx;
     m_config.pseltxd = tx;
+    m_config.pselrts = rts;
+    m_config.pselcts = cts;
 
     // Determine flow control or not
-    if (rts && cts)
+    if (rts != NRF_UARTE_PSEL_DISCONNECTED && cts != NRF_UARTE_PSEL_DISCONNECTED)
     {
-        m_config.pselrts = rts;
-        m_config.pselcts = cts;
         m_config.hwfc = NRF_UART_HWFC_ENABLED;
     }
     else
     {
-        m_config.pselrts = 0;
-        m_config.pselcts = 0;
         m_config.hwfc = NRF_UART_HWFC_DISABLED;
     }
 
@@ -175,7 +173,7 @@ size_t serial_write(const char data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, 1, &bytes_written, 40);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -195,7 +193,7 @@ size_t serial_write_bytes(const char *data, size_t size)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size, &bytes_written, 40);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -220,7 +218,7 @@ size_t serial_println(const char *data)
     size_t bytes_written = 0;
 
     // Write the bytes
-    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, 0);
+    ret_code_t err_code = nrf_serial_write(&m_serial, m_tx_buf, size + 1, &bytes_written, 40);
     APP_ERROR_CHECK(err_code);
 
     return bytes_written;
@@ -268,7 +266,7 @@ void serial_process()
     {
         m_driver_error = false;
 
-        // NRF_LOG_INFO("drvr error");
+        NRF_LOG_INFO("drvr error");
 
         ret_code_t err_code;
 
