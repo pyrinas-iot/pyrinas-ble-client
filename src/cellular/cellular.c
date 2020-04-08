@@ -1,6 +1,6 @@
 #include "FreeRTOS.h"
+#include "task.h"
 
-#include "cellular_cfg_hw.h"
 #include "cellular_cfg_module.h"
 #include "cellular_cfg_sw.h"
 #include "cellular_port.h"
@@ -15,9 +15,13 @@
 #include "boards.h"
 #include "cellular.h"
 
-#include "nrf_delay.h"
 #include "nrf_gpio.h"
 #include "nrf_log.h"
+
+// Which UARTE port
+#define CELLULAR_UARTE 0
+#define CELLULAR_UNUSED -1
+#define CELLULAR_BAUD 115200
 
 // Used to check if we're initialized
 static bool m_initialized = false;
@@ -34,13 +38,34 @@ uint32_t cellular_init(void)
     nrf_gpio_cfg_output(UB_BUF_PWR);
     nrf_gpio_pin_set(UB_BUF_PWR);
 
-    // Reset pin
-    nrf_gpio_cfg_output(UB_RST);
-    nrf_gpio_pin_set(UB_RST);
+    // vTaskDelay(100);
 
-    // RTS must be low at all times
-    nrf_gpio_cfg_output(UB_RTS);
-    nrf_gpio_pin_clear(UB_RTS);
+    // Reset pin
+    // nrf_gpio_cfg_output(UB_RST);
+    // nrf_gpio_pin_set(UB_RST);
+
+    // CP_ON
+    nrf_gpio_cfg_output(UB_PWR_ON);
+    nrf_gpio_pin_set(UB_PWR_ON);
+
+    vTaskDelay(100);
+    nrf_gpio_pin_clear(UB_PWR_ON);
+    vTaskDelay(300);
+    nrf_gpio_pin_set(UB_PWR_ON);
+
+    // Get vint input
+    nrf_gpio_cfg_input(UB_VINT, NRF_GPIO_PIN_NOPULL);
+
+    for (int i = 0; i < 10; i++)
+    {
+        vTaskDelay(100);
+
+        if (nrf_gpio_pin_read(UB_VINT))
+        {
+            NRF_LOG_INFO("powered up!");
+            break;
+        }
+    }
 
     // Init function (which does nothing)
     errorCode = cellularPortInit();
