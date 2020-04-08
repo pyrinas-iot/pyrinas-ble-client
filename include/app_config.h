@@ -47,7 +47,7 @@
 #define SLAVE_LATENCY 0                                    /**< Slave latency. */
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)   /**< Connection supervisory timeout (4 seconds). */
 
-// Cellular related
+// Hard fault detection with FreeRTOS
 #define HARDFAULT_HANDLER_ENABLED 1
 
 // Serial related
@@ -135,7 +135,8 @@
 #undef UART_PRESENT
 #endif
 #define NRFX_UARTE_ENABLED 1
-#define NRFX_UARTE0_ENABLED 1
+// ! NRFX_UART0 is used by the cellular setup
+// #define NRFX_UARTE0_ENABLED 1
 #define NRFX_UARTE1_ENABLED 1
 
 #endif //SETUP_H
