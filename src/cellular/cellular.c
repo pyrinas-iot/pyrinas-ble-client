@@ -34,11 +34,9 @@ uint32_t cellular_init(void)
 
     int32_t errorCode;
 
-    // Buffer power/enable
-    nrf_gpio_cfg_output(UB_BUF_PWR);
-    nrf_gpio_pin_set(UB_BUF_PWR);
 
-    // vTaskDelay(100);
+    // Get vint input
+    nrf_gpio_cfg_input(UB_VINT, NRF_GPIO_PIN_NOPULL);
 
     // Reset pin
     // nrf_gpio_cfg_output(UB_RST);
@@ -48,13 +46,13 @@ uint32_t cellular_init(void)
     nrf_gpio_cfg_output(UB_PWR_ON);
     nrf_gpio_pin_set(UB_PWR_ON);
 
-    vTaskDelay(100);
-    nrf_gpio_pin_clear(UB_PWR_ON);
-    vTaskDelay(300);
-    nrf_gpio_pin_set(UB_PWR_ON);
-
-    // Get vint input
-    nrf_gpio_cfg_input(UB_VINT, NRF_GPIO_PIN_NOPULL);
+    if( nrf_gpio_pin_read(UB_VINT) != 1 ) {
+        NRF_LOG_INFO("Power up sequence");
+        vTaskDelay(100);
+        nrf_gpio_pin_clear(UB_PWR_ON);
+        vTaskDelay(300);
+        nrf_gpio_pin_set(UB_PWR_ON);
+    }
 
     for (int i = 0; i < 10; i++)
     {
@@ -67,6 +65,14 @@ uint32_t cellular_init(void)
         }
     }
 
+    vTaskDelay(5000);
+
+    // Buffer power/enable
+    nrf_gpio_cfg_output(UB_BUF_PWR);
+    // Note: active low!
+    nrf_gpio_pin_clear(UB_BUF_PWR);
+    
+
     // Init function (which does nothing)
     errorCode = cellularPortInit();
 
@@ -74,7 +80,7 @@ uint32_t cellular_init(void)
     {
         errorCode = cellularPortUartInit(UB_TX,
                                          UB_RX,
-                                         UB_CTS,
+                                         CELLULAR_UNUSED,
                                          UB_RTS,
                                          CELLULAR_BAUD,
                                          CELLULAR_UNUSED,
@@ -114,7 +120,7 @@ uint32_t cellular_init(void)
     // Power it on!
     if (m_initialized && (cellularCtrlPowerOn(NULL) == 0))
     {
-        cellularPortLog("CELLULAR: WIFI_On() cellular powered on.\n");
+        cellularPortLog("CELLULAR: cellular powered on.\n");
         errorCode = NRF_SUCCESS;
     }
 
