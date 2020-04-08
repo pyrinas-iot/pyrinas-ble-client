@@ -47,21 +47,21 @@ uint32_t cellular_init(void)
 
     if (errorCode == NRF_SUCCESS)
     {
-        errorCode = cellularPortUartInit(CELLULAR_CFG_PIN_TXD,
-                                         CELLULAR_CFG_PIN_RXD,
-                                         CELLULAR_CFG_PIN_CTS,
-                                         CELLULAR_CFG_PIN_RTS,
-                                         CELLULAR_CFG_BAUD_RATE,
-                                         CELLULAR_CFG_RTS_THRESHOLD,
-                                         CELLULAR_CFG_UART,
+        errorCode = cellularPortUartInit(UB_TX,
+                                         UB_RX,
+                                         UB_CTS,
+                                         UB_RTS,
+                                         CELLULAR_BAUD,
+                                         CELLULAR_UNUSED,
+                                         CELLULAR_UARTE,
                                          &gQueueHandle);
         if (errorCode == 0)
         {
-            errorCode = cellularCtrlInit(CELLULAR_CFG_PIN_ENABLE_POWER,
-                                         CELLULAR_CFG_PIN_CP_ON,
-                                         CELLULAR_CFG_PIN_VINT,
+            errorCode = cellularCtrlInit(CELLULAR_UNUSED,
+                                         UB_PWR_ON,
+                                         UB_VINT,
                                          false,
-                                         CELLULAR_CFG_UART,
+                                         CELLULAR_UARTE,
                                          gQueueHandle);
             if (errorCode == 0)
             {
