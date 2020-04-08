@@ -91,7 +91,7 @@ void timer_stop(timer_id_t *p_timer_id)
 
 bool timer_is_active(timer_id_t *p_timer_id)
 {
-    return (*p_timer_id->timer_id)->active;
+    return false; // TODO: fix this!
 }
 
 void timer_process()
