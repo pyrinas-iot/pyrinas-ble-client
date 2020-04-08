@@ -146,7 +146,7 @@ static void logs_init()
 
 #if NRF_LOG_ENABLED
     // Start execution.
-    if (pdPASS != xTaskCreate(logger_thread, "LOGGER", 256, NULL, 4, &m_logger_thread))
+    if (pdPASS != xTaskCreate(logger_thread, "LOGGER", 128, NULL, 4, &m_logger_thread))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
     }
@@ -181,6 +181,16 @@ void vApplicationIdleHook(void)
     vTaskResume(m_main_thread);
 }
 
+/**@brief A function which is hooked to a stack overflow event.
+ * @note The check for stack overflow must be enabled in FreeRTOS configuration (configCHECK_FOR_STACK_OVERFLOW).
+ */
+void vApplicationStackOverflowHook(TaskHandle_t xTask,
+                                   signed char *pcTaskName)
+{
+    NRF_LOG_INFO("%s: Stack overflow.", pcTaskName);
+    NRF_LOG_FLUSH();
+}
+
 /**@brief   Function for application main entry.
  *
  * @details Initializes BLE and NFC stacks and runs NFC Forum device task.
@@ -196,7 +206,7 @@ int main(void)
     fs_init();
 
     // Start execution of main thread.
-    if (pdPASS != xTaskCreate(main_thread, "MAIN", 256, NULL, 2, &m_main_thread))
+    if (pdPASS != xTaskCreate(main_thread, "MAIN", 256, NULL, 4, &m_main_thread))
     {
         APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
     }
