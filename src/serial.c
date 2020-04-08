@@ -38,7 +38,7 @@
 
 #include "boards.h"
 
-NRF_SERIAL_UART_DEF(m_serial, 0);
+NRF_SERIAL_UART_DEF(m_serial, 1);
 
 static nrf_drv_uart_config_t m_config;
 
