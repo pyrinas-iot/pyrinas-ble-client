@@ -49,7 +49,7 @@ SRC_FILES += \
   $(wildcard $(PROJ_DIR)/../external/cellular/ctrl/src/*.c) \
   $(wildcard $(PROJ_DIR)/../external/cellular/port/clib/*.c) \
   $(wildcard $(PROJ_DIR)/../external/cellular/sock/src/*.c) \
-  $(wildcard $(PROJ_DIR)/../external/cellular/port/platform/nordic/src/*.c) \
+  $(wildcard $(PROJ_DIR)/../external/cellular/port/platform/nordic/nrf52840/src/*.c) \
 
 # FreeRTOS Related
 SRC_FILES += \
@@ -160,8 +160,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/../external/cellular/port \
   $(PROJ_DIR)/../external/cellular/port/api \
   $(PROJ_DIR)/../external/cellular/sock \
-  $(PROJ_DIR)/../external/cellular/sock/api \
-  $(PROJ_DIR)/../external/cellular/port/platform/nordic/cfg
+  $(PROJ_DIR)/../external/cellular/sock/api
 
 # Comms related
 INC_FOLDERS += \
@@ -173,6 +172,7 @@ INC_FOLDERS += \
 INC_FOLDERS += \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/prs \
   $(SDK_ROOT)/components/libraries/scheduler \
   $(SDK_ROOT)/components/libraries/serial \
   $(SDK_ROOT)/modules/nrfx \
@@ -271,6 +271,7 @@ CFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 CFLAGS += -DBOARD_CUSTOM
 CFLAGS += -DSOCKLEN_T_DEFINED
 CFLAGS += -DFREERTOS
+CFLAGS += -DCELLULAR_CFG_MODULE_SARA_R4
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
@@ -296,6 +297,7 @@ ASMFLAGS += -mcpu=cortex-m4
 ASMFLAGS += -mthumb -mabi=aapcs
 ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 ASMFLAGS += -DFREERTOS
+ASMFLAGS += -DCELLULAR_CFG_MODULE_SARA_R4
 ASMFLAGS += -DAPP_TIMER_V2
 ASMFLAGS += -DBL_SETTINGS_ACCESS_ONLY
 ASMFLAGS += -DBOARD_CUSTOM
