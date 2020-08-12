@@ -15,6 +15,7 @@ ifdef APP_DIR
 # Source files in app directories
 APP_SRC_FILES := \
   $(wildcard $(APP_DIR)/*.c) \
+  $(wildcard $(APP_DIR)/fsrc/*.c) \
   $(wildcard $(APP_DIR)/lib/*/src/*.c)
 
 # Add these separately
@@ -28,6 +29,7 @@ APP_D_FILES := $(APP_SRC_FILES_STRIPED:.c=.c.d)
 # Include folders for app
 INC_FOLDERS += \
   $(APP_DIR)/ \
+  $(APP_DIR)/src/ \
   $(wildcard $(APP_DIR)/lib/*/) \
   $(wildcard $(APP_DIR)/lib/*/src/)
 endif
@@ -73,11 +75,13 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/ecc/ecc.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_qspi.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
@@ -114,16 +118,15 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
-  $(PROJ_DIR)/../external/nanopb/pb_common.c \
-  $(PROJ_DIR)/../external/nanopb/pb_encode.c \
-  $(PROJ_DIR)/../external/nanopb/pb_decode.c \
+  $(PROJ_DIR)/../external/tinycbor/src/cborencoder.c \
+  $(PROJ_DIR)/../external/tinycbor/src/cborparser.c \
   $(PROJ_DIR)/../external/littlefs/lfs.c \
-  $(PROJ_DIR)/../src/proto/command.pb.c \
   $(PROJ_DIR)/../src/ble/ble_m.c \
   $(PROJ_DIR)/../src/ble/ble_peripheral.c \
   $(PROJ_DIR)/../src/ble/ble_central.c \
   $(PROJ_DIR)/../src/ble/ble_pb.c \
   $(PROJ_DIR)/../src/ble/ble_pb_c.c \
+  $(PROJ_DIR)/../src/ble/ble_codec.c \
   $(PROJ_DIR)/../src/buttons_m.c \
   $(PROJ_DIR)/../src/pm_m.c \
   $(PROJ_DIR)/../src/util.c \
@@ -195,9 +198,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/../include \
   $(PROJ_DIR)/../include/board \
-  $(PROJ_DIR)/../include/proto \
   $(PROJ_DIR)/../include/ble \
-  $(PROJ_DIR)/../external/nanopb \
+  $(PROJ_DIR)/../external/tinycbor/src \
 
 # Libraries common to all targets
 LIB_FILES += \

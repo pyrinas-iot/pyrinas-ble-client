@@ -48,9 +48,6 @@
 #include "ble_conn_state.h"
 #include "ble_pb.h"
 #include "ble_srv_common.h"
-#include "command.pb.h"
-#include "pb_decode.h"
-#include "pb_encode.h"
 #include <string.h>
 
 // TODO: rename ble_protobuf to ble_pb
@@ -112,26 +109,18 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
     // Handle writning to the value handle
     if (p_evt_write->handle == p_protobuf->command_handles.value_handle)
     {
-
-        // Setitng up protocol buffer data
-        protobuf_event_t data;
+        int err;
 
         ble_pb_evt_t evt;
         evt.evt_type = BLE_PB_EVT_DATA;
 
-        // NRF_LOG_HEXDUMP_INFO(p_evt_write->data,p_evt_write->len);
-
         // Read in buffer
-        pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_write->data, p_evt_write->len);
-
-        if (!pb_decode(&istream, protobuf_event_t_fields, &data))
+        err = ble_codec_decode(&evt.params.data, p_evt_write->data, p_evt_write->len);
+        if (err)
         {
-            NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
+            NRF_LOG_ERROR("Unable to decode ble data!");
             return;
         }
-
-        // Copy data over
-        evt.params.data = data;
 
         // Event to the main context
         p_protobuf->evt_handler(p_protobuf, &evt);
@@ -201,19 +190,19 @@ void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-    case BLE_GAP_EVT_CONNECTED:
-        on_connect(p_protobuf, p_ble_evt);
-        break;
-    case BLE_GAP_EVT_DISCONNECTED:
-        on_disconnect(p_protobuf, p_ble_evt);
-        break;
-    case BLE_GATTS_EVT_WRITE:
-        on_write(p_protobuf, p_ble_evt);
-        break;
+        case BLE_GAP_EVT_CONNECTED:
+            on_connect(p_protobuf, p_ble_evt);
+            break;
+        case BLE_GAP_EVT_DISCONNECTED:
+            on_disconnect(p_protobuf, p_ble_evt);
+            break;
+        case BLE_GATTS_EVT_WRITE:
+            on_write(p_protobuf, p_ble_evt);
+            break;
 
-    default:
-        // No implementation needed.
-        break;
+        default:
+            // No implementation needed.
+            break;
     }
 }
 
@@ -232,7 +221,7 @@ static ret_code_t command_char_add(ble_protobuf_t *p_protobuf, const ble_protobu
     memset(&add_char_params, 0, sizeof(add_char_params));
 
     add_char_params.uuid = PROTOBUF_UUID_CONFIG_CHAR;
-    add_char_params.max_len = protobuf_event_t_size;
+    add_char_params.max_len = sizeof(ble_event_t);
     add_char_params.is_var_len = true;
 
     add_char_params.char_props.notify = 1;

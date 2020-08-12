@@ -62,9 +62,9 @@
 #define BLE_PB_C_H__
 
 #include "ble.h"
+#include "ble_codec.h"
 #include "ble_db_discovery.h"
 #include "ble_srv_common.h"
-#include "command.pb.h"
 #include "nrf_ble_gq.h"
 #include "nrf_sdh_ble.h"
 #include "sdk_config.h"
@@ -121,9 +121,10 @@ extern "C"
     {
         ble_pb_c_evt_type_t evt_type; /**< Type of the event. */
         uint16_t conn_handle;         /**< Connection handle on which the Protobuf service was discovered on the peer device..*/
-        union {
-            pb_db_t peer_db;       /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
-            protobuf_event_t data; /**< Protobuf data received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
+        union
+        {
+            pb_db_t peer_db;  /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
+            ble_event_t data; /**< Protobuf data received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
         } params;
     } ble_pb_c_evt_t;
 

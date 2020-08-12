@@ -57,7 +57,7 @@
 
 #include "peer_manager.h"
 
-#include "command.pb.h"
+#include "ble_codec.h"
 
 //TODO: better place to define this
 #define BLE_M_SUBSCRIBER_MAX_COUNT 12 /**< Max amount of potential subscriptions. */
@@ -67,7 +67,7 @@
 typedef struct
 {
     susbcribe_handler_t evt_handler;
-    protobuf_event_t_name_t name;
+    ble_event_name_data_t name;
 } ble_subscription_handler_t;
 
 typedef struct
@@ -93,7 +93,8 @@ typedef struct
 {
     ble_mode_t mode;
     bool long_range;
-    union {
+    union
+    {
         ble_central_init_t config;
     };
 
@@ -121,7 +122,7 @@ void scan_start(void);
 void ble_publish(char *name, char *data);
 
 // TODO: document this
-void ble_publish_raw(protobuf_event_t event);
+void ble_publish_raw(ble_event_t event);
 
 // TODO: document this
 void ble_subscribe(char *name, susbcribe_handler_t handler);

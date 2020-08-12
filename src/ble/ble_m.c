@@ -56,17 +56,17 @@
 
 #include "util.h"
 
-#include "pb_decode.h"
-#include "pb_encode.h"
+#include "ble_codec.h"
 
 #define NRF_LOG_MODULE_NAME ble_m
 #include "nrf_log.h"
+#include "nrf_log_ctrl.h"
 NRF_LOG_MODULE_REGISTER();
 
 #define APP_BLE_CONN_CFG_TAG 1  /**< Tag for the configuration of the BLE stack. */
 #define APP_BLE_OBSERVER_PRIO 3 /**< BLE observer priority of the application. There is no need to modify this value. */
 
-NRF_QUEUE_DEF(protobuf_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
+NRF_QUEUE_DEF(ble_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
 
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
 
@@ -75,7 +75,7 @@ static ble_stack_init_t m_config;                /**< Init config */
 static raw_susbcribe_handler_t m_raw_handler_ext;
 static bool m_init_complete = false;
 
-static int subscriber_search(protobuf_event_t_name_t *event_name); // Forward declaration of subscriber_search
+static int subscriber_search(ble_event_name_data_t *event_name); // Forward declaration of subscriber_search
 
 bool ble_is_connected(void)
 {
@@ -84,12 +84,12 @@ bool ble_is_connected(void)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        is_connected = ble_peripheral_is_connected();
-        break;
-    case ble_mode_central:
-        is_connected = ble_central_is_connected();
-        break;
+        case ble_mode_peripheral:
+            is_connected = ble_peripheral_is_connected();
+            break;
+        case ble_mode_central:
+            is_connected = ble_central_is_connected();
+            break;
     }
 
     return is_connected;
@@ -99,12 +99,12 @@ void ble_disconnect(void)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_disconnect();
-        break;
-    case ble_mode_central:
-        ble_central_disconnect();
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_disconnect();
+            break;
+        case ble_mode_central:
+            ble_central_disconnect();
+            break;
     }
 }
 
@@ -115,21 +115,21 @@ void ble_publish(char *name, char *data)
     uint8_t data_length = strlen(data);
 
     // Check size
-    if (name_length >= member_size(protobuf_event_t_name_t, bytes))
+    if (name_length >= member_size(ble_event_name_data_t, bytes))
     {
-        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(protobuf_event_t_name_t, bytes));
+        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(ble_event_name_data_t, bytes));
         return;
     }
 
     // Check size
-    if (data_length >= member_size(protobuf_event_t_data_t, bytes))
+    if (data_length >= member_size(ble_event_data_t, bytes))
     {
-        NRF_LOG_WARNING("Data must be <= %d characters.", member_size(protobuf_event_t_data_t, bytes));
+        NRF_LOG_WARNING("Data must be <= %d characters.", member_size(ble_event_data_t, bytes));
         return;
     }
 
     // Create an event.
-    protobuf_event_t event = {
+    ble_event_t event = {
         .name.size = name_length,
         .data.size = data_length,
     };
@@ -142,7 +142,7 @@ void ble_publish(char *name, char *data)
     ble_publish_raw(event);
 }
 
-void ble_publish_raw(protobuf_event_t event)
+void ble_publish_raw(ble_event_t event)
 {
 
     NRF_LOG_DEBUG("publish raw: %s %s", event.name.bytes, event.data.bytes);
@@ -153,38 +153,41 @@ void ble_publish_raw(protobuf_event_t event)
     memcpy(event.faddr, gap_addr.addr, sizeof(event.faddr));
 
     // Encode value
-    pb_byte_t output[protobuf_event_t_size];
+    uint8_t output[sizeof(ble_event_t)];
+    size_t bytes_buffered = 0;
+
+    // Encode
+    int err = ble_codec_encode(&event, output, sizeof(output), &bytes_buffered);
 
     // Output buffer
-    pb_ostream_t ostream = pb_ostream_from_buffer(output, sizeof(output));
-
-    if (!pb_encode(&ostream, protobuf_event_t_fields, &event))
+    if (err)
     {
-        NRF_LOG_ERROR("Unable to encode: %s", PB_GET_ERROR(&ostream));
+        NRF_LOG_ERROR("Unable to encode data!");
         return;
     }
 
     // TODO: send to connected device(s)
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_write(output, ostream.bytes_written);
-        break;
-    case ble_mode_central:
-        ble_central_write(output, ostream.bytes_written);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_write(output, bytes_buffered);
+            break;
+        case ble_mode_central:
+            ble_central_write(output, bytes_buffered);
+            break;
     }
 }
 
 void ble_subscribe(char *name, susbcribe_handler_t handler)
 {
 
-    uint8_t name_length = strlen(name) + 1;
+    uint8_t name_length = strlen(name);
+    uint8_t name_length_nl = name_length + 1;
 
     // Check size
-    if (name_length > member_size(protobuf_event_t_name_t, bytes))
+    if (name_length > member_size(ble_event_name_data_t, bytes))
     {
-        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(protobuf_event_t_name_t, bytes));
+        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(ble_event_name_data_t, bytes));
         return;
     }
 
@@ -199,8 +202,11 @@ void ble_subscribe(char *name, susbcribe_handler_t handler)
         .evt_handler = handler};
 
     // Copy over info to structure.
-    subscriber.name.size = name_length;
+    subscriber.name.size = name_length_nl;
     memcpy(subscriber.name.bytes, name, name_length);
+
+    // Teminating \0 char
+    subscriber.name.bytes[name_length] = 0;
 
     // Check if exists
     int index = subscriber_search(&subscriber.name);
@@ -256,12 +262,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_evt_handler(p_ble_evt, p_context);
-        break;
-    case ble_mode_central:
-        ble_central_evt_handler(p_ble_evt, p_context);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_evt_handler(p_ble_evt, p_context);
+            break;
+        case ble_mode_central:
+            ble_central_evt_handler(p_ble_evt, p_context);
+            break;
     }
 }
 
@@ -304,9 +310,8 @@ static void gatt_init(void)
 
 /**@brief Function for queuing events so they can read in main context.
  */
-static void ble_raw_evt_handler(protobuf_event_t *evt)
+static void ble_raw_evt_handler(ble_event_t *evt)
 {
-
     // Queue events.
     ret_code_t ret = nrf_queue_push(&m_event_queue, evt);
     APP_ERROR_CHECK(ret);
@@ -357,21 +362,21 @@ void ble_stack_init(ble_stack_init_t *init)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        // Attach handler
-        ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_peripheral:
+            // Attach handler
+            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
 
-        // Init peripheral mode
-        ble_peripheral_init();
-        break;
+            // Init peripheral mode
+            ble_peripheral_init();
+            break;
 
-    case ble_mode_central:
-        // First, attach handler
-        ble_central_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_central:
+            // First, attach handler
+            ble_central_attach_raw_handler(ble_raw_evt_handler);
 
-        // Initialize
-        ble_central_init(&m_config.config);
-        break;
+            // Initialize
+            ble_central_init(&m_config.config);
+            break;
     }
 
     // Init complete
@@ -397,7 +402,7 @@ void ble_process()
     if (!nrf_queue_is_empty(&m_event_queue))
     {
 
-        static protobuf_event_t evt;
+        static ble_event_t evt;
         ret_code_t ret = nrf_queue_pop(&m_event_queue, &evt);
         APP_ERROR_CHECK(ret);
 
@@ -408,6 +413,7 @@ void ble_process()
         }
 
         // adding \0 terminating char so printing, strlen, etc works
+        // TODO necessary?
         evt.name.bytes[evt.name.size++] = 0;
         evt.data.bytes[evt.data.size++] = 0;
 
@@ -424,14 +430,14 @@ void ble_process()
 }
 
 // TODO: more optimized way of doing this?
-static int subscriber_search(protobuf_event_t_name_t *event_name)
+static int subscriber_search(ble_event_name_data_t *event_name)
 {
 
     int index = 0;
 
     for (; index < m_subscribe_list.count; index++)
     {
-        protobuf_event_t_name_t *name = &m_subscribe_list.subscribers[index].name;
+        ble_event_name_data_t *name = &m_subscribe_list.subscribers[index].name;
 
         if (name->size == event_name->size)
         {
@@ -449,11 +455,11 @@ void ble_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_pm_evt_handler(p_evt);
-        break;
-    case ble_mode_central:
-        ble_central_pm_evt_handler(p_evt);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_pm_evt_handler(p_evt);
+            break;
+        case ble_mode_central:
+            ble_central_pm_evt_handler(p_evt);
+            break;
     }
 }
