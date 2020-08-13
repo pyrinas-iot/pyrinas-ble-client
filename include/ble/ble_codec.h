@@ -6,13 +6,13 @@
 
 typedef struct
 {
-    uint8_t size;
+    size_t size;
     uint8_t bytes[18];
 } ble_event_name_data_t;
 
 typedef struct
 {
-    uint8_t size;
+    size_t size;
     uint8_t bytes[128];
 } ble_event_data_t;
 
