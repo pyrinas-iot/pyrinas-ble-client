@@ -24,6 +24,8 @@ typedef struct
     uint8_t taddr[6];
 } ble_event_t;
 
+#define ble_event_t_size sizeof(ble_event_t) + 64
+
 int ble_codec_encode(const ble_event_t *p_data, uint8_t *p_buf, size_t len, size_t *p_size);
 int ble_codec_decode(ble_event_t *p_data, const uint8_t *p_buf, size_t len);
 
