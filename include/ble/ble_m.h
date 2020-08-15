@@ -57,7 +57,7 @@
 
 #include "peer_manager.h"
 
-#include "ble_codec.h"
+#include "pyrinas_codec.h"
 
 //TODO: better place to define this
 #define BLE_M_SUBSCRIBER_MAX_COUNT 12 /**< Max amount of potential subscriptions. */
@@ -122,7 +122,7 @@ void scan_start(void);
 void ble_publish(char *name, char *data);
 
 // TODO: document this
-void ble_publish_raw(ble_event_t event);
+void ble_publish_raw(pyrinas_event_t event);
 
 // TODO: document this
 void ble_subscribe(char *name, susbcribe_handler_t handler);

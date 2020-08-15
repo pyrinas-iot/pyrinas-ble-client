@@ -62,7 +62,7 @@
 #define BLE_PB_C_H__
 
 #include "ble.h"
-#include "ble_codec.h"
+#include "pyrinas_codec.h"
 #include "ble_db_discovery.h"
 #include "ble_srv_common.h"
 #include "nrf_ble_gq.h"
@@ -82,110 +82,110 @@ extern "C"
  * @param   _name   Name of the instance.
  * @hideinitializer
  */
-#define BLE_PB_C_DEF(_name)                          \
-    static ble_pb_c_t _name;                         \
-    NRF_SDH_BLE_OBSERVER(_name##_obs,                \
-                         BLE_PB_C_BLE_OBSERVER_PRIO, \
-                         ble_pb_c_on_ble_evt, &_name)
+#define BLE_PB_C_DEF(_name)                        \
+  static ble_pb_c_t _name;                         \
+  NRF_SDH_BLE_OBSERVER(_name##_obs,                \
+                       BLE_PB_C_BLE_OBSERVER_PRIO, \
+                       ble_pb_c_on_ble_evt, &_name)
 
-    /**
+  /**
  * @defgroup pb_c_enums Enumerations
  * @{
  */
 
-    /**@brief PB Client event type. */
-    typedef enum
-    {
-        BLE_PB_C_EVT_DISCOVERY_COMPLETE = 1, /**< Event indicating that the Protobuf Service was discovered at the peer. */
-        BLE_PB_C_EVT_NOTIFICATION            /**< Event indicating that a notification of the Protobuf characteristic was received from the peer. */
-    } ble_pb_c_evt_type_t;
+  /**@brief PB Client event type. */
+  typedef enum
+  {
+    BLE_PB_C_EVT_DISCOVERY_COMPLETE = 1, /**< Event indicating that the Protobuf Service was discovered at the peer. */
+    BLE_PB_C_EVT_NOTIFICATION            /**< Event indicating that a notification of the Protobuf characteristic was received from the peer. */
+  } ble_pb_c_evt_type_t;
 
-    /** @} */
+  /** @} */
 
-    /**
+  /**
  * @defgroup pb_c_structs Structures
  * @{
  */
 
-    /**@brief Structure containing the handles related to the Protobuf Service found on the peer. */
-    typedef struct
+  /**@brief Structure containing the handles related to the Protobuf Service found on the peer. */
+  typedef struct
+  {
+    uint16_t cccd_handle; /**< Handle of the CCCD of the Protobuf characteristic. */
+    uint16_t data_handle; /**< Handle of the Protobuf characteristic, as provided by the SoftDevice. */
+  } pb_db_t;
+
+  // TODO: Create a context array of these handles. As they are unique on a per-connection basis.
+
+  /**@brief Protobuf Event structure. */
+  typedef struct
+  {
+    ble_pb_c_evt_type_t evt_type; /**< Type of the event. */
+    uint16_t conn_handle;         /**< Connection handle on which the Protobuf service was discovered on the peer device..*/
+    union
     {
-        uint16_t cccd_handle; /**< Handle of the CCCD of the Protobuf characteristic. */
-        uint16_t data_handle; /**< Handle of the Protobuf characteristic, as provided by the SoftDevice. */
-    } pb_db_t;
+      pb_db_t peer_db;      /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
+      pyrinas_event_t data; /**< Protobuf data received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
+    } params;
+  } ble_pb_c_evt_t;
 
-    // TODO: Create a context array of these handles. As they are unique on a per-connection basis.
+  /** @} */
 
-    /**@brief Protobuf Event structure. */
-    typedef struct
-    {
-        ble_pb_c_evt_type_t evt_type; /**< Type of the event. */
-        uint16_t conn_handle;         /**< Connection handle on which the Protobuf service was discovered on the peer device..*/
-        union
-        {
-            pb_db_t peer_db;  /**< Handles related to the Protobuf, found on the peer device. This is filled if the evt_type is @ref BLE_PB_C_EVT_DISCOVERY_COMPLETE.*/
-            ble_event_t data; /**< Protobuf data received. This is filled if the evt_type is @ref BLE_PB_C_EVT_NOTIFICATION. */
-        } params;
-    } ble_pb_c_evt_t;
-
-    /** @} */
-
-    /**
+  /**
  * @defgroup pb_c_types Types
  * @{
  */
 
-    // Forward declaration of the ble_bas_t type.
-    typedef struct ble_pb_c_s ble_pb_c_t;
+  // Forward declaration of the ble_bas_t type.
+  typedef struct ble_pb_c_s ble_pb_c_t;
 
-    /**@brief   Event handler type.
+  /**@brief   Event handler type.
  *
  * @details This is the type of the event handler that is to be provided by the application
  *          of this module to receive events.
  */
-    typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt);
+  typedef void (*ble_pb_c_evt_handler_t)(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt);
 
-    /** @} */
+  /** @} */
 
-    /**
+  /**
  * @addtogroup pb_c_structs
  * @{
  */
 
-    /**@brief Protobuf Client structure.
+  /**@brief Protobuf Client structure.
  */
-    // TODO: this technically uses more memory than necssary.. May get hefty with more connections.
-    struct ble_pb_c_s
-    {
-        uint8_t uuid_type;                                          /**< UUID type for DFU UUID. */
-        uint16_t conn_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];        /**< Connection handle, as provided by the SoftDevice. */
-        pb_db_t char_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];         /**< Handles related to PB on the peer. */
-        bool notify_enable_on_secure[NRF_SDH_BLE_TOTAL_LINK_COUNT]; /**< Determines if a secure session has begun before discovery.. */
-        ble_pb_c_evt_handler_t evt_handler;                         /**< Application event handler to be called when there is an event related to the Protobuf Service. */
-        ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
-        nrf_ble_gq_t *p_gatt_queue;                                 /**< Pointer to the BLE GATT Queue instance. */
-    };
+  // TODO: this technically uses more memory than necssary.. May get hefty with more connections.
+  struct ble_pb_c_s
+  {
+    uint8_t uuid_type;                                          /**< UUID type for DFU UUID. */
+    uint16_t conn_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];        /**< Connection handle, as provided by the SoftDevice. */
+    pb_db_t char_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];         /**< Handles related to PB on the peer. */
+    bool notify_enable_on_secure[NRF_SDH_BLE_TOTAL_LINK_COUNT]; /**< Determines if a secure session has begun before discovery.. */
+    ble_pb_c_evt_handler_t evt_handler;                         /**< Application event handler to be called when there is an event related to the Protobuf Service. */
+    ble_srv_error_handler_t error_handler;                      /**< Function to be called in case of an error. */
+    nrf_ble_gq_t *p_gatt_queue;                                 /**< Pointer to the BLE GATT Queue instance. */
+  };
 
-    /**@brief Protobuf Client initialization structure.
+  /**@brief Protobuf Client initialization structure.
  */
-    typedef struct
-    {
-        ble_pb_c_evt_handler_t evt_handler;    /**< Event handler to be called by the Protobuf Client module when there is an event related to the Protobuf Service. */
-        ble_srv_error_handler_t error_handler; /**< Function to be called in case of an error. */
-        nrf_ble_gq_t *p_gatt_queue;            /**< Pointer to the BLE GATT Queue instance. */
-    } ble_pb_c_init_t;
+  typedef struct
+  {
+    ble_pb_c_evt_handler_t evt_handler;    /**< Event handler to be called by the Protobuf Client module when there is an event related to the Protobuf Service. */
+    ble_srv_error_handler_t error_handler; /**< Function to be called in case of an error. */
+    nrf_ble_gq_t *p_gatt_queue;            /**< Pointer to the BLE GATT Queue instance. */
+  } ble_pb_c_init_t;
 
-    /** @} */
+  /** @} */
 
-    /**
+  /**
  * @defgroup pb_c_functions Functions
  * @{
  */
 
-    // TODO: document this
-    uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, uint8_t *data, size_t size);
+  // TODO: document this
+  uint32_t ble_pb_c_write(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle, uint8_t *data, size_t size);
 
-    /**@brief     Function for initializing the Protobuf Client module.
+  /**@brief     Function for initializing the Protobuf Client module.
  *
  * @details   This function registers with the Database Discovery module for the Protobuf Service.
  *		   	  The module looks for the presence of a Protobuf Service instance at the peer
@@ -199,9 +199,9 @@ extern "C"
  * @retval    err_code    Otherwise, this function propagates the error code returned by the Database Discovery module API
  *                        @ref ble_db_discovery_evt_register.
  */
-    uint32_t ble_pb_c_init(ble_pb_c_t *p_ble_pb_c, ble_pb_c_init_t *p_ble_pb_c_init);
+  uint32_t ble_pb_c_init(ble_pb_c_t *p_ble_pb_c, ble_pb_c_init_t *p_ble_pb_c_init);
 
-    /**@brief     Function for handling BLE events from the SoftDevice.
+  /**@brief     Function for handling BLE events from the SoftDevice.
  *
  * @details   This function handles the BLE events received from the SoftDevice. If a BLE
  *            event is relevant to the Protobuf Client module, the function uses the event's data to update
@@ -210,9 +210,9 @@ extern "C"
  * @param[in] p_ble_evt     Pointer to the BLE event.
  * @param[in] p_context     Pointer to the Protobuf Client structure.
  */
-    void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context);
+  void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context);
 
-    /**@brief   Function for requesting the peer to start sending notification of Protobuf
+  /**@brief   Function for requesting the peer to start sending notification of Protobuf
  *          Measurement.
  *
  * @details This function enables notification of the Protobuf at the peer
@@ -224,9 +224,9 @@ extern "C"
  * @retval	err_code	Otherwise, this function propagates the error code returned
  *                      by the SoftDevice API @ref sd_ble_gattc_write.
  */
-    uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle);
+  uint32_t ble_pb_c_notif_enable(ble_pb_c_t *p_ble_pb_c, uint16_t conn_handle);
 
-    /**@brief     Function for handling events from the Database Discovery module.
+  /**@brief     Function for handling events from the Database Discovery module.
  *
  * @details   Call this function when you get a callback event from the Database Discovery module.
  *            This function handles an event from the Database Discovery module and determines
@@ -239,9 +239,9 @@ extern "C"
  * @param[in] p_evt Pointer to the event received from the Database Discovery module.
  *
  */
-    void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t *p_evt);
+  void ble_pb_on_db_disc_evt(ble_pb_c_t *p_ble_pb_c, const ble_db_discovery_evt_t *p_evt);
 
-    /**@brief     Function for assigning handles to an instance of pb_c.
+  /**@brief     Function for assigning handles to an instance of pb_c.
  *
  * @details   Call this function when a link has been established with a peer to
  *            associate the link to this instance of the module. This association makes it
@@ -254,11 +254,11 @@ extern "C"
  * @param[in] p_peer_pb_handles Attribute handles for the PB server you want this PB_C client to
  *                               interact with.
  */
-    uint32_t ble_pb_c_handles_assign(ble_pb_c_t *p_ble_pb_c,
-                                     uint16_t conn_handle,
-                                     const pb_db_t *p_peer_pb_handles);
+  uint32_t ble_pb_c_handles_assign(ble_pb_c_t *p_ble_pb_c,
+                                   uint16_t conn_handle,
+                                   const pb_db_t *p_peer_pb_handles);
 
-    /** @} */ // End tag for Function group.
+  /** @} */ // End tag for Function group.
 
 #ifdef __cplusplus
 }

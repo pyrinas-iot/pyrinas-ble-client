@@ -33,13 +33,13 @@
 #ifndef BLE_HANDLERS_H
 #define BLE_HANDLERS_H
 
-#include "ble_codec.h"
+#include "pyrinas_codec.h"
 
 // TODO: duplicate handlers that are doing the same thing as Central and Peripheral
 /**@brief Subscription handler definition. */
 typedef void (*susbcribe_handler_t)(char *name, char *data);
 
 /**@brief Raw subscription handler definition. */
-typedef void (*raw_susbcribe_handler_t)(ble_event_t *evt);
+typedef void (*raw_susbcribe_handler_t)(pyrinas_event_t *evt);
 
 #endif

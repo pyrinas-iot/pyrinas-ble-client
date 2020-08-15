@@ -127,7 +127,7 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
         static ble_pb_c_evt_t ble_pb_c_evt;
 
         // Read in buffer
-        int err = ble_codec_decode(&ble_pb_c_evt.params.data, p_evt_data->data, p_evt_data->len);
+        int err = pyrinas_codec_decode(&ble_pb_c_evt.params.data, p_evt_data->data, p_evt_data->len);
         if (err)
         {
             NRF_LOG_ERROR("Unable to decode ble data!");
@@ -262,16 +262,16 @@ void ble_pb_c_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GATTC_EVT_HVX:
-            on_hvx(p_ble_pb_c, p_ble_evt);
-            break;
+    case BLE_GATTC_EVT_HVX:
+        on_hvx(p_ble_pb_c, p_ble_evt);
+        break;
 
-        case BLE_GAP_EVT_DISCONNECTED:
-            on_disconnected(p_ble_pb_c, p_ble_evt);
-            break;
+    case BLE_GAP_EVT_DISCONNECTED:
+        on_disconnected(p_ble_pb_c, p_ble_evt);
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 

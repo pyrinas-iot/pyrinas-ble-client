@@ -15,7 +15,9 @@ ifdef APP_DIR
 # Source files in app directories
 APP_SRC_FILES := \
   $(wildcard $(APP_DIR)/*.c) \
+  $(wildcard $(APP_DIR)/src/*.c) \
   $(wildcard $(APP_DIR)/fsrc/*.c) \
+  $(wildcard $(APP_DIR)/lib/*/*.c) \
   $(wildcard $(APP_DIR)/lib/*/src/*.c)
 
 # Add these separately
@@ -126,7 +128,6 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/ble/ble_central.c \
   $(PROJ_DIR)/../src/ble/ble_pb.c \
   $(PROJ_DIR)/../src/ble/ble_pb_c.c \
-  $(PROJ_DIR)/../src/ble/ble_codec.c \
   $(PROJ_DIR)/../src/buttons_m.c \
   $(PROJ_DIR)/../src/pm_m.c \
   $(PROJ_DIR)/../src/util.c \
@@ -138,6 +139,7 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/lfs_util.c \
   $(PROJ_DIR)/../src/error.c \
   $(PROJ_DIR)/../src/systick.c \
+  $(PROJ_DIR)/../external/pyrinas-codec/pyrinas_codec.c \
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -200,6 +202,7 @@ INC_FOLDERS += \
   $(PROJ_DIR)/../include/board \
   $(PROJ_DIR)/../include/ble \
   $(PROJ_DIR)/../external/tinycbor/src \
+  $(PROJ_DIR)/../external/pyrinas-codec \
 
 # Libraries common to all targets
 LIB_FILES += \

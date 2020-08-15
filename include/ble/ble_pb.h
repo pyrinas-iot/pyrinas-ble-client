@@ -60,7 +60,7 @@
 #define BLE_PB_H__
 
 #include "ble.h"
-#include "ble_codec.h"
+#include "pyrinas_codec.h"
 #include "ble_srv_common.h"
 #include "nrf_sdh_ble.h"
 #include <stdbool.h>
@@ -109,7 +109,7 @@ extern "C"
         ble_pb_evt_type_t evt_type; /**< Type of event. */
         union
         {
-            ble_event_t data; /* data */
+            pyrinas_event_t data; /* data */
         } params;
 
     } ble_pb_evt_t;

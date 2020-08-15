@@ -115,7 +115,7 @@ static void on_write(ble_protobuf_t *p_protobuf, ble_evt_t const *p_ble_evt)
         evt.evt_type = BLE_PB_EVT_DATA;
 
         // Read in buffer
-        err = ble_codec_decode(&evt.params.data, p_evt_write->data, p_evt_write->len);
+        err = pyrinas_codec_decode(&evt.params.data, p_evt_write->data, p_evt_write->len);
         if (err)
         {
             NRF_LOG_ERROR("Unable to decode ble data!");
@@ -190,19 +190,19 @@ void ble_protobuf_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (p_ble_evt->header.evt_id)
     {
-        case BLE_GAP_EVT_CONNECTED:
-            on_connect(p_protobuf, p_ble_evt);
-            break;
-        case BLE_GAP_EVT_DISCONNECTED:
-            on_disconnect(p_protobuf, p_ble_evt);
-            break;
-        case BLE_GATTS_EVT_WRITE:
-            on_write(p_protobuf, p_ble_evt);
-            break;
+    case BLE_GAP_EVT_CONNECTED:
+        on_connect(p_protobuf, p_ble_evt);
+        break;
+    case BLE_GAP_EVT_DISCONNECTED:
+        on_disconnect(p_protobuf, p_ble_evt);
+        break;
+    case BLE_GATTS_EVT_WRITE:
+        on_write(p_protobuf, p_ble_evt);
+        break;
 
-        default:
-            // No implementation needed.
-            break;
+    default:
+        // No implementation needed.
+        break;
     }
 }
 
@@ -221,7 +221,7 @@ static ret_code_t command_char_add(ble_protobuf_t *p_protobuf, const ble_protobu
     memset(&add_char_params, 0, sizeof(add_char_params));
 
     add_char_params.uuid = PROTOBUF_UUID_CONFIG_CHAR;
-    add_char_params.max_len = sizeof(ble_event_t);
+    add_char_params.max_len = sizeof(pyrinas_event_t);
     add_char_params.is_var_len = true;
 
     add_char_params.char_props.notify = 1;

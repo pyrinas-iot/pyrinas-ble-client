@@ -56,7 +56,7 @@
 
 #include "util.h"
 
-#include "ble_codec.h"
+#include "pyrinas_codec.h"
 
 #define NRF_LOG_MODULE_NAME ble_m
 #include "nrf_log.h"
@@ -66,7 +66,7 @@ NRF_LOG_MODULE_REGISTER();
 #define APP_BLE_CONN_CFG_TAG 1  /**< Tag for the configuration of the BLE stack. */
 #define APP_BLE_OBSERVER_PRIO 3 /**< BLE observer priority of the application. There is no need to modify this value. */
 
-NRF_QUEUE_DEF(ble_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
+NRF_QUEUE_DEF(pyrinas_event_t, m_event_queue, 20, NRF_QUEUE_MODE_OVERFLOW);
 
 NRF_BLE_GATT_DEF(m_gatt); /**< GATT module instance. */
 
@@ -84,12 +84,12 @@ bool ble_is_connected(void)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            is_connected = ble_peripheral_is_connected();
-            break;
-        case ble_mode_central:
-            is_connected = ble_central_is_connected();
-            break;
+    case ble_mode_peripheral:
+        is_connected = ble_peripheral_is_connected();
+        break;
+    case ble_mode_central:
+        is_connected = ble_central_is_connected();
+        break;
     }
 
     return is_connected;
@@ -99,12 +99,12 @@ void ble_disconnect(void)
 {
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_disconnect();
-            break;
-        case ble_mode_central:
-            ble_central_disconnect();
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_disconnect();
+        break;
+    case ble_mode_central:
+        ble_central_disconnect();
+        break;
     }
 }
 
@@ -129,7 +129,7 @@ void ble_publish(char *name, char *data)
     }
 
     // Create an event.
-    ble_event_t event = {
+    pyrinas_event_t event = {
         .name.size = name_length,
         .data.size = data_length,
     };
@@ -142,10 +142,10 @@ void ble_publish(char *name, char *data)
     ble_publish_raw(event);
 }
 
-void ble_publish_raw(ble_event_t event)
+void ble_publish_raw(pyrinas_event_t event)
 {
 
-    NRF_LOG_DEBUG("publish raw: %s %s", event.name.bytes, event.data.bytes);
+    NRF_LOG_DEBUG("publish raw: %d %d", event.name.size, event.data.size);
     ble_gap_addr_t gap_addr;
     sd_ble_gap_addr_get(&gap_addr);
 
@@ -153,11 +153,11 @@ void ble_publish_raw(ble_event_t event)
     memcpy(event.faddr, gap_addr.addr, sizeof(event.faddr));
 
     // Encode value
-    uint8_t output[sizeof(ble_event_t)];
+    uint8_t output[sizeof(pyrinas_event_t)];
     size_t bytes_buffered = 0;
 
     // Encode
-    int err = ble_codec_encode(&event, output, sizeof(output), &bytes_buffered);
+    int err = pyrinas_codec_encode(&event, output, sizeof(output), &bytes_buffered);
 
     // Output buffer
     if (err)
@@ -166,15 +166,17 @@ void ble_publish_raw(ble_event_t event)
         return;
     }
 
+    NRF_LOG_DEBUG("buffered: %d", bytes_buffered);
+
     // TODO: send to connected device(s)
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_write(output, bytes_buffered);
-            break;
-        case ble_mode_central:
-            ble_central_write(output, bytes_buffered);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_write(output, bytes_buffered);
+        break;
+    case ble_mode_central:
+        ble_central_write(output, bytes_buffered);
+        break;
     }
 }
 
@@ -262,12 +264,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_evt_handler(p_ble_evt, p_context);
-            break;
-        case ble_mode_central:
-            ble_central_evt_handler(p_ble_evt, p_context);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_evt_handler(p_ble_evt, p_context);
+        break;
+    case ble_mode_central:
+        ble_central_evt_handler(p_ble_evt, p_context);
+        break;
     }
 }
 
@@ -310,7 +312,7 @@ static void gatt_init(void)
 
 /**@brief Function for queuing events so they can read in main context.
  */
-static void ble_raw_evt_handler(ble_event_t *evt)
+static void ble_raw_evt_handler(pyrinas_event_t *evt)
 {
     // Queue events.
     ret_code_t ret = nrf_queue_push(&m_event_queue, evt);
@@ -362,21 +364,21 @@ void ble_stack_init(ble_stack_init_t *init)
 
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            // Attach handler
-            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+    case ble_mode_peripheral:
+        // Attach handler
+        ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
 
-            // Init peripheral mode
-            ble_peripheral_init();
-            break;
+        // Init peripheral mode
+        ble_peripheral_init();
+        break;
 
-        case ble_mode_central:
-            // First, attach handler
-            ble_central_attach_raw_handler(ble_raw_evt_handler);
+    case ble_mode_central:
+        // First, attach handler
+        ble_central_attach_raw_handler(ble_raw_evt_handler);
 
-            // Initialize
-            ble_central_init(&m_config.config);
-            break;
+        // Initialize
+        ble_central_init(&m_config.config);
+        break;
     }
 
     // Init complete
@@ -402,7 +404,7 @@ void ble_process()
     if (!nrf_queue_is_empty(&m_event_queue))
     {
 
-        static ble_event_t evt;
+        static pyrinas_event_t evt;
         ret_code_t ret = nrf_queue_pop(&m_event_queue, &evt);
         APP_ERROR_CHECK(ret);
 
@@ -455,11 +457,11 @@ void ble_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (m_config.mode)
     {
-        case ble_mode_peripheral:
-            ble_peripheral_pm_evt_handler(p_evt);
-            break;
-        case ble_mode_central:
-            ble_central_pm_evt_handler(p_evt);
-            break;
+    case ble_mode_peripheral:
+        ble_peripheral_pm_evt_handler(p_evt);
+        break;
+    case ble_mode_central:
+        ble_central_pm_evt_handler(p_evt);
+        break;
     }
 }
