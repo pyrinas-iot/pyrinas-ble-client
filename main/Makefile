@@ -223,6 +223,7 @@ endif
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -D__PYRINAS_OS__
 CFLAGS += -DLFS_NO_MALLOC
 CFLAGS += -DLFS_NO_ASSERT
 CFLAGS += -DLFS_YES_TRACE
