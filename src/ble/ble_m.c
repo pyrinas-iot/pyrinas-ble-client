@@ -75,7 +75,7 @@ static ble_stack_init_t m_config;                /**< Init config */
 static raw_susbcribe_handler_t m_raw_handler_ext;
 static bool m_init_complete = false;
 
-static int subscriber_search(ble_event_name_data_t *event_name); // Forward declaration of subscriber_search
+static int subscriber_search(pyrinas_event_name_data_t *event_name); // Forward declaration of subscriber_search
 
 bool ble_is_connected(void)
 {
@@ -84,12 +84,12 @@ bool ble_is_connected(void)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        is_connected = ble_peripheral_is_connected();
-        break;
-    case ble_mode_central:
-        is_connected = ble_central_is_connected();
-        break;
+        case ble_mode_peripheral:
+            is_connected = ble_peripheral_is_connected();
+            break;
+        case ble_mode_central:
+            is_connected = ble_central_is_connected();
+            break;
     }
 
     return is_connected;
@@ -99,12 +99,12 @@ void ble_disconnect(void)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_disconnect();
-        break;
-    case ble_mode_central:
-        ble_central_disconnect();
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_disconnect();
+            break;
+        case ble_mode_central:
+            ble_central_disconnect();
+            break;
     }
 }
 
@@ -115,16 +115,16 @@ void ble_publish(char *name, char *data)
     uint8_t data_length = strlen(data);
 
     // Check size
-    if (name_length >= member_size(ble_event_name_data_t, bytes))
+    if (name_length >= member_size(pyrinas_event_name_data_t, bytes))
     {
-        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(ble_event_name_data_t, bytes));
+        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(pyrinas_event_name_data_t, bytes));
         return;
     }
 
     // Check size
-    if (data_length >= member_size(ble_event_data_t, bytes))
+    if (data_length >= member_size(pyrinas_event_data_t, bytes))
     {
-        NRF_LOG_WARNING("Data must be <= %d characters.", member_size(ble_event_data_t, bytes));
+        NRF_LOG_WARNING("Data must be <= %d characters.", member_size(pyrinas_event_data_t, bytes));
         return;
     }
 
@@ -171,12 +171,12 @@ void ble_publish_raw(pyrinas_event_t event)
     // TODO: send to connected device(s)
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_write(output, bytes_buffered);
-        break;
-    case ble_mode_central:
-        ble_central_write(output, bytes_buffered);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_write(output, bytes_buffered);
+            break;
+        case ble_mode_central:
+            ble_central_write(output, bytes_buffered);
+            break;
     }
 }
 
@@ -187,9 +187,9 @@ void ble_subscribe(char *name, susbcribe_handler_t handler)
     uint8_t name_length_nl = name_length + 1;
 
     // Check size
-    if (name_length > member_size(ble_event_name_data_t, bytes))
+    if (name_length > member_size(pyrinas_event_name_data_t, bytes))
     {
-        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(ble_event_name_data_t, bytes));
+        NRF_LOG_WARNING("Name must be <= %d characters.", member_size(pyrinas_event_name_data_t, bytes));
         return;
     }
 
@@ -264,12 +264,12 @@ static void ble_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_evt_handler(p_ble_evt, p_context);
-        break;
-    case ble_mode_central:
-        ble_central_evt_handler(p_ble_evt, p_context);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_evt_handler(p_ble_evt, p_context);
+            break;
+        case ble_mode_central:
+            ble_central_evt_handler(p_ble_evt, p_context);
+            break;
     }
 }
 
@@ -364,21 +364,21 @@ void ble_stack_init(ble_stack_init_t *init)
 
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        // Attach handler
-        ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_peripheral:
+            // Attach handler
+            ble_peripheral_attach_raw_handler(ble_raw_evt_handler);
 
-        // Init peripheral mode
-        ble_peripheral_init();
-        break;
+            // Init peripheral mode
+            ble_peripheral_init();
+            break;
 
-    case ble_mode_central:
-        // First, attach handler
-        ble_central_attach_raw_handler(ble_raw_evt_handler);
+        case ble_mode_central:
+            // First, attach handler
+            ble_central_attach_raw_handler(ble_raw_evt_handler);
 
-        // Initialize
-        ble_central_init(&m_config.config);
-        break;
+            // Initialize
+            ble_central_init(&m_config.config);
+            break;
     }
 
     // Init complete
@@ -432,14 +432,14 @@ void ble_process()
 }
 
 // TODO: more optimized way of doing this?
-static int subscriber_search(ble_event_name_data_t *event_name)
+static int subscriber_search(pyrinas_event_name_data_t *event_name)
 {
 
     int index = 0;
 
     for (; index < m_subscribe_list.count; index++)
     {
-        ble_event_name_data_t *name = &m_subscribe_list.subscribers[index].name;
+        pyrinas_event_name_data_t *name = &m_subscribe_list.subscribers[index].name;
 
         if (name->size == event_name->size)
         {
@@ -457,11 +457,11 @@ void ble_pm_evt_handler(pm_evt_t const *p_evt)
 {
     switch (m_config.mode)
     {
-    case ble_mode_peripheral:
-        ble_peripheral_pm_evt_handler(p_evt);
-        break;
-    case ble_mode_central:
-        ble_central_pm_evt_handler(p_evt);
-        break;
+        case ble_mode_peripheral:
+            ble_peripheral_pm_evt_handler(p_evt);
+            break;
+        case ble_mode_central:
+            ble_central_pm_evt_handler(p_evt);
+            break;
     }
 }

@@ -67,7 +67,7 @@
 typedef struct
 {
     susbcribe_handler_t evt_handler;
-    ble_event_name_data_t name;
+    pyrinas_event_name_data_t name;
 } ble_subscription_handler_t;
 
 typedef struct
