@@ -45,10 +45,16 @@
  *            buttons events.
  */
 
-#ifndef BUTTONS_M_H__
-#define BUTTONS_M_H__
+#ifndef BUTTONS_M_H
+#define BUTTONS_M_H
 
-#include <stdbool.h>
+typedef enum
+{
+  button_evt_mode_pressed
+} button_evt_t;
+
+/**@brief Button event handler for app context */
+typedef void (*button_evt_handler_t)(button_evt_t evt);
 
 /**@brief   Function for initializing device buttons.
  *
@@ -57,4 +63,10 @@
  */
 void buttons_init(void);
 
-#endif // BUTTONS_M_H__
+/**@brief   Function for attaching an event handler for button press
+ *
+ * @details Forwards on events from the bsp_event_handler()
+ */
+void buttons_attach_evt_handler(button_evt_handler_t cb);
+
+#endif // BUTTONS_M_H
