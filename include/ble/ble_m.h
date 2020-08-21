@@ -113,6 +113,12 @@ void ble_disconnect(void);
  */
 void ble_stack_init(ble_stack_init_t *init);
 
+/**@brief Function for reloading configuration
+ *
+ * @details Re-initialize configuration
+ */
+void ble_reload_config(ble_stack_init_t *init);
+
 /**@brief Function for starting the scanning.
  */
 void scan_start(void);
