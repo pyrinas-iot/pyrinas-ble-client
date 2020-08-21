@@ -120,8 +120,6 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
-  $(PROJ_DIR)/../external/tinycbor/src/cborencoder.c \
-  $(PROJ_DIR)/../external/tinycbor/src/cborparser.c \
   $(PROJ_DIR)/../external/littlefs/lfs.c \
   $(PROJ_DIR)/../src/ble/ble_m.c \
   $(PROJ_DIR)/../src/ble/ble_peripheral.c \
@@ -140,6 +138,11 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/error.c \
   $(PROJ_DIR)/../src/systick.c \
   $(PROJ_DIR)/../external/pyrinas-codec/pyrinas_codec.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_decode.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_encode.c \
+  $(PROJ_DIR)/../external/QCBOR/src/UsefulBuf.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_err_to_str.c \
+
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -201,7 +204,8 @@ INC_FOLDERS += \
   $(PROJ_DIR)/../include \
   $(PROJ_DIR)/../include/board \
   $(PROJ_DIR)/../include/ble \
-  $(PROJ_DIR)/../external/tinycbor/src \
+  $(PROJ_DIR)/../external/QCBOR/src \
+  $(PROJ_DIR)/../external/QCBOR/inc \
   $(PROJ_DIR)/../external/pyrinas-codec \
 
 # Libraries common to all targets
@@ -240,6 +244,9 @@ CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DNRF_DFU_SVCI_ENABLED
 CFLAGS += -DNRF_DFU_TRANSPORT_BLE=1
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
+CFLAGS += -DQCBOR_DISABLE_PREFERRED_FLOAT
+CFLAGS += -DQCBOR_DISABLE_FLOAT_HW_USE
+CFLAGS += -DQCBOR_CONFIG_DISABLE_EXP_AND_MANTISSA
 CFLAGS += -DS140
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4
