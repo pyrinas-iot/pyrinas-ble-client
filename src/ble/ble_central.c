@@ -472,6 +472,9 @@ void ble_central_scan_start(void)
 {
     ret_code_t err_code;
 
+    // Make sure this gets active again.
+    m_scan_on_disconnect_enabled = true;
+
     // If there is any pending write to flash, defer scanning until it completes.
     if (nrf_fstorage_is_busy(NULL))
     {
