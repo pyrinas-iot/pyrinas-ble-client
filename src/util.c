@@ -37,7 +37,7 @@
 #include "nrf_log.h"
 
 // TODO: get this without SDH
-void util_print_device_address()
+void util_print_device_address(bool with_delim)
 {
 
     ble_gap_addr_t gap_addr;
@@ -45,7 +45,14 @@ void util_print_device_address()
     static char gap_addr_str[18];
 
     // Convert address to readable string
-    addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
+    if (with_delim)
+    {
+        addr_strhex_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
+    }
+    else
+    {
+        addr_strhex_no_delim(gap_addr.addr, BLE_GAP_ADDR_LEN, gap_addr_str);
+    }
 
     NRF_LOG_INFO("Address: %s", gap_addr_str);
 }
@@ -72,6 +79,21 @@ void addr_strhex_delim(uint8_t *addr, int size, char *out)
         (out)[i * factor + 0] = hex_str[(addr[i] >> 4) & 0x0F];
         (out)[i * factor + 1] = hex_str[(addr[i]) & 0x0F];
         (out)[i * factor + 2] = ':';
+    }
+    (out)[(i - 1) * factor + 2] = '\0';
+}
+
+void addr_strhex_no_delim(uint8_t *addr, int size, char *out)
+{
+    static char hex_str[] = "0123456789abcdef";
+    unsigned int i;
+
+    int factor = 2;
+
+    for (i = 0; i < size; i++)
+    {
+        (out)[i * factor + 0] = hex_str[(addr[i] >> 4) & 0x0F];
+        (out)[i * factor + 1] = hex_str[(addr[i]) & 0x0F];
     }
     (out)[(i - 1) * factor + 2] = '\0';
 }
