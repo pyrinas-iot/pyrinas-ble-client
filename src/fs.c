@@ -195,7 +195,7 @@ void fs_write(const char *filename, const void *data, size_t size)
         fs_check_error(err);
 }
 
-void fs_read(const char *filename, void *data, size_t size)
+void fs_read(const char *filename, void *data, size_t size, size_t *bytes_read)
 {
     // Mount the fs
     int err = lfs_mount(&lfs, &cfg);
@@ -207,10 +207,18 @@ void fs_read(const char *filename, void *data, size_t size)
     if (err)
         fs_check_error(err);
 
+    *bytes_read = 0;
+
     // Write the data
-    err = lfs_file_read(&lfs, &file, data, size);
-    if (err)
-        fs_check_error(err);
+    int ret = lfs_file_read(&lfs, &file, data, size);
+    if (ret > 0)
+    {
+        *bytes_read = ret;
+    }
+    else if (ret < 0)
+    {
+        fs_check_error(ret);
+    }
 
     // remember the storage is not updated until the file is closed successfully
     err = lfs_file_close(&lfs, &file);

@@ -63,6 +63,7 @@ void ble_central_attach_raw_handler(raw_susbcribe_handler_t raw_evt_handler);
 void ble_central_write(uint8_t *data, size_t size);
 void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context);
 void ble_central_scan_start(void);
+void ble_central_reload(ble_central_init_t *init);
 void ble_central_init(ble_central_init_t *init);
 
 #endif

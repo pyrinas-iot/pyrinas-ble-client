@@ -47,7 +47,7 @@
 #define SLAVE_LATENCY 0                                    /**< Slave latency. */
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)   /**< Connection supervisory timeout (4 seconds). */
 
-// Serial related
+ // Serial related
 #define NRF_SERIAL_ENABLED true
 
 // Two-wire inferface
@@ -87,6 +87,13 @@
 #define NRFX_QSPI_CONFIG_XIP_OFFSET 0
 #define NRFX_QSPI_FLASH_IRQ_PRIORITY 6
 #define NRFX_QSPI_CONFIG_SCK_DELAY 1
+
+// TWI related
+#define TWIM_ENABLED 1
+#define NRFX_TWI_ENABLED 1
+#define NRFX_TWI0_ENABLED 1
+#define NRFX_TWIM_ENABLED 1
+#define NRFX_TWIM0_ENABLED 1
 
 // Gatt Queue related
 #define NRF_BLE_GQ_ENABLED 1

@@ -316,25 +316,29 @@ static void scan_init(void)
     err_code = nrf_ble_scan_init(&m_scan, &init_scan, scan_evt_handler);
     APP_ERROR_CHECK(err_code);
 
-    // Iterate through all the available addresses
-    // TODO: update this on change
-    for (uint8_t i = 0; i < m_config.device_count; i++)
+    // Only enable filters if there are devices.
+    if (m_config.device_count)
     {
-        err_code = nrf_ble_scan_filter_set(&m_scan,
-                                           SCAN_ADDR_FILTER,
-                                           m_config.devices[i].addr);
+        // Iterate through all the available addresses
+        // TODO: update this on change
+        for (uint8_t i = 0; i < m_config.device_count; i++)
+        {
+            err_code = nrf_ble_scan_filter_set(&m_scan,
+                                               SCAN_ADDR_FILTER,
+                                               m_config.devices[i].addr);
+            APP_ERROR_CHECK(err_code);
+        }
+
+        // TODO: scan by UUID also?
+        // err_code = nrf_ble_scan_filter_set(&m_scan, SCAN_UUID_FILTER, &m_nus_uuid);
+        // APP_ERROR_CHECK(err_code);
+
+        // Eanble the filters.
+        err_code = nrf_ble_scan_filters_enable(&m_scan,
+                                               NRF_BLE_SCAN_ALL_FILTER,
+                                               false);
         APP_ERROR_CHECK(err_code);
     }
-
-    // TODO: scan by UUID also?
-    // err_code = nrf_ble_scan_filter_set(&m_scan, SCAN_UUID_FILTER, &m_nus_uuid);
-    // APP_ERROR_CHECK(err_code);
-
-    // Eanble the filters.
-    err_code = nrf_ble_scan_filters_enable(&m_scan,
-                                           NRF_BLE_SCAN_ALL_FILTER,
-                                           false);
-    APP_ERROR_CHECK(err_code);
 }
 
 void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
@@ -468,6 +472,9 @@ void ble_central_scan_start(void)
 {
     ret_code_t err_code;
 
+    // Make sure this gets active again.
+    m_scan_on_disconnect_enabled = true;
+
     // If there is any pending write to flash, defer scanning until it completes.
     if (nrf_fstorage_is_busy(NULL))
     {
@@ -523,6 +530,16 @@ static void tx_power_init()
 {
     ret_code_t err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_SCAN_INIT, 0, NRF_BLE_SCAN_TX_POWER);
     APP_ERROR_CHECK(err_code);
+}
+
+void ble_central_reload(ble_central_init_t *init)
+{
+
+    // Copy configuration over
+    m_config = *init;
+
+    // Initialize scan
+    scan_init();
 }
 
 void ble_central_init(ble_central_init_t *init)

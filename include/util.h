@@ -47,8 +47,9 @@
 #define STRX(a) #a
 #define STR(a) STRX(a)
 
-void util_print_device_address();
+void util_print_device_address(bool with_delim);
 void addr_strhex_delim(uint8_t *addr, int size, char *result);
+void addr_strhex_no_delim(uint8_t *addr, int size, char *result);
 void util_get_device_address(char *addr);
 
 #endif

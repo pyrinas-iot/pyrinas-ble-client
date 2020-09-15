@@ -1,6 +1,6 @@
-[submodule "external/nanopb"]
-	path = external/nanopb
-	url = https://github.com/nanopb/nanopb.git
 [submodule "external/littlefs"]
 	path = external/littlefs
 	url = https://github.com/ARMmbed/littlefs.git
+[submodule "external/QCBOR"]
+	path = external/QCBOR
+	url = git@github.com:laurencelundblade/QCBOR.git

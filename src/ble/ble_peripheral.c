@@ -219,14 +219,13 @@ static void advertising_config_get(ble_adv_modes_config_t *p_config)
     p_config->ble_adv_whitelist_enabled = true;
     p_config->ble_adv_directed_enabled = false;
     p_config->ble_adv_extended_enabled = true;
-    p_config->ble_adv_primary_phy = BLE_GAP_PHY_CODED;
-    p_config->ble_adv_secondary_phy = BLE_GAP_PHY_1MBPS;
     p_config->ble_adv_fast_enabled = true;
     p_config->ble_adv_fast_interval = APP_ADV_INTERVAL;
     p_config->ble_adv_fast_timeout = APP_ADV_DURATION;
 
     // Coded PHY
     p_config->ble_adv_primary_phy = BLE_GAP_PHY_CODED;
+    p_config->ble_adv_secondary_phy = BLE_GAP_PHY_CODED;
 }
 
 /**@brief Function for handling advertising events.

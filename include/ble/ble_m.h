@@ -57,7 +57,7 @@
 
 #include "peer_manager.h"
 
-#include "command.pb.h"
+#include "pyrinas_codec.h"
 
 //TODO: better place to define this
 #define BLE_M_SUBSCRIBER_MAX_COUNT 12 /**< Max amount of potential subscriptions. */
@@ -67,7 +67,7 @@
 typedef struct
 {
     susbcribe_handler_t evt_handler;
-    protobuf_event_t_name_t name;
+    pyrinas_event_name_data_t name;
 } ble_subscription_handler_t;
 
 typedef struct
@@ -93,7 +93,8 @@ typedef struct
 {
     ble_mode_t mode;
     bool long_range;
-    union {
+    union
+    {
         ble_central_init_t config;
     };
 
@@ -112,6 +113,12 @@ void ble_disconnect(void);
  */
 void ble_stack_init(ble_stack_init_t *init);
 
+/**@brief Function for reloading configuration
+ *
+ * @details Re-initialize configuration
+ */
+void ble_reload_config(ble_stack_init_t *init);
+
 /**@brief Function for starting the scanning.
  */
 void scan_start(void);
@@ -121,7 +128,7 @@ void scan_start(void);
 void ble_publish(char *name, char *data);
 
 // TODO: document this
-void ble_publish_raw(protobuf_event_t event);
+void ble_publish_raw(pyrinas_event_t event);
 
 // TODO: document this
 void ble_subscribe(char *name, susbcribe_handler_t handler);
@@ -147,6 +154,11 @@ uint16_t ble_get_conn_handle(void);
 
 // TODO: Document this
 void ble_pm_evt_handler(pm_evt_t const *p_evt);
+
+/**@brief Function for enabling or disabling u.FL connection.
+ *
+ */
+void ble_external_antenna(bool enabled);
 
 // TODO: document this
 void ble_process();

@@ -16,6 +16,8 @@ ifdef APP_DIR
 APP_SRC_FILES := \
   $(wildcard $(APP_DIR)/*.c) \
   $(wildcard $(APP_DIR)/src/*.c) \
+  $(wildcard $(APP_DIR)/fsrc/*.c) \
+  $(wildcard $(APP_DIR)/lib/*/*.c) \
   $(wildcard $(APP_DIR)/lib/*/src/*.c)
 
 # Add these separately
@@ -29,6 +31,7 @@ APP_D_FILES := $(APP_SRC_FILES_STRIPED:.c=.c.d)
 # Include folders for app
 INC_FOLDERS += \
   $(APP_DIR)/ \
+  $(APP_DIR)/src/ \
   $(wildcard $(APP_DIR)/lib/*/) \
   $(wildcard $(APP_DIR)/lib/*/src/) \
   $(APP_DIR)/src/
@@ -75,11 +78,13 @@ SRC_FILES += \
   $(SDK_ROOT)/components/libraries/ecc/ecc.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_qspi.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
@@ -116,14 +121,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
-  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
-  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
-  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twim.c \
-  $(PROJ_DIR)/../external/nanopb/pb_common.c \
-  $(PROJ_DIR)/../external/nanopb/pb_encode.c \
-  $(PROJ_DIR)/../external/nanopb/pb_decode.c \
   $(PROJ_DIR)/../external/littlefs/lfs.c \
-  $(PROJ_DIR)/../src/proto/command.pb.c \
   $(PROJ_DIR)/../src/ble/ble_m.c \
   $(PROJ_DIR)/../src/ble/ble_peripheral.c \
   $(PROJ_DIR)/../src/ble/ble_central.c \
@@ -140,6 +138,12 @@ SRC_FILES += \
   $(PROJ_DIR)/../src/lfs_util.c \
   $(PROJ_DIR)/../src/error.c \
   $(PROJ_DIR)/../src/systick.c \
+  $(PROJ_DIR)/../external/pyrinas-codec/pyrinas_codec.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_decode.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_encode.c \
+  $(PROJ_DIR)/../external/QCBOR/src/UsefulBuf.c \
+  $(PROJ_DIR)/../external/QCBOR/src/qcbor_err_to_str.c \
+
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -200,9 +204,10 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/log/src \
   $(PROJ_DIR)/../include \
   $(PROJ_DIR)/../include/board \
-  $(PROJ_DIR)/../include/proto \
   $(PROJ_DIR)/../include/ble \
-  $(PROJ_DIR)/../external/nanopb \
+  $(PROJ_DIR)/../external/QCBOR/src \
+  $(PROJ_DIR)/../external/QCBOR/inc \
+  $(PROJ_DIR)/../external/pyrinas-codec \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -223,6 +228,7 @@ endif
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -D__PYRINAS_OS__
 CFLAGS += -DLFS_NO_MALLOC
 CFLAGS += -DLFS_NO_ASSERT
 CFLAGS += -DLFS_YES_TRACE
@@ -239,6 +245,9 @@ CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DNRF_DFU_SVCI_ENABLED
 CFLAGS += -DNRF_DFU_TRANSPORT_BLE=1
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
+CFLAGS += -DQCBOR_DISABLE_PREFERRED_FLOAT
+CFLAGS += -DQCBOR_DISABLE_FLOAT_HW_USE
+CFLAGS += -DQCBOR_CONFIG_DISABLE_EXP_AND_MANTISSA
 CFLAGS += -DS140
 CFLAGS += -DSOFTDEVICE_PRESENT
 CFLAGS += -mcpu=cortex-m4

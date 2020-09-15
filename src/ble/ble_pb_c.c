@@ -49,9 +49,6 @@
 #include "ble_pb_c.h"
 #include "ble_types.h"
 
-#include "pb_decode.h"
-#include "pb_encode.h"
-
 #define NRF_LOG_MODULE_NAME ble_pb_c
 #include "nrf_log.h"
 NRF_LOG_MODULE_REGISTER();
@@ -126,23 +123,22 @@ static void on_hvx(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
         // Decode the data
         ble_gattc_evt_hvx_t const *p_evt_data = &p_ble_evt->evt.gattc_evt.params.hvx;
 
-        // Setitng up protocol buffer data
-        protobuf_event_t data;
+        // Where the data is going
+        static ble_pb_c_evt_t ble_pb_c_evt;
 
         // Read in buffer
-        pb_istream_t istream = pb_istream_from_buffer((pb_byte_t *)p_evt_data->data, p_evt_data->len);
-
-        if (!pb_decode(&istream, protobuf_event_t_fields, &data))
+        int err = pyrinas_codec_decode(&ble_pb_c_evt.params.data, p_evt_data->data, p_evt_data->len);
+        if (err)
         {
-            NRF_LOG_ERROR("Unable to decode: %s", PB_GET_ERROR(&istream));
+            NRF_LOG_ERROR("Unable to decode ble data!");
             return;
         }
 
+        NRF_LOG_DEBUG("%s %s", ble_pb_c_evt.params.data.name.bytes, ble_pb_c_evt.params.data.data.bytes);
+
         // Set the event type
-        ble_pb_c_evt_t ble_pb_c_evt;
         ble_pb_c_evt.evt_type = BLE_PB_C_EVT_NOTIFICATION;
         ble_pb_c_evt.conn_handle = conn_handle;
-        ble_pb_c_evt.params.data = data;
 
         p_ble_pb_c->evt_handler(p_ble_pb_c, &ble_pb_c_evt);
     }

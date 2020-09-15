@@ -41,7 +41,7 @@
 
 void fs_init();
 void fs_write(const char *filename, const void *data, size_t size);
-void fs_read(const char *filename, void *data, size_t size);
+void fs_read(const char *filename, void *data, size_t size, size_t *bytes_read);
 void fs_delete(const char *filename);
 bool fs_file_exists(const char *filename);
 
