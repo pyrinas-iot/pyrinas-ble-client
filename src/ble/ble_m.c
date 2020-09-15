@@ -319,6 +319,28 @@ static void ble_raw_evt_handler(pyrinas_event_t *evt)
     APP_ERROR_CHECK(ret);
 }
 
+void ble_external_antenna(bool enabled)
+{
+
+    nrf_gpio_cfg_output(VCTL1);
+    nrf_gpio_cfg_output(VCTL2);
+
+    if (enabled)
+    {
+        // VCTL2 high, Output 2
+        // VCTL1 low, Output 1
+        nrf_gpio_pin_set(VCTL2);
+        nrf_gpio_pin_clear(VCTL1);
+    }
+    else
+    {
+        // VCTL2 low, Output 2
+        // VCTL1 high, Output 1
+        nrf_gpio_pin_clear(VCTL2);
+        nrf_gpio_pin_set(VCTL1);
+    }
+}
+
 static void radio_switch_init()
 {
 

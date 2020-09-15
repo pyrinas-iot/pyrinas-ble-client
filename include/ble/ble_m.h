@@ -155,6 +155,11 @@ uint16_t ble_get_conn_handle(void);
 // TODO: Document this
 void ble_pm_evt_handler(pm_evt_t const *p_evt);
 
+/**@brief Function for enabling or disabling u.FL connection.
+ *
+ */
+void ble_external_antenna(bool enabled);
+
 // TODO: document this
 void ble_process();
 
