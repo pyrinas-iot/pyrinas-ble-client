@@ -165,6 +165,7 @@ void fs_init()
     fs_folder_init(FS_RUN_DIR);
     fs_folder_init(FS_ETC_DIR);
 }
+
 void fs_write(const char *filename, const void *data, size_t size)
 {
     int err = 0;
