@@ -114,8 +114,6 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         break;
 
     case BLE_GAP_EVT_CONNECTED:
-        // Set connected flag
-        m_connected = true;
 
         // Set LED
         err_code = bsp_indication_set(BSP_INDICATE_BONDING);
@@ -378,7 +376,15 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt)
         NRF_LOG_INFO("Notifications enabled!")
         m_notifications_enabled = true;
 
+        // Set connected flag
+        m_connected = true;
+
+        // Show we're connected
         err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+        APP_ERROR_CHECK(err_code);
+
+        // Enable RSSI readings
+        err_code = sd_ble_gap_rssi_start(m_conn_handle, 0, 100);
         APP_ERROR_CHECK(err_code);
         break;
     case BLE_PB_EVT_NOTIFICATION_DISABLED:
