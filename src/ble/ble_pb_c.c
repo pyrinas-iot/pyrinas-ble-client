@@ -164,6 +164,7 @@ static void on_disconnected(ble_pb_c_t *p_ble_pb_c, const ble_evt_t *p_ble_evt)
         p_ble_pb_c->conn_handles[conn_handle] = BLE_CONN_HANDLE_INVALID;
         p_ble_pb_c->char_handles[conn_handle].cccd_handle = BLE_GATT_HANDLE_INVALID;
         p_ble_pb_c->char_handles[conn_handle].data_handle = BLE_GATT_HANDLE_INVALID;
+        p_ble_pb_c->rssi[conn_handle] = 0;
     }
 }
 
@@ -347,6 +348,10 @@ uint32_t ble_pb_c_handles_assign(ble_pb_c_t *p_ble_pb_c,
 {
     VERIFY_PARAM_NOT_NULL(p_ble_pb_c);
 
+    // Reset RSSI
+    p_ble_pb_c->rssi[conn_handle] = 0;
+
+    // Set conn handle
     p_ble_pb_c->conn_handles[conn_handle] = conn_handle;
     if (p_peer_data_handles != NULL)
     {

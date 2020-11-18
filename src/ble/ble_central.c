@@ -157,6 +157,10 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
             // Enable notifications
             err_code = ble_pb_c_notif_enable(p_pb_c, p_evt->conn_handle);
             APP_ERROR_CHECK(err_code);
+
+            // Get RSSI data
+            err_code = sd_ble_gap_rssi_start(p_evt->conn_handle, 0, 100);
+            APP_ERROR_CHECK(err_code);
         }
         else
         {
@@ -178,6 +182,17 @@ static void pb_c_evt_handler(ble_pb_c_t *p_pb_c, ble_pb_c_evt_t *p_evt)
         // Forward to raw handler.
         if (m_raw_evt_handler != NULL)
         {
+            // Tag on RSSI
+            p_evt->params.data.central_rssi = p_pb_c->rssi[p_evt->conn_handle];
+
+            // Set the address
+            ble_gap_addr_t gap_addr;
+            sd_ble_gap_addr_get(&gap_addr);
+
+            // Copy over the address information
+            memcpy(p_evt->params.data.central_addr, gap_addr.addr, sizeof(p_evt->params.data.central_addr));
+
+            // Send event
             m_raw_evt_handler(&(p_evt->params.data));
         }
 
@@ -461,7 +476,10 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
     case BLE_GAP_EVT_CONN_SEC_UPDATE:
         NRF_LOG_DEBUG("BLE_GAP_EVT_CONN_SEC_UPDATE");
         break;
-
+    case BLE_GAP_EVT_RSSI_CHANGED:
+        NRF_LOG_INFO("Rssi changed! %i on %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi, p_ble_evt->evt.gap_evt.conn_handle);
+        m_pb_c.rssi[p_ble_evt->evt.gap_evt.conn_handle] = p_ble_evt->evt.gap_evt.params.rssi_changed.rssi;
+        break;
     default:
         // No implementation needed.
         break;

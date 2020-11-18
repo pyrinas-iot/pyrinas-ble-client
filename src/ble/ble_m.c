@@ -146,11 +146,20 @@ void ble_publish_raw(pyrinas_event_t event)
 {
 
     NRF_LOG_DEBUG("publish raw: %d %d", event.name.size, event.data.size);
+
     ble_gap_addr_t gap_addr;
     sd_ble_gap_addr_get(&gap_addr);
 
     // Copy over the address information
-    memcpy(event.faddr, gap_addr.addr, sizeof(event.faddr));
+    switch (m_config.mode)
+    {
+    case ble_mode_peripheral:
+        memcpy(event.peripheral_addr, gap_addr.addr, sizeof(event.peripheral_addr));
+        break;
+    case ble_mode_central:
+        memcpy(event.central_addr, gap_addr.addr, sizeof(event.central_addr));
+        break;
+    }
 
     // Encode value
     uint8_t output[sizeof(pyrinas_event_t)];

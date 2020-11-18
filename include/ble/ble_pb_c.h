@@ -158,6 +158,7 @@ extern "C"
   struct ble_pb_c_s
   {
     uint8_t uuid_type;                                          /**< UUID type for DFU UUID. */
+    int8_t rssi[NRF_SDH_BLE_TOTAL_LINK_COUNT];                  /**< RSSI values for each handle. */
     uint16_t conn_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];        /**< Connection handle, as provided by the SoftDevice. */
     pb_db_t char_handles[NRF_SDH_BLE_TOTAL_LINK_COUNT];         /**< Handles related to PB on the peer. */
     bool notify_enable_on_secure[NRF_SDH_BLE_TOTAL_LINK_COUNT]; /**< Determines if a secure session has begun before discovery.. */

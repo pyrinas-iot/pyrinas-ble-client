@@ -59,6 +59,7 @@ BLE_ADVERTISING_DEF(m_advertising); /**< Advertising module instance. */
 NRF_LOG_MODULE_REGISTER();
 
 // Static defines
+static int8_t m_rssi;
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 static bool m_advertising_on_disconnect = true;
 static bool m_connected = false;
@@ -155,6 +156,10 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
                                          BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
         APP_ERROR_CHECK(err_code);
+        break;
+    case BLE_GAP_EVT_RSSI_CHANGED:
+        NRF_LOG_INFO("Rssi changed! %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
+        m_rssi = p_ble_evt->evt.gap_evt.params.rssi_changed.rssi;
         break;
     default:
         // No implementation needed.
@@ -396,6 +401,17 @@ void ble_protobuf_evt_hanlder(ble_protobuf_t *p_protobuf, ble_pb_evt_t *p_evt)
         // Forward to raw handler.
         if (m_raw_evt_handler != NULL)
         {
+            // Set the RSSI
+            p_evt->params.data.peripheral_rssi = m_rssi;
+
+            // Set the address
+            ble_gap_addr_t gap_addr;
+            sd_ble_gap_addr_get(&gap_addr);
+
+            // Copy over the address information
+            memcpy(p_evt->params.data.peripheral_addr, gap_addr.addr, sizeof(p_evt->params.data.peripheral_addr));
+
+            // Send it along
             m_raw_evt_handler(&(p_evt->params.data));
         }
 
@@ -483,6 +499,9 @@ void ble_peripheral_disconnect()
 
     // Disable advertising on disconnect.
     m_advertising_on_disconnect = false;
+
+    // Reset RSSI
+    m_rssi = 0;
 
     // TODO: handle this better?
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
