@@ -519,3 +519,8 @@ bool ble_peripheral_is_connected(void)
 {
     return m_connected;
 }
+
+int8_t ble_peripheral_get_rssi() 
+{
+    return m_rssi;
+}

@@ -154,6 +154,7 @@ void ble_publish_raw(pyrinas_event_t event)
     switch (m_config.mode)
     {
     case ble_mode_peripheral:
+        event.peripheral_rssi = ble_peripheral_get_rssi();
         memcpy(event.peripheral_addr, gap_addr.addr, sizeof(event.peripheral_addr));
         break;
     case ble_mode_central:

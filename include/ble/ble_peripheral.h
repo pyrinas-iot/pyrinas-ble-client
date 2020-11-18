@@ -46,6 +46,7 @@
 #include "peer_manager.h"
 
 //TODO document
+int8_t ble_peripheral_get_rssi();
 bool ble_peripheral_is_connected(void);
 void ble_peripheral_disconnect(void);
 void ble_peripheral_pm_evt_handler(pm_evt_t const *p_evt);
