@@ -477,7 +477,7 @@ void ble_central_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         NRF_LOG_DEBUG("BLE_GAP_EVT_CONN_SEC_UPDATE");
         break;
     case BLE_GAP_EVT_RSSI_CHANGED:
-        NRF_LOG_INFO("Rssi changed! %i on %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi, p_ble_evt->evt.gap_evt.conn_handle);
+        NRF_LOG_DEBUG("Rssi changed! %i on %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi, p_ble_evt->evt.gap_evt.conn_handle);
         m_pb_c.rssi[p_ble_evt->evt.gap_evt.conn_handle] = p_ble_evt->evt.gap_evt.params.rssi_changed.rssi;
         break;
     default:

@@ -35,8 +35,14 @@
 
 #include "app_util.h"
 
-#define DEVICE_NAME "Scafolding"         /**< Name of device. Will be included in the advertising data. */
+#ifndef DEVICE_NAME
+#define DEVICE_NAME "Pyrinas"            /**< Name of device. Will be included in the advertising data. */
+#endif
+
+#ifndef MANUFACTURER_NAME
 #define MANUFACTURER_NAME "Circuit Dojo" /**< Manufacturer. Will be passed to Device Information Service. */
+#endif 
+
 #define APP_ADV_INTERVAL 300             /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 #define APP_ADV_DURATION 0               /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 #define APP_BLE_CONN_CFG_TAG 1           /**< A tag identifying the SoftDevice BLE configuration. */
@@ -47,7 +53,7 @@
 #define SLAVE_LATENCY 0                                    /**< Slave latency. */
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)   /**< Connection supervisory timeout (4 seconds). */
 
- // Serial related
+// Serial related
 #define NRF_SERIAL_ENABLED true
 
 // Two-wire inferface

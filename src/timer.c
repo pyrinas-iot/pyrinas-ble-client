@@ -37,7 +37,7 @@
 #include "nrf_log.h"
 #include "nrf_queue.h"
 
-NRF_QUEUE_DEF(timer_id_t, m_timer_event_queue, 8, NRF_QUEUE_MODE_OVERFLOW);
+NRF_QUEUE_DEF(timer_id_t, m_timer_event_queue, 16, NRF_QUEUE_MODE_OVERFLOW);
 
 static void app_timer_timeout_handler(void *p_context)
 {

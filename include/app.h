@@ -39,6 +39,7 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_nvic.h"
+#include "nrf_drv_gpiote.h"
 
 #include "ble_m.h"
 

@@ -158,7 +158,7 @@ void ble_peripheral_evt_handler(ble_evt_t const *p_ble_evt, void *p_context)
         APP_ERROR_CHECK(err_code);
         break;
     case BLE_GAP_EVT_RSSI_CHANGED:
-        NRF_LOG_INFO("Rssi changed! %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
+        NRF_LOG_DEBUG("Rssi changed! %i", p_ble_evt->evt.gap_evt.params.rssi_changed.rssi);
         m_rssi = p_ble_evt->evt.gap_evt.params.rssi_changed.rssi;
         break;
     default:
@@ -520,7 +520,7 @@ bool ble_peripheral_is_connected(void)
     return m_connected;
 }
 
-int8_t ble_peripheral_get_rssi() 
+int8_t ble_peripheral_get_rssi()
 {
     return m_rssi;
 }
