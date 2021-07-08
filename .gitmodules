@@ -4,3 +4,6 @@
 [submodule "external/QCBOR"]
 	path = external/QCBOR
 	url = git@github.com:laurencelundblade/QCBOR.git
+[submodule "external/pyrinas-codec"]
+	path = external/pyrinas-codec
+	url = git@github.com:pyrinas-iot/pyrinas-codec.git
